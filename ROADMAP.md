@@ -180,7 +180,7 @@ Completion:
 
 ### Slice 1 - Tenant Schema And Liona Backfill
 
-Status: `NEXT`
+Status: `COMPLETE`
 
 Goal:
 
@@ -209,9 +209,20 @@ Deployment notes:
 - Verify counts before and after migration.
 - Do not delete or rename existing board rows.
 
+Completion:
+
+- Commit: pending
+- Pushed: pending
+- Migration: `focusboard_multi_client_tenancy` applied to project
+  `xoafnjhsxxczmfavmwoq` on 2026-06-12
+- Verification: 1 client, 2 active Liona memberships, 1 active platform owner, and 0 boards
+  without a client
+- Preserved data: 1 board, 7 tasks, 17 metrics, 4 reward tiers, and 51 events
+- Outstanding deployment work: none
+
 ### Slice 2 - Board Context Refactor
 
-Status: `PLANNED`
+Status: `NEXT`
 
 Goal:
 
@@ -386,3 +397,8 @@ Each implementation slice should run the checks relevant to its scope:
 ## Change Log
 
 - 2026-06-12: Slice 0 completed in `5a746f3`; roadmap and repository instructions established.
+- 2026-06-12: Slice 1 started. Pre-migration baseline recorded: 1 board, 7 tasks, 17 metrics,
+  4 reward tiers, and 51 events.
+- 2026-06-12: Slice 1 database migration applied and verified. Liona's existing board data and
+  slugs were preserved; both Liona accounts were assigned as client users and Andrew was assigned
+  as platform owner.
