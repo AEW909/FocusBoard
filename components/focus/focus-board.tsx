@@ -200,8 +200,6 @@ export function FocusBoard({ board, initialView }: FocusBoardProps) {
           <a
             className="focus-content-launch-link"
             href={`/focus-content/${board.settings.boardSlug}`}
-            rel="noreferrer"
-            target="_blank"
           >
             Open Content Lab
           </a>

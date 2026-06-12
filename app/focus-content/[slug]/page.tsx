@@ -9,7 +9,7 @@ type FocusContentPageProps = {
 
 export default async function FocusContentPage({ params }: FocusContentPageProps) {
   const { slug } = await params;
-  await requireRole(["owner"], `/focus-content/${slug}`);
+  await requireRole(["owner", "clinician", "admin"], `/focus-content/${slug}`);
   const runtime = await getFocusBoardRuntimeConfigByPublicSlug(slug);
 
   if (!runtime) {

@@ -1,10 +1,14 @@
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
+import type { StaffRole } from "@/lib/auth/types";
 
 type OwnerApiAccess =
   | { allowed: true }
   | { allowed: false; error: string; status: 401 | 403 };
 
-export async function getOwnerApiAccess(): Promise<OwnerApiAccess> {
+export async function getRoleApiAccess(
+  allowedRoles: StaffRole[],
+  deniedMessage = "You do not have permission to access this area.",
+): Promise<OwnerApiAccess> {
   const user = await getSessionUser();
 
   if (!user) {
@@ -17,13 +21,20 @@ export async function getOwnerApiAccess(): Promise<OwnerApiAccess> {
 
   const profile = await getCurrentProfile();
 
-  if (!profile || profile.role !== "owner") {
+  if (!profile || !allowedRoles.includes(profile.role)) {
     return {
       allowed: false,
-      error: "Only the owner account can access Focus administration.",
+      error: deniedMessage,
       status: 403,
     };
   }
 
   return { allowed: true };
+}
+
+export async function getOwnerApiAccess(): Promise<OwnerApiAccess> {
+  return getRoleApiAccess(
+    ["owner"],
+    "Only the owner account can access Focus administration.",
+  );
 }
