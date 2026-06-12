@@ -259,11 +259,21 @@ Completion:
 
 ### Slice 3 - Role-Aware Login And Client Home
 
-Status: `NEXT`
+Status: `IN PROGRESS`
 
 Goal:
 
 Make login the product home and route users to the correct destination.
+
+Implementation progress:
+
+- Root login and role-aware destination routing implemented.
+- Platform client hub implemented at `/clients`.
+- Multi-membership board picker implemented at `/boards`.
+- Control-room authorization moved from PhysioNote profile roles to FocusBoard platform ownership.
+- Compatibility `/login` route preserves `next` and redirects to `/`.
+- Local signed-out route checks and live access-assignment SQL checks passed.
+- Pending: deployed sign-in smoke test with the existing Andrew and Liona accounts.
 
 Deliverables:
 
@@ -419,3 +429,7 @@ Each implementation slice should run the checks relevant to its scope:
   hardcoded Liona board key to an explicitly resolved board context.
 - 2026-06-12: Slice 2 completed. Runtime reads, event queries, and control mutations now use the
   resolved board context; temporary two-board application and SQL isolation checks passed.
+- 2026-06-12: Slice 3 started. Root login routing and FocusBoard-specific platform/client access
+  resolution are being implemented.
+- 2026-06-12: Slice 3 implementation prepared for deployment. Authenticated production smoke
+  testing remains before the slice can be marked complete.

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireRole } from "@/lib/auth/session";
+import { requireFocusPlatformOwner } from "@/lib/focus-board/access";
 import {
   getAccentClassForIndex,
   normaliseFocusKey,
@@ -23,7 +23,7 @@ function getIntValue(formData: FormData, key: string, fallback = 0) {
 }
 
 async function getAdminContext(adminSlug: string) {
-  await requireRole(["owner"]);
+  await requireFocusPlatformOwner();
   const runtime = await getFocusBoardRuntimeConfigByAdminSlug(adminSlug);
 
   if (!runtime) {

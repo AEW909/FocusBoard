@@ -2,12 +2,18 @@ import Link from "next/link";
 import { signOutAction } from "@/app/login/actions";
 
 type ProtectedSessionBarProps = {
-  homeHref: string;
+  homeHref?: string;
+  homeLabel?: string;
+  backHref?: string;
+  backLabel?: string;
   title: string;
 };
 
 export function ProtectedSessionBar({
   homeHref,
+  homeLabel = "Open board",
+  backHref,
+  backLabel = "Back",
   title,
 }: ProtectedSessionBarProps) {
   return (
@@ -26,9 +32,16 @@ export function ProtectedSessionBar({
         </div>
 
         <div className="topbar-actions">
-          <Link className="button button-small topbar-focus-link" href={homeHref}>
-            Open board
-          </Link>
+          {backHref ? (
+            <Link className="button button-small topbar-focus-link" href={backHref}>
+              {backLabel}
+            </Link>
+          ) : null}
+          {homeHref ? (
+            <Link className="button button-small topbar-focus-link" href={homeHref}>
+              {homeLabel}
+            </Link>
+          ) : null}
           <form action={signOutAction}>
             <button className="button button-small topbar-focus-signout" type="submit">
               Sign out

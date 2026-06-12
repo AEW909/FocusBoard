@@ -1,25 +1,36 @@
-import { notFound } from "next/navigation";
-import { FocusBoard } from "@/components/focus/focus-board";
-import { FocusPullToRefresh } from "@/components/focus/focus-pull-to-refresh";
-import { FOCUS_BOARD_SLUG } from "@/lib/focus-board/config";
-import { getFocusBoardData } from "@/lib/focus-board/queries";
-import { getFocusBoardRuntimeConfigByPublicSlug } from "@/lib/focus-board/runtime";
+import { redirect } from "next/navigation";
+import { FocusLoginScreen } from "@/components/auth/focus-login-screen";
+import { getSafeNextPath } from "@/lib/auth/redirects";
+import {
+  getCurrentFocusBoardAccess,
+  getFocusBoardHomePath,
+} from "@/lib/focus-board/access";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
-  const config = await getFocusBoardRuntimeConfigByPublicSlug(FOCUS_BOARD_SLUG);
+type HomePageProps = {
+  searchParams: Promise<{ next?: string }>;
+};
 
-  if (!config) {
-    notFound();
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const nextPath = getSafeNextPath(params.next);
+  const current = await getCurrentFocusBoardAccess();
+
+  if (!current) {
+    return <FocusLoginScreen nextPath={nextPath} />;
   }
 
-  const board = await getFocusBoardData(config.settings.boardKey);
+  const destination = nextPath !== "/" ? nextPath : getFocusBoardHomePath(current.access);
+
+  if (destination) {
+    redirect(destination);
+  }
 
   return (
-    <main className="shell focus-public-page focus-public-page-neon">
-      <FocusPullToRefresh label="Release to refresh board" />
-      <FocusBoard board={board} initialView="week" />
-    </main>
+    <FocusLoginScreen
+      nextPath="/"
+      signedInEmail={current.user.email ?? "This account"}
+    />
   );
 }

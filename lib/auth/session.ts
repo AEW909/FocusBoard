@@ -18,7 +18,7 @@ export async function requireUser(nextPath?: string) {
 
   if (!user) {
     const safeNextPath = getSafeNextPath(nextPath, "/");
-    redirect(safeNextPath === "/" ? "/login" : `/login?next=${encodeURIComponent(safeNextPath)}`);
+    redirect(safeNextPath === "/" ? "/" : `/?next=${encodeURIComponent(safeNextPath)}`);
   }
 
   return user;
