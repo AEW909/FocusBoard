@@ -356,6 +356,144 @@ a {
   width: min(560px, 100%);
 }
 
+.auth-shell-focus {
+  background:
+    radial-gradient(circle at 10% 14%, rgba(0, 255, 214, 0.18), transparent 24%),
+    radial-gradient(circle at 88% 10%, rgba(255, 77, 202, 0.22), transparent 22%),
+    radial-gradient(circle at 52% 86%, rgba(149, 255, 74, 0.14), transparent 26%),
+    linear-gradient(180deg, #030309 0%, #090816 48%, #10051d 100%);
+}
+
+.auth-card-focus {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(circle at top left, rgba(0, 255, 214, 0.16), transparent 26%),
+    radial-gradient(circle at top right, rgba(255, 77, 202, 0.18), transparent 26%),
+    radial-gradient(circle at bottom center, rgba(149, 255, 74, 0.12), transparent 40%),
+    rgba(8, 8, 18, 0.94);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 24px 64px rgba(0, 0, 0, 0.42),
+    0 0 42px rgba(63, 255, 218, 0.08);
+}
+
+.auth-card-focus h1 {
+  color: #fff9ff;
+  text-shadow: 0 0 18px rgba(255, 0, 140, 0.18);
+}
+
+.auth-card-focus .focus-hero-copy,
+.auth-card-focus .field span {
+  color: rgba(244, 240, 255, 0.8);
+}
+
+.auth-card-focus .field input {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.auth-card-focus .field input::placeholder {
+  color: rgba(244, 240, 255, 0.38);
+}
+
+.auth-card-focus .field input:focus {
+  outline: none;
+  border-color: rgba(89, 244, 214, 0.48);
+  box-shadow:
+    0 0 0 1px rgba(89, 244, 214, 0.22),
+    0 0 22px rgba(89, 244, 214, 0.12);
+}
+
+.auth-card-focus .form-error {
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 108, 122, 0.28);
+  border-radius: 16px;
+  background: rgba(118, 22, 37, 0.22);
+  color: #ffb5c0;
+}
+
+.auth-card-focus .button-primary {
+  min-height: 52px;
+  background: linear-gradient(135deg, #00f5d4 0%, #ff4dca 100%);
+  color: #090816;
+  box-shadow: 0 0 24px rgba(255, 77, 202, 0.18);
+}
+
+.auth-focus-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.auth-focus-brand-name {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.08rem;
+  letter-spacing: -0.03em;
+}
+
+.auth-focus-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.auth-focus-badges span {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(244, 240, 255, 0.82);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.auth-focus-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(2px);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.auth-focus-orb-teal {
+  top: 18px;
+  right: 22px;
+  width: 18px;
+  height: 18px;
+  background: #00f5d4;
+  box-shadow: 0 0 20px rgba(0, 245, 212, 0.5);
+}
+
+.auth-focus-orb-pink {
+  top: 48px;
+  right: 58px;
+  width: 10px;
+  height: 10px;
+  background: #ff4dca;
+  box-shadow: 0 0 16px rgba(255, 77, 202, 0.46);
+}
+
+.auth-focus-orb-lime {
+  bottom: 24px;
+  left: 28px;
+  width: 14px;
+  height: 14px;
+  background: #95ff4a;
+  box-shadow: 0 0 18px rgba(149, 255, 74, 0.4);
+}
+
 .auth-form {
   display: grid;
   gap: 16px;
@@ -482,10 +620,54 @@ a {
   box-shadow: var(--shadow);
 }
 
+.topbar-shell-focus {
+  padding-top: 16px;
+}
+
+.topbar-focus {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(circle at top left, rgba(0, 255, 214, 0.14), transparent 26%),
+    radial-gradient(circle at top right, rgba(255, 77, 202, 0.18), transparent 24%),
+    rgba(8, 8, 18, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 18px 40px rgba(0, 0, 0, 0.34),
+    0 0 32px rgba(63, 255, 218, 0.06);
+}
+
+.topbar-focus .brand-name {
+  color: #fff;
+}
+
+.topbar-focus .brand-subtitle {
+  color: rgba(244, 240, 255, 0.68);
+}
+
 .topbar-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.topbar-focus-link,
+.topbar-focus-signout {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.topbar-focus-link {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.topbar-focus-signout {
+  background: linear-gradient(135deg, rgba(255, 77, 202, 0.18), rgba(0, 245, 212, 0.18));
+}
+
+.topbar-focus-link:hover,
+.topbar-focus-signout:hover {
+  border-color: rgba(89, 244, 214, 0.3);
 }
 
 .topbar-home-link {

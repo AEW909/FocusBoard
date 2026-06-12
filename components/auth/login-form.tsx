@@ -54,7 +54,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
       <input type="hidden" name="next" value={nextPath} />
 
       <label className="field">
-        <span>Email</span>
+        <span>Team email</span>
         <input name="email" type="email" autoComplete="email" required />
       </label>
 
