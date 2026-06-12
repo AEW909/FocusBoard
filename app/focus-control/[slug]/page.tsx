@@ -52,8 +52,8 @@ function FocusControlSection({
 }
 
 export default async function FocusControlPage({ params }: FocusControlPageProps) {
-  await requireRole(["owner"]);
   const { slug } = await params;
+  await requireRole(["owner"], `/focus-control/${slug}`);
   const [runtime, assets] = await Promise.all([
     getFocusBoardRuntimeConfigByAdminSlug(slug),
     getFocusAssetOptions(),

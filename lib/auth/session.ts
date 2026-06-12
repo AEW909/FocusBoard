@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { StaffProfile, StaffRole } from "@/lib/auth/types";
+import { getSafeNextPath } from "@/lib/auth/redirects";
 
 export async function getSessionUser() {
   const supabase = await createSupabaseServerClient();
@@ -12,11 +13,12 @@ export async function getSessionUser() {
   return user;
 }
 
-export async function requireUser() {
+export async function requireUser(nextPath?: string) {
   const user = await getSessionUser();
 
   if (!user) {
-    redirect("/login");
+    const safeNextPath = getSafeNextPath(nextPath, "/");
+    redirect(safeNextPath === "/" ? "/login" : `/login?next=${encodeURIComponent(safeNextPath)}`);
   }
 
   return user;
@@ -56,8 +58,8 @@ export async function getCurrentProfile(): Promise<StaffProfile | null> {
   return null;
 }
 
-export async function requireRole(allowedRoles: StaffRole[]) {
-  await requireUser();
+export async function requireRole(allowedRoles: StaffRole[], nextPath?: string) {
+  await requireUser(nextPath);
   const profile = await getCurrentProfile();
 
   if (!profile || !allowedRoles.includes(profile.role)) {
