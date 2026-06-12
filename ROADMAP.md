@@ -267,6 +267,7 @@ Make login the product home and route users to the correct destination.
 
 Implementation progress:
 
+- Implementation commit: `246539e`
 - Root login and role-aware destination routing implemented.
 - Platform client hub implemented at `/clients`.
 - Multi-membership board picker implemented at `/boards`.
