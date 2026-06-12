@@ -246,8 +246,8 @@ Acceptance:
 
 Completion:
 
-- Commit: pending
-- Pushed: pending
+- Commit: `78fd6e8`
+- Pushed: 2026-06-12
 - Runtime verification: a temporary second client and board rendered its own title and task at its
   own slug without rendering Liona content
 - Regression verification: Liona's route returned `200` with her existing title and tasks; an
