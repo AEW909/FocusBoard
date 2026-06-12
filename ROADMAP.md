@@ -211,8 +211,8 @@ Deployment notes:
 
 Completion:
 
-- Commit: pending
-- Pushed: pending
+- Commit: `fc36fd6`
+- Pushed: 2026-06-12
 - Migration: `focusboard_multi_client_tenancy` applied to project
   `xoafnjhsxxczmfavmwoq` on 2026-06-12
 - Verification: 1 client, 2 active Liona memberships, 1 active platform owner, and 0 boards
