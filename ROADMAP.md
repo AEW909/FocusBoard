@@ -274,7 +274,9 @@ Implementation progress:
 - Control-room authorization moved from PhysioNote profile roles to FocusBoard platform ownership.
 - Compatibility `/login` route preserves `next` and redirects to `/`.
 - Local signed-out route checks and live access-assignment SQL checks passed.
-- Pending: deployed sign-in smoke test with the existing Andrew and Liona accounts.
+- Production verification: `https://harris-focus-board.vercel.app/` serves the new login and
+  `/clients` redirects signed-out users to `/?next=/clients`.
+- Pending: post-password destination smoke test with the existing Andrew and Liona accounts.
 
 Deliverables:
 
