@@ -1,0 +1,37 @@
+<svg width="360" height="320" viewBox="0 0 360 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="30" y1="22" x2="305" y2="262" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00F5D4"/>
+      <stop offset="0.5" stop-color="#FF4DCA"/>
+      <stop offset="1" stop-color="#8E5DFF"/>
+    </linearGradient>
+    <filter id="glow" x="0" y="0" width="360" height="320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#glow)">
+    <path d="M45 72C45 42 71 18 102 23C130 27 143 8 176 7C213 5 228 32 258 35C292 38 319 64 318 99C317 132 344 144 345 176C346 211 318 225 303 251C287 280 260 305 227 302C195 299 187 276 160 275C130 274 118 300 88 296C56 292 32 266 31 233C30 202 11 188 10 156C9 118 45 112 45 72Z" fill="url(#bg)"/>
+  </g>
+  <g transform="translate(78 54)">
+    <circle cx="104" cy="58" r="46" fill="#FFE982" stroke="#111111" stroke-width="8"/>
+    <circle cx="88" cy="54" r="5.5" fill="#111111"/>
+    <circle cx="120" cy="54" r="5.5" fill="#111111"/>
+    <path d="M86 74C98 86 111 86 123 74" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <rect x="54" y="98" width="102" height="82" rx="26" fill="#FFF7FF" stroke="#111111" stroke-width="8"/>
+    <path d="M66 114C46 122 34 140 34 162" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <path d="M144 114C164 122 176 140 176 162" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <path d="M68 181L52 212" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <path d="M141 181L157 212" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <path d="M84 178V214" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <path d="M124 178V214" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <path d="M34 160C34 172 42 180 54 180H74" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <path d="M176 160C176 172 168 180 156 180H136" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <path d="M24 45L56 52" stroke="#FFD84D" stroke-width="10" stroke-linecap="round"/>
+    <path d="M182 22L165 51" stroke="#FFD84D" stroke-width="10" stroke-linecap="round"/>
+    <path d="M198 86L169 88" stroke="#FFD84D" stroke-width="10" stroke-linecap="round"/>
+  </g>
+</svg>

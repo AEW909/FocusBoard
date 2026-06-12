@@ -1,0 +1,21 @@
+project_id = "focusboard"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "focusboard"]
+extra_search_path = ["public", "focusboard", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
