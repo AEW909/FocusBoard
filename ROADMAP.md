@@ -174,8 +174,9 @@ Acceptance:
 
 Completion:
 
-- Commit: pending
-- Pushed: pending
+- Commit: `5a746f3`
+- Pushed: 2026-06-12
+- Outstanding deployment work: none
 
 ### Slice 1 - Tenant Schema And Liona Backfill
 
@@ -384,4 +385,4 @@ Each implementation slice should run the checks relevant to its scope:
 
 ## Change Log
 
-- 2026-06-12: Initial multi-client roadmap created. Slice 0 prepared for commit.
+- 2026-06-12: Slice 0 completed in `5a746f3`; roadmap and repository instructions established.
