@@ -1,7 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
-import { FOCUS_BOARD_KEY } from "@/lib/focus-board/config";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
-import { getFocusBoardRuntimeConfig } from "@/lib/focus-board/runtime";
+import { getFocusBoardRuntimeConfigByBoardKey } from "@/lib/focus-board/runtime";
 
 type FocusBoardEventRow = {
   id: string;
@@ -96,10 +95,17 @@ function buildMonthHistory(historyEnd: Date, currentMonthKey: string, monthPoint
   });
 }
 
-export async function getFocusBoardData(params: FocusBoardParams = {}) {
+export async function getFocusBoardData(
+  boardKey: string,
+  params: FocusBoardParams = {},
+) {
   noStore();
   const admin = createFocusBoardAdminClient();
-  const runtime = await getFocusBoardRuntimeConfig();
+  const runtime = await getFocusBoardRuntimeConfigByBoardKey(boardKey);
+
+  if (!runtime) {
+    throw new Error("Focus board not found.");
+  }
   const currentMonthStart = getMonthStart();
   const currentMonthKey = toIsoDate(currentMonthStart);
   const currentWeekKey = toIsoDate(getWeekStart());
@@ -129,7 +135,7 @@ export async function getFocusBoardData(params: FocusBoardParams = {}) {
   const { data, error } = await admin
     .from("focus_board_events")
     .select("id, board_key, month_key, week_start, task_key, metric_key, points, created_at")
-    .eq("board_key", FOCUS_BOARD_KEY)
+    .eq("board_key", runtime.settings.boardKey)
     .gte("month_key", toIsoDate(queryStart))
     .lt("month_key", toIsoDate(queryEnd))
     .order("created_at", { ascending: true });
@@ -225,7 +231,7 @@ export async function getFocusBoardData(params: FocusBoardParams = {}) {
   const monthHistory = buildMonthHistory(historyEndStart, currentMonthKey, monthPointMap);
 
   return {
-    boardKey: FOCUS_BOARD_KEY,
+    boardKey: runtime.settings.boardKey,
     monthKey: selectedMonthKey,
     monthLabel: formatMonthLabel(selectedMonthKey),
     currentMonthKey,

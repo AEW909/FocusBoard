@@ -59,6 +59,7 @@ export type FocusWeeklyReward = {
 };
 
 export type FocusBoardSettings = {
+  clientId: string | null;
   boardKey: string;
   boardSlug: string;
   adminSlug: string;
@@ -68,6 +69,7 @@ export type FocusBoardSettings = {
 };
 
 export const DEFAULT_FOCUS_BOARD_SETTINGS: FocusBoardSettings = {
+  clientId: null,
   boardKey: FOCUS_BOARD_KEY,
   boardSlug: FOCUS_BOARD_SLUG,
   adminSlug: FOCUS_BOARD_ADMIN_SLUG,

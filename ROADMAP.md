@@ -222,7 +222,7 @@ Completion:
 
 ### Slice 2 - Board Context Refactor
 
-Status: `NEXT`
+Status: `COMPLETE`
 
 Goal:
 
@@ -244,9 +244,22 @@ Acceptance:
 - Liona's current routes and history remain correct.
 - Production build and focused multi-board tests pass.
 
+Completion:
+
+- Commit: pending
+- Pushed: pending
+- Runtime verification: a temporary second client and board rendered its own title and task at its
+  own slug without rendering Liona content
+- Regression verification: Liona's route returned `200` with her existing title and tasks; an
+  unknown board slug returned `404`
+- Isolation verification: transactional two-board SQL assertions passed and rolled back
+- Preserved data after fixture cleanup: 7 Liona tasks and 51 Liona events
+- Checks: `npm run typecheck` and `npm run build`
+- Outstanding deployment work: none
+
 ### Slice 3 - Role-Aware Login And Client Home
 
-Status: `PLANNED`
+Status: `NEXT`
 
 Goal:
 
@@ -402,3 +415,7 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-12: Slice 1 database migration applied and verified. Liona's existing board data and
   slugs were preserved; both Liona accounts were assigned as client users and Andrew was assigned
   as platform owner.
+- 2026-06-12: Slice 2 started. Runtime, query, and control paths are being converted from the
+  hardcoded Liona board key to an explicitly resolved board context.
+- 2026-06-12: Slice 2 completed. Runtime reads, event queries, and control mutations now use the
+  resolved board context; temporary two-board application and SQL isolation checks passed.

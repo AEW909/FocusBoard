@@ -21,7 +21,7 @@ export default async function FocusBoardPage({ params, searchParams }: FocusBoar
     notFound();
   }
 
-  const board = await getFocusBoardData({
+  const board = await getFocusBoardData(config.settings.boardKey, {
     history: query.history,
     month: query.month,
     week: query.week,

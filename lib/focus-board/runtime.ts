@@ -7,7 +7,6 @@ import {
   DEFAULT_FOCUS_REWARD_TIERS,
   DEFAULT_FOCUS_WEEKLY_REWARD,
   FOCUS_BOARD_ADMIN_SLUG,
-  FOCUS_BOARD_KEY,
   FOCUS_BOARD_SLUG,
   type FocusBoardSettings,
   type FocusBoardTask,
@@ -17,6 +16,7 @@ import {
 } from "@/lib/focus-board/config";
 
 type FocusBoardSettingsRow = {
+  client_id: string;
   board_key: string;
   board_slug: string;
   admin_slug: string;
@@ -81,23 +81,14 @@ export type FocusBoardRuntimeConfig = {
   weeklyReward: FocusWeeklyReward;
 };
 
-function buildFallbackConfig(): FocusBoardRuntimeConfig {
-  return {
-    settings: DEFAULT_FOCUS_BOARD_SETTINGS,
-    tasks: DEFAULT_FOCUS_BOARD_TASKS,
-    allTasks: DEFAULT_FOCUS_BOARD_TASKS,
-    rewards: DEFAULT_FOCUS_REWARD_TIERS,
-    weeklyReward: DEFAULT_FOCUS_WEEKLY_REWARD,
-  };
-}
-
 function mapSettings(row?: FocusBoardSettingsRow | null): FocusBoardSettings {
   if (!row) {
     return DEFAULT_FOCUS_BOARD_SETTINGS;
   }
 
   return {
-    boardKey: row.board_key || FOCUS_BOARD_KEY,
+    clientId: row.client_id || null,
+    boardKey: row.board_key || DEFAULT_FOCUS_BOARD_SETTINGS.boardKey,
     boardSlug: row.board_slug || FOCUS_BOARD_SLUG,
     adminSlug: row.admin_slug || FOCUS_BOARD_ADMIN_SLUG,
     title: row.title || DEFAULT_FOCUS_BOARD_SETTINGS.title,
@@ -209,44 +200,65 @@ function mapRewards(rows?: FocusRewardTierRow[] | null) {
     }));
 }
 
-export async function getFocusBoardRuntimeConfig(): Promise<FocusBoardRuntimeConfig> {
+type FocusBoardSettingsSelector = "board_key" | "board_slug" | "admin_slug" | "client_id";
+
+async function getFocusBoardRuntimeConfigBy(
+  selector: FocusBoardSettingsSelector,
+  value: string,
+): Promise<FocusBoardRuntimeConfig | null> {
   noStore();
   const admin = createFocusBoardAdminClient();
 
-  const [settingsResult, tasksResult, metricsResult, rewardsResult] = await Promise.all([
-    admin
-      .from("focus_board_settings")
-      .select(
-        "board_key, board_slug, admin_slug, title, subtitle, weekly_target, weekly_reward_label, weekly_reward_description, weekly_reward_locked_description, weekly_reward_unlocked_description, weekly_reward_locked_sticker_src, weekly_reward_unlocked_sticker_src, weekly_reward_sticker_alt",
-      )
-      .eq("board_key", FOCUS_BOARD_KEY)
-      .maybeSingle<FocusBoardSettingsRow>(),
+  const settingsResult = await admin
+    .from("focus_board_settings")
+    .select(
+      "client_id, board_key, board_slug, admin_slug, title, subtitle, weekly_target, weekly_reward_label, weekly_reward_description, weekly_reward_locked_description, weekly_reward_unlocked_description, weekly_reward_locked_sticker_src, weekly_reward_unlocked_sticker_src, weekly_reward_sticker_alt",
+    )
+    .eq(selector, value)
+    .maybeSingle<FocusBoardSettingsRow>();
+
+  if (settingsResult.error || !settingsResult.data) {
+    return null;
+  }
+
+  const settingsRow = settingsResult.data;
+  const [tasksResult, rewardsResult] = await Promise.all([
     admin
       .from("focus_board_tasks")
       .select("id, board_key, task_key, icon, sticker_src, sticker_alt, title, description, accent_class, sort_order, is_active, is_visible")
-      .eq("board_key", FOCUS_BOARD_KEY)
-      .order("sort_order", { ascending: true }),
-    admin
-      .from("focus_board_task_metrics")
-      .select("id, task_id, metric_key, label, target, points, kind, sort_order, is_active, is_visible")
+      .eq("board_key", settingsRow.board_key)
       .order("sort_order", { ascending: true }),
     admin
       .from("focus_board_reward_tiers")
       .select(
         "id, board_key, label, min_points, min_weeks_hit, locked_sticker_src, unlocked_sticker_src, sticker_alt, description, sort_order",
       )
-      .eq("board_key", FOCUS_BOARD_KEY)
+      .eq("board_key", settingsRow.board_key)
       .order("sort_order", { ascending: true }),
   ]);
 
-  if (settingsResult.error || tasksResult.error || metricsResult.error || rewardsResult.error) {
-    return buildFallbackConfig();
+  if (tasksResult.error || rewardsResult.error) {
+    return null;
   }
 
-  const settings = mapSettings((settingsResult.data as FocusBoardSettingsRow | null | undefined) ?? null);
-  const weeklyReward = mapWeeklyReward((settingsResult.data as FocusBoardSettingsRow | null | undefined) ?? null);
+  const taskRows = (tasksResult.data as FocusBoardTaskRow[] | null | undefined) ?? [];
+  const taskIds = taskRows.map((task) => task.id);
+  const metricsResult = taskIds.length
+    ? await admin
+        .from("focus_board_task_metrics")
+        .select("id, task_id, metric_key, label, target, points, kind, sort_order, is_active, is_visible")
+        .in("task_id", taskIds)
+        .order("sort_order", { ascending: true })
+    : { data: [], error: null };
+
+  if (metricsResult.error) {
+    return null;
+  }
+
+  const settings = mapSettings(settingsRow);
+  const weeklyReward = mapWeeklyReward(settingsRow);
   const taskConfig = mapTasks(
-    (tasksResult.data as FocusBoardTaskRow[] | null | undefined) ?? null,
+    taskRows,
     (metricsResult.data as FocusBoardTaskMetricRow[] | null | undefined) ?? null,
   );
   const rewards = mapRewards((rewardsResult.data as FocusRewardTierRow[] | null | undefined) ?? null);
@@ -260,12 +272,18 @@ export async function getFocusBoardRuntimeConfig(): Promise<FocusBoardRuntimeCon
   };
 }
 
+export async function getFocusBoardRuntimeConfigByBoardKey(boardKey: string) {
+  return getFocusBoardRuntimeConfigBy("board_key", boardKey);
+}
+
 export async function getFocusBoardRuntimeConfigByPublicSlug(slug: string) {
-  const config = await getFocusBoardRuntimeConfig();
-  return config.settings.boardSlug === slug ? config : null;
+  return getFocusBoardRuntimeConfigBy("board_slug", slug);
 }
 
 export async function getFocusBoardRuntimeConfigByAdminSlug(slug: string) {
-  const config = await getFocusBoardRuntimeConfig();
-  return config.settings.adminSlug === slug ? config : null;
+  return getFocusBoardRuntimeConfigBy("admin_slug", slug);
+}
+
+export async function getFocusBoardRuntimeConfigByClientId(clientId: string) {
+  return getFocusBoardRuntimeConfigBy("client_id", clientId);
 }

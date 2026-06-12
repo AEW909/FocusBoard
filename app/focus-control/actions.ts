@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import {
-  FOCUS_BOARD_KEY,
   getAccentClassForIndex,
   normaliseFocusKey,
   type FocusMetricKind,
@@ -55,7 +54,7 @@ export async function updateFocusBoardSettingsAction(formData: FormData) {
       subtitle,
       weekly_target: weeklyTarget,
     })
-    .eq("board_key", FOCUS_BOARD_KEY);
+    .eq("board_key", runtime.settings.boardKey);
 
   revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
 }
@@ -80,7 +79,7 @@ export async function updateFocusWeeklyRewardAction(formData: FormData) {
         getValue(formData, "unlockedStickerSrc") || runtime.weeklyReward.unlockedStickerSrc,
       weekly_reward_sticker_alt: getValue(formData, "stickerAlt") || runtime.weeklyReward.stickerAlt,
     })
-    .eq("board_key", FOCUS_BOARD_KEY);
+    .eq("board_key", runtime.settings.boardKey);
 
   if (error) {
     throw new Error(error.message);
@@ -117,7 +116,7 @@ export async function addFocusBoardTaskAction(formData: FormData) {
   const { data: taskRow, error: taskError } = await admin
     .from("focus_board_tasks")
     .insert({
-      board_key: FOCUS_BOARD_KEY,
+      board_key: runtime.settings.boardKey,
       task_key: taskKey,
       icon,
       sticker_src: stickerSrc,
@@ -171,7 +170,7 @@ export async function updateFocusBoardTaskAction(formData: FormData) {
       sticker_alt: getValue(formData, "stickerAlt") || "Goal sticker",
     })
     .eq("id", taskId)
-    .eq("board_key", FOCUS_BOARD_KEY);
+    .eq("board_key", runtime.settings.boardKey);
 
   revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
 }
@@ -202,7 +201,7 @@ export async function toggleFocusBoardTaskVisibilityAction(formData: FormData) {
     .from("focus_board_tasks")
     .update(taskUpdate)
     .eq("id", taskId)
-    .eq("board_key", FOCUS_BOARD_KEY);
+    .eq("board_key", runtime.settings.boardKey);
 
   if (taskError) {
     throw new Error(taskError.message);
@@ -236,7 +235,7 @@ export async function deleteFocusBoardTaskAction(formData: FormData) {
       is_visible: false,
     })
     .eq("id", taskId)
-    .eq("board_key", FOCUS_BOARD_KEY);
+    .eq("board_key", runtime.settings.boardKey);
 
   await admin.from("focus_board_task_metrics").update({ is_active: false }).eq("task_id", taskId);
 
@@ -292,6 +291,14 @@ export async function updateFocusBoardMetricAction(formData: FormData) {
     throw new Error("Metric id missing.");
   }
 
+  const metricBelongsToBoard = runtime.allTasks.some((task) =>
+    task.metrics.some((metric) => metric.id === metricId),
+  );
+
+  if (!metricBelongsToBoard) {
+    throw new Error("Metric not found.");
+  }
+
   await admin
     .from("focus_board_task_metrics")
     .update({
@@ -315,6 +322,14 @@ export async function toggleFocusBoardMetricVisibilityAction(formData: FormData)
 
   if (!metricId) {
     throw new Error("Metric id missing.");
+  }
+
+  const metricBelongsToBoard = runtime.allTasks.some((task) =>
+    task.metrics.some((metric) => metric.id === metricId),
+  );
+
+  if (!metricBelongsToBoard) {
+    throw new Error("Metric not found.");
   }
 
   const shouldShow = nextVisible === "true";
@@ -352,7 +367,9 @@ export async function deleteFocusBoardMetricAction(formData: FormData) {
   }
 
   const task = runtime.allTasks.find((item) => item.id === taskId);
-  if (!task) {
+  const metricBelongsToTask = task?.metrics.some((metric) => metric.id === metricId);
+
+  if (!task || !metricBelongsToTask) {
     throw new Error("Task not found.");
   }
 
@@ -387,7 +404,7 @@ export async function updateFocusRewardTierAction(formData: FormData) {
       sticker_alt: getValue(formData, "stickerAlt"),
     })
     .eq("id", rewardId)
-    .eq("board_key", FOCUS_BOARD_KEY);
+    .eq("board_key", runtime.settings.boardKey);
 
   if (error) {
     throw new Error(error.message);
