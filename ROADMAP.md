@@ -414,6 +414,12 @@ Deliverables:
 - Generate collision-resistant client and board slugs.
 - Create starter settings, tasks, metrics, and reward tiers from a template.
 - Invite or link a Supabase Auth user to the client.
+- Add a persistent `Switch board` entry point for users with multiple board memberships.
+- Make the switcher available from the authenticated board experience and other user-facing
+  multi-board surfaces where appropriate.
+- Preserve `/boards` as the canonical board-selection destination.
+- Keep the current post-login routing rules unchanged:
+  one board -> direct to board, multiple boards -> `/boards`, platform owner -> `/clients`.
 - Add activate/deactivate behavior.
 - Add empty, loading, access-denied, and no-membership states.
 - Add audit-friendly timestamps and actor IDs for important administrative changes where practical.
@@ -424,6 +430,9 @@ Acceptance:
 - A new client can be created, assigned a login, and used without SQL edits.
 - Deactivated clients cannot log events or generate content.
 - Existing clients remain isolated.
+- Multi-board users can switch boards without relying only on browser back-navigation.
+- Existing `/boards` remains the source of truth for board selection.
+- Single-board users do not see unnecessary board-switching UI.
 - End-to-end verification covers platform owner and client user journeys.
 
 ## Verification Matrix
@@ -512,3 +521,5 @@ Each implementation slice should run the checks relevant to its scope:
   only uses Auth admin data as a best-effort fallback.
 - 2026-06-13: Granted `service_role` access to `focusboard.client_content_profiles` after the
   manage page exposed a production permission error during server rendering.
+- 2026-06-13: Added late-stage board-switching UX polish to Slice 7 without changing the current
+  multi-board routing model.
