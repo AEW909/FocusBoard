@@ -510,3 +510,5 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-13: Hardened client membership rendering so the manage page no longer hard-fails when
   Supabase Auth admin user listing is unavailable; it now renders from `public.profiles` first and
   only uses Auth admin data as a best-effort fallback.
+- 2026-06-13: Granted `service_role` access to `focusboard.client_content_profiles` after the
+  manage page exposed a production permission error during server rendering.
