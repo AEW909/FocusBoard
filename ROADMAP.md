@@ -334,7 +334,7 @@ Completion:
 
 ### Slice 5 - Optional, Tenant-Aware Content Lab
 
-Status: `IN PROGRESS`
+Status: `COMPLETE`
 
 Goal:
 
@@ -358,9 +358,9 @@ Acceptance:
 - Liona's generated content retains the current Skin Revive context.
 - Missing `ANTHROPIC_API_KEY` produces a clear operational error without breaking the board.
 
-Implementation progress:
+Completion:
 
-- Implementation commit: `2090cc2`
+- Implementation commits: `2090cc2`, `9b46692`
 - Canonical Content Lab route implemented at `/clients/[clientId]/content`.
 - Legacy `/focus-content/[slug]` now redirects into the canonical route.
 - Content Lab page and API now enforce both client-level enablement and membership-level access.
@@ -368,11 +368,17 @@ Implementation progress:
 - Membership-level `content_lab_access` migration applied to Supabase project
   `xoafnjhsxxczmfavmwoq` on 2026-06-13.
 - Verification: existing Liona memberships were backfilled with `content_lab_access = true`.
-- Pending: replace the hardcoded Skin Revive prompt with client content profiles and editing tools.
+- Client content profiles migration `focusboard_client_content_profiles` applied to Supabase
+  project `xoafnjhsxxczmfavmwoq` on 2026-06-13.
+- Verification: Liona's client profile was seeded as `Skin Revive Aesthetics` and is now the
+  server-resolved prompt source for Content Lab generation.
+- Management control added for editing client Content Lab context inside the control room.
+- Checks: `npm run typecheck` and `npm run build`
+- Outstanding deployment work: none
 
 ### Slice 6 - Membership And User Management
 
-Status: `PLANNED`
+Status: `IN PROGRESS`
 
 Goal:
 
@@ -494,3 +500,7 @@ Each implementation slice should run the checks relevant to its scope:
   client-scoped and membership-scoped authorization. Implementation commit: `2090cc2`.
 - 2026-06-13: Membership management controls were pulled forward again to support Content Lab
   per-user assignment before the rest of Slice 6 is complete.
+- 2026-06-13: Slice 5 completed. Content Lab prompts now resolve from per-client profiles stored in
+  `focusboard.client_content_profiles`, with in-app editing controls and verified Liona seed data.
+- 2026-06-13: Slice 6 is the active slice again. Core membership assignment and Content Lab
+  entitlement toggles are live; the remaining work is broader operational user-management polish.
