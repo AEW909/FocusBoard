@@ -27,14 +27,16 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
   }
 
   const initialView = query.view === "month" ? "month" : "week";
-  const backHref = access.isPlatformOwner ? "/clients" : access.clients.length > 1 ? "/boards" : undefined;
-  const backLabel = access.isPlatformOwner ? "Back to clients" : "Back to boards";
+  const backHref = access.isPlatformOwner ? "/clients" : undefined;
+  const backLabel = "Back to clients";
+  const switchHref = !access.isPlatformOwner && access.clients.length > 1 ? "/boards" : undefined;
 
   return (
     <>
       <ProtectedSessionBar
         backHref={backHref}
         backLabel={backHref ? backLabel : undefined}
+        switchHref={switchHref}
         title={client.displayName}
       />
       <main className="shell focus-public-page focus-public-page-neon">

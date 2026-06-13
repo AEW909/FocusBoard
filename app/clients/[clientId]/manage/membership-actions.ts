@@ -37,7 +37,7 @@ export async function addFocusClientMembershipAction(formData: FormData) {
   const role = getValue(formData, "role");
   const contentLabAccess = getValue(formData, "contentLabAccess") === "true";
 
-  await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
+  const { user } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
 
   if (!email) {
     redirect(getManagePath(clientId, undefined, "Enter an email address first."));
@@ -78,6 +78,7 @@ export async function addFocusClientMembershipAction(formData: FormData) {
         role,
         is_active: true,
         content_lab_access: contentLabAccess,
+        updated_by: user.id,
       })
       .eq("id", existing.id)
       .eq("client_id", clientId);
@@ -89,9 +90,11 @@ export async function addFocusClientMembershipAction(formData: FormData) {
     const { error } = await focusAdmin.from("client_memberships").insert({
       client_id: clientId,
       user_id: authUser.id,
+      created_by: user.id,
       role,
       is_active: true,
       content_lab_access: contentLabAccess,
+      updated_by: user.id,
     });
 
     if (error) {
@@ -108,7 +111,7 @@ export async function setFocusClientMembershipContentLabAccessAction(formData: F
   const membershipId = getValue(formData, "membershipId");
   const nextContentLabAccess = getValue(formData, "nextContentLabAccess");
 
-  await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
+  const { user } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
 
   if (!membershipId) {
     redirect(getManagePath(clientId, undefined, "Membership id is missing."));
@@ -118,7 +121,7 @@ export async function setFocusClientMembershipContentLabAccessAction(formData: F
   const focusAdmin = createFocusBoardAdminClient();
   const { error } = await focusAdmin
     .from("client_memberships")
-    .update({ content_lab_access: contentLabAccess })
+    .update({ content_lab_access: contentLabAccess, updated_by: user.id })
     .eq("id", membershipId)
     .eq("client_id", clientId);
 
@@ -140,7 +143,7 @@ export async function updateFocusClientMembershipRoleAction(formData: FormData) 
   const membershipId = getValue(formData, "membershipId");
   const role = getValue(formData, "role");
 
-  await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
+  const { user } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
 
   if (!membershipId) {
     redirect(getManagePath(clientId, undefined, "Membership id is missing."));
@@ -153,7 +156,7 @@ export async function updateFocusClientMembershipRoleAction(formData: FormData) 
   const focusAdmin = createFocusBoardAdminClient();
   const { error } = await focusAdmin
     .from("client_memberships")
-    .update({ role })
+    .update({ role, updated_by: user.id })
     .eq("id", membershipId)
     .eq("client_id", clientId);
 
@@ -170,7 +173,7 @@ export async function setFocusClientMembershipActiveAction(formData: FormData) {
   const membershipId = getValue(formData, "membershipId");
   const nextActive = getValue(formData, "nextActive");
 
-  await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
+  const { user } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
 
   if (!membershipId) {
     redirect(getManagePath(clientId, undefined, "Membership id is missing."));
@@ -180,7 +183,7 @@ export async function setFocusClientMembershipActiveAction(formData: FormData) {
   const focusAdmin = createFocusBoardAdminClient();
   const { error } = await focusAdmin
     .from("client_memberships")
-    .update({ is_active: isActive })
+    .update({ is_active: isActive, updated_by: user.id })
     .eq("id", membershipId)
     .eq("client_id", clientId);
 
@@ -201,13 +204,13 @@ export async function setFocusClientContentLabEnabledAction(formData: FormData) 
   const clientId = getValue(formData, "clientId");
   const nextEnabled = getValue(formData, "nextEnabled");
 
-  await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
+  const { user } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
 
   const contentLabEnabled = nextEnabled === "true";
   const focusAdmin = createFocusBoardAdminClient();
   const { error } = await focusAdmin
     .from("clients")
-    .update({ content_lab_enabled: contentLabEnabled })
+    .update({ content_lab_enabled: contentLabEnabled, updated_by: user.id })
     .eq("id", clientId);
 
   if (error) {

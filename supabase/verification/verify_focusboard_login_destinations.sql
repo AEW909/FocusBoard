@@ -3,7 +3,7 @@ select
   case
     when platform_user.user_id is not null then '/clients'
     when count(membership.id) = 1 then
-      '/focus/' || min(settings.board_slug)
+      '/board/' || min(settings.board_slug)
     when count(membership.id) > 1 then '/boards'
     else null
   end as expected_home_path,

@@ -378,7 +378,7 @@ Completion:
 
 ### Slice 6 - Membership And User Management
 
-Status: `IN PROGRESS`
+Status: `COMPLETE`
 
 Goal:
 
@@ -400,9 +400,20 @@ Acceptance:
 - Membership changes do not affect other clients.
 - Existing Liona and Andrew access remains intact through the migration.
 
+Completion:
+
+- Implementation commits: `4a82c40`, `fc43232`
+- Current client memberships render inside the client management flow.
+- Platform owners can attach an existing Supabase Auth user to a client by email.
+- Membership role, active status, and per-user Content Lab access can be updated from the
+  management screen.
+- Empty and missing-user states are handled in the management UI.
+- Checks: `npm run typecheck` and `npm run build`
+- Outstanding deployment work: none
+
 ### Slice 7 - Client Provisioning And Operational Polish
 
-Status: `PLANNED`
+Status: `IN PROGRESS`
 
 Goal:
 
@@ -434,6 +445,27 @@ Acceptance:
 - Existing `/boards` remains the source of truth for board selection.
 - Single-board users do not see unnecessary board-switching UI.
 - End-to-end verification covers platform owner and client user journeys.
+
+Implementation progress:
+
+- `/clients` now includes a `Create client workspace` flow for platform owners.
+- New clients receive collision-resistant `client_key`, `board_slug`, and `admin_slug` values.
+- Provisioning seeds starter board settings, tasks, metrics, weekly reward data, reward tiers, and
+  a starter content profile.
+- Provisioning can optionally link an existing Supabase Auth user during client creation.
+- `/clients` now supports activate/deactivate actions for provisioned clients.
+- Multi-board client users now get a persistent `Switch board` entry point from board and Content
+  Lab surfaces, while `/boards` remains the canonical selector.
+- Route-level loading states were added for `/clients`, `/boards`, `/board/[slug]`,
+  `/clients/[clientId]/manage`, and `/clients/[clientId]/content`.
+- Admin actor tracking was added for client creation/status changes and membership changes via the
+  `created_by` / `updated_by` columns on `focusboard.clients` and
+  `focusboard.client_memberships`.
+- Documentation now covers provisioning and recovery checks in `README.md`.
+- Verification SQL now includes client provisioning checks and the login-destination query was
+  updated to the canonical `/board/...` route.
+- Pending: live provisioning smoke test against the shared Supabase project before marking this
+  slice complete.
 
 ## Verification Matrix
 
@@ -523,3 +555,8 @@ Each implementation slice should run the checks relevant to its scope:
   manage page exposed a production permission error during server rendering.
 - 2026-06-13: Added late-stage board-switching UX polish to Slice 7 without changing the current
   multi-board routing model.
+- 2026-06-13: Slice 6 completed. Client membership management is now handled in-app without SQL
+  edits, including per-user Content Lab access toggles.
+- 2026-06-13: Slice 7 started. Client provisioning, client activation controls, multi-board switch
+  entry points, loading states, admin actor tracking, and provisioning documentation are now in
+  place pending live smoke verification.

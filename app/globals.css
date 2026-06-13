@@ -712,6 +712,7 @@ a {
 
 .focus-client-hub-hero,
 .focus-client-card,
+.focus-client-create-card,
 .focus-client-empty {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background:
@@ -742,6 +743,37 @@ a {
   margin: 0;
   color: rgba(244, 240, 255, 0.72);
   line-height: 1.7;
+}
+
+.focus-client-create-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 26px;
+}
+
+.focus-client-create-copy h2,
+.focus-client-create-copy p {
+  margin: 0;
+}
+
+.focus-client-create-copy h2 {
+  margin-top: 6px;
+  color: #fff;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: -0.04em;
+}
+
+.focus-client-create-copy p:last-child {
+  margin-top: 10px;
+  color: rgba(244, 240, 255, 0.72);
+  line-height: 1.7;
+}
+
+.focus-client-create-form {
+  display: grid;
+  gap: 16px;
 }
 
 .focus-client-grid {
@@ -4173,7 +4205,7 @@ a {
   .topbar-actions {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     justify-content: stretch;
   }
 
