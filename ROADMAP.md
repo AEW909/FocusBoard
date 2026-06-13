@@ -504,3 +504,6 @@ Each implementation slice should run the checks relevant to its scope:
   `focusboard.client_content_profiles`, with in-app editing controls and verified Liona seed data.
 - 2026-06-13: Slice 6 is the active slice again. Core membership assignment and Content Lab
   entitlement toggles are live; the remaining work is broader operational user-management polish.
+- 2026-06-13: Fixed platform-owner client management routing so `/clients/[clientId]/manage` and
+  `/clients/[clientId]/content` resolve managed clients by `focus_board_settings.client_id`
+  instead of a nonexistent `id` column.

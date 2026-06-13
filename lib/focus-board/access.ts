@@ -221,7 +221,7 @@ export async function getManagedFocusClients(): Promise<FocusManagedClient[]> {
 }
 
 async function findManagedClientBy(
-  selector: "id" | "board_slug" | "admin_slug",
+  selector: "client_id" | "board_slug" | "admin_slug",
   value: string,
 ): Promise<FocusManagedClient | null> {
   const admin = createFocusBoardAdminClient();
@@ -285,7 +285,7 @@ async function getClientLookupForUser(
 
   const managedClient =
     selector === "clientId"
-      ? await findManagedClientBy("id", value)
+      ? await findManagedClientBy("client_id", value)
       : selector === "boardSlug"
         ? await findManagedClientBy("board_slug", value)
         : await findManagedClientBy("admin_slug", value);
