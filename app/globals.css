@@ -873,6 +873,11 @@ a {
   gap: 18px;
 }
 
+.focus-content-profile-stack {
+  display: grid;
+  gap: 18px;
+}
+
 .focus-membership-feature-bar {
   display: flex;
   justify-content: space-between;

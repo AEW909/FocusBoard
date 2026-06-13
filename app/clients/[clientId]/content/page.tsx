@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ProtectedSessionBar } from "@/components/auth/protected-session-bar";
 import { FocusContentLab } from "@/components/focus/focus-content-lab";
 import { requireFocusContentLabAccessByClientId } from "@/lib/focus-board/access";
+import { getFocusContentProfile } from "@/lib/focus-board/content-profiles";
 import { getFocusBoardRuntimeConfigByClientId } from "@/lib/focus-board/runtime";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,10 @@ export default async function FocusClientContentPage({
     clientId,
     `/clients/${clientId}/content`,
   );
-  const runtime = await getFocusBoardRuntimeConfigByClientId(clientId);
+  const [runtime, contentProfile] = await Promise.all([
+    getFocusBoardRuntimeConfigByClientId(clientId),
+    getFocusContentProfile(clientId, client.displayName),
+  ]);
 
   if (!runtime) {
     notFound();
@@ -35,7 +39,7 @@ export default async function FocusClientContentPage({
         homeHref={`/board/${runtime.settings.boardSlug}`}
         title="Content Lab"
       />
-      <FocusContentLab clientName={client.displayName} slug={runtime.settings.boardSlug} />
+      <FocusContentLab clientName={contentProfile.businessName} slug={runtime.settings.boardSlug} />
     </>
   );
 }

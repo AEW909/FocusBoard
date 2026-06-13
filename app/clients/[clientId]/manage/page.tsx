@@ -12,6 +12,7 @@ import {
   setFocusClientMembershipActiveAction,
   updateFocusClientMembershipRoleAction,
 } from "@/app/clients/[clientId]/manage/membership-actions";
+import { updateFocusClientContentProfileAction } from "@/app/clients/[clientId]/manage/content-profile-actions";
 import { ProtectedSessionBar } from "@/components/auth/protected-session-bar";
 import { FocusAssetUploadForm } from "@/components/focus/focus-asset-upload-form";
 import { FocusControlExistingGoals } from "@/components/focus/focus-control-existing-goals";
@@ -19,6 +20,7 @@ import { FocusImageSelect } from "@/components/focus/focus-image-select";
 import { FocusPullToRefresh } from "@/components/focus/focus-pull-to-refresh";
 import { getFocusAssetOptions } from "@/lib/focus-board/assets";
 import { requireManagedFocusClientById } from "@/lib/focus-board/access";
+import { getFocusContentProfile } from "@/lib/focus-board/content-profiles";
 import { getManagedFocusClientMemberships } from "@/lib/focus-board/memberships";
 import { getFocusBoardRuntimeConfigByClientId } from "@/lib/focus-board/runtime";
 
@@ -26,7 +28,12 @@ export const dynamic = "force-dynamic";
 
 type FocusClientManagePageProps = {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ membershipMessage?: string; membershipError?: string }>;
+  searchParams: Promise<{
+    membershipMessage?: string;
+    membershipError?: string;
+    contentProfileMessage?: string;
+    contentProfileError?: string;
+  }>;
 };
 
 type FocusControlSectionProps = {
@@ -76,10 +83,11 @@ export default async function FocusClientManagePage({
   const { clientId } = await params;
   const query = await searchParams;
   const { client } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
-  const [runtime, assets, memberships] = await Promise.all([
+  const [runtime, assets, memberships, contentProfile] = await Promise.all([
     getFocusBoardRuntimeConfigByClientId(client.clientId),
     getFocusAssetOptions(),
     getManagedFocusClientMemberships(client.clientId),
+    getFocusContentProfile(client.clientId, client.displayName),
   ]);
 
   if (!runtime) {
@@ -119,6 +127,75 @@ export default async function FocusClientManagePage({
         </section>
 
         <section className="focus-control-grid">
+          <FocusControlSection
+            eyebrow="Content profile"
+            summary="Store the business context that powers client-specific Content Lab prompts."
+            title="Content Lab context"
+          >
+            <div className="focus-content-profile-stack">
+              {query.contentProfileMessage ? (
+                <p className="form-success">{query.contentProfileMessage}</p>
+              ) : null}
+              {query.contentProfileError ? (
+                <p className="form-error">{query.contentProfileError}</p>
+              ) : null}
+
+              <form
+                action={updateFocusClientContentProfileAction}
+                className="focus-control-form"
+              >
+                <input name="clientId" type="hidden" value={client.clientId} />
+                <label className="field">
+                  <span>Business name</span>
+                  <input defaultValue={contentProfile.businessName} name="businessName" required />
+                </label>
+                <label className="field">
+                  <span>Brand voice</span>
+                  <textarea
+                    defaultValue={contentProfile.brandVoice}
+                    name="brandVoice"
+                    placeholder="Warm, credible, premium-but-human..."
+                  />
+                </label>
+                <label className="field">
+                  <span>Target audience</span>
+                  <textarea
+                    defaultValue={contentProfile.targetAudience}
+                    name="targetAudience"
+                    placeholder="Who the business serves, what they value, what concerns they bring..."
+                  />
+                </label>
+                <label className="field">
+                  <span>Services / offers</span>
+                  <textarea
+                    defaultValue={contentProfile.services}
+                    name="services"
+                    placeholder="Core services, signature programmes, flagship offers..."
+                  />
+                </label>
+                <label className="field">
+                  <span>Differentiators</span>
+                  <textarea
+                    defaultValue={contentProfile.differentiators}
+                    name="differentiators"
+                    placeholder="Credentials, methods, location, founder story, reasons to trust this business..."
+                  />
+                </label>
+                <label className="field">
+                  <span>Content rules</span>
+                  <textarea
+                    defaultValue={contentProfile.contentRules}
+                    name="contentRules"
+                    placeholder="Words to avoid, claims guidance, legal notes, CTA style, hashtag preferences..."
+                  />
+                </label>
+                <button className="button button-primary" type="submit">
+                  Save Content Lab profile
+                </button>
+              </form>
+            </div>
+          </FocusControlSection>
+
           <FocusControlSection
             eyebrow="Client access"
             summary="Grant or remove board access for existing signed-in users, including Content Lab access."

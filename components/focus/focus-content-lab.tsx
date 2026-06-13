@@ -33,16 +33,16 @@ const TONES = [
 ] as const;
 
 const QUICK_TOPICS = [
-  "Anti-wrinkle injections",
-  "Restore Protocol",
-  "RF Microneedling",
-  "Polynucleotides",
-  "Liona's credentials",
-  "First-time clients",
+  "Signature service",
+  "First-time client questions",
   "Natural results",
-  "Post-weight-loss face",
-  "Why choose Skin Revive",
-  "Booking a consultation",
+  "Behind the scenes",
+  "Founder credentials",
+  "Client transformation journey",
+  "How the consultation works",
+  "Common myth vs fact",
+  "Seasonal campaign idea",
+  "Why choose this business",
 ] as const;
 
 export function FocusContentLab({ clientName, slug }: FocusContentLabProps) {
@@ -177,7 +177,7 @@ export function FocusContentLab({ clientName, slug }: FocusContentLabProps) {
           <textarea
             className="focus-content-textarea"
             onChange={(event) => setTopic(event.target.value)}
-            placeholder="e.g. anti-wrinkle injections for natural results, the Restore Protocol for post-weight-loss facial recovery, RF Microneedling, Liona's HCPC credentials, first-time clients..."
+            placeholder="e.g. your signature service, a common client concern, how your consultation works, founder credibility, a seasonal campaign..."
             value={topic}
           />
 
