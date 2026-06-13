@@ -323,6 +323,7 @@ Acceptance:
 
 Completion:
 
+- Commit: `2090cc2`
 - Canonical routes implemented: `/board/[slug]` and `/clients/[clientId]/manage`.
 - Legacy `/focus/[slug]` and `/focus-control/[slug]` now redirect into the canonical routes.
 - Board reads, board mutations, management pages, and management mutations now enforce
@@ -359,6 +360,7 @@ Acceptance:
 
 Implementation progress:
 
+- Implementation commit: `2090cc2`
 - Canonical Content Lab route implemented at `/clients/[clientId]/content`.
 - Legacy `/focus-content/[slug]` now redirects into the canonical route.
 - Content Lab page and API now enforce both client-level enablement and membership-level access.
@@ -487,8 +489,8 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-12: Basic user management was pulled ahead of full provisioning and is now planned as
   Slice 6.
 - 2026-06-13: Slice 4 completed. Boards and management now use canonical authenticated routes with
-  legacy compatibility redirects.
+  legacy compatibility redirects. Implementation commit: `2090cc2`.
 - 2026-06-13: Slice 5 started. Content Lab is moving onto canonical client routes with
-  client-scoped and membership-scoped authorization.
+  client-scoped and membership-scoped authorization. Implementation commit: `2090cc2`.
 - 2026-06-13: Membership management controls were pulled forward again to support Content Lab
   per-user assignment before the rest of Slice 6 is complete.
