@@ -33,7 +33,16 @@ async function getAdminContext(adminSlug: string) {
   return runtime;
 }
 
-function revalidateFocusPaths(boardSlug: string, adminSlug: string) {
+function getManagePath(clientId: string | null, adminSlug: string) {
+  return clientId ? `/clients/${clientId}/manage` : `/focus-control/${adminSlug}`;
+}
+
+function revalidateFocusPaths(boardSlug: string, adminSlug: string, clientId: string | null) {
+  revalidatePath(`/board/${boardSlug}`);
+  revalidatePath(`/clients`);
+  if (clientId) {
+    revalidatePath(`/clients/${clientId}/manage`);
+  }
   revalidatePath(`/focus/${boardSlug}`);
   revalidatePath(`/focus-control/${adminSlug}`);
 }
@@ -56,7 +65,11 @@ export async function updateFocusBoardSettingsAction(formData: FormData) {
     })
     .eq("board_key", runtime.settings.boardKey);
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function updateFocusWeeklyRewardAction(formData: FormData) {
@@ -85,8 +98,12 @@ export async function updateFocusWeeklyRewardAction(formData: FormData) {
     throw new Error(error.message);
   }
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
-  redirect(`/focus-control/${runtime.settings.adminSlug}`);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
+  redirect(getManagePath(runtime.settings.clientId, runtime.settings.adminSlug));
 }
 
 export async function addFocusBoardTaskAction(formData: FormData) {
@@ -147,7 +164,11 @@ export async function addFocusBoardTaskAction(formData: FormData) {
     throw new Error(metricError.message);
   }
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function updateFocusBoardTaskAction(formData: FormData) {
@@ -172,7 +193,11 @@ export async function updateFocusBoardTaskAction(formData: FormData) {
     .eq("id", taskId)
     .eq("board_key", runtime.settings.boardKey);
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function toggleFocusBoardTaskVisibilityAction(formData: FormData) {
@@ -215,7 +240,11 @@ export async function toggleFocusBoardTaskVisibilityAction(formData: FormData) {
     }
   }
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function deleteFocusBoardTaskAction(formData: FormData) {
@@ -239,7 +268,11 @@ export async function deleteFocusBoardTaskAction(formData: FormData) {
 
   await admin.from("focus_board_task_metrics").update({ is_active: false }).eq("task_id", taskId);
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function addFocusBoardMetricAction(formData: FormData) {
@@ -278,7 +311,11 @@ export async function addFocusBoardMetricAction(formData: FormData) {
     throw new Error(error.message);
   }
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function updateFocusBoardMetricAction(formData: FormData) {
@@ -309,7 +346,11 @@ export async function updateFocusBoardMetricAction(formData: FormData) {
     })
     .eq("id", metricId);
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function toggleFocusBoardMetricVisibilityAction(formData: FormData) {
@@ -351,7 +392,11 @@ export async function toggleFocusBoardMetricVisibilityAction(formData: FormData)
     throw new Error(error.message);
   }
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function deleteFocusBoardMetricAction(formData: FormData) {
@@ -379,7 +424,11 @@ export async function deleteFocusBoardMetricAction(formData: FormData) {
 
   await admin.from("focus_board_task_metrics").update({ is_active: false }).eq("id", metricId);
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
 }
 
 export async function updateFocusRewardTierAction(formData: FormData) {
@@ -410,6 +459,10 @@ export async function updateFocusRewardTierAction(formData: FormData) {
     throw new Error(error.message);
   }
 
-  revalidateFocusPaths(runtime.settings.boardSlug, runtime.settings.adminSlug);
-  redirect(`/focus-control/${runtime.settings.adminSlug}`);
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
+  redirect(getManagePath(runtime.settings.clientId, runtime.settings.adminSlug));
 }

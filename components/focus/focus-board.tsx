@@ -21,6 +21,7 @@ const FOCUS_BREAKDOWN_COLORS = [
 
 type FocusBoardProps = {
   board: FocusBoardData;
+  contentLabEnabled: boolean;
   initialView: "week" | "month";
 };
 
@@ -70,15 +71,15 @@ function getTaskBurstText(progress: number, target: number) {
 }
 
 function buildWeekHref(boardSlug: string, monthKey: string, weekKey: string, view: FocusView) {
-  return `/focus/${boardSlug}?month=${monthKey}&week=${weekKey}&view=${view}`;
+  return `/board/${boardSlug}?month=${monthKey}&week=${weekKey}&view=${view}`;
 }
 
 function buildMonthHref(boardSlug: string, monthKey: string, view: FocusView) {
-  return `/focus/${boardSlug}?month=${monthKey}&view=${view}`;
+  return `/board/${boardSlug}?month=${monthKey}&view=${view}`;
 }
 
 function buildHistoryHref(boardSlug: string, monthKey: string, historyEndKey: string) {
-  return `/focus/${boardSlug}?month=${monthKey}&history=${historyEndKey}&view=month`;
+  return `/board/${boardSlug}?month=${monthKey}&history=${historyEndKey}&view=month`;
 }
 
 function buildLinePath(values: number[], width: number, height: number) {
@@ -119,7 +120,7 @@ function buildDonutSegments(values: { color: string; value: number }[], circumfe
   });
 }
 
-export function FocusBoard({ board, initialView }: FocusBoardProps) {
+export function FocusBoard({ board, contentLabEnabled, initialView }: FocusBoardProps) {
   const [state, formAction, pending] = useActionState(updateFocusBoardAction, initialState);
   const [view, setView] = useState<FocusView>(initialView);
 
@@ -183,6 +184,10 @@ export function FocusBoard({ board, initialView }: FocusBoardProps) {
   const linePath = buildLinePath(lineValues, 280, 120);
   const historyRangeLabel = `${board.monthHistory[0]?.label ?? ""} - ${board.monthHistory.at(-1)?.label ?? ""}`;
 
+  const contentLabHref = board.settings.clientId
+    ? `/clients/${board.settings.clientId}/content`
+    : `/focus-content/${board.settings.boardSlug}`;
+
   return (
     <div className="focus-board-shell focus-board-shell-neon">
       <section className="focus-arcade-hero focus-arcade-hero-rebuilt">
@@ -197,12 +202,14 @@ export function FocusBoard({ board, initialView }: FocusBoardProps) {
             <span>{board.weeksHit} weeks hit this month</span>
             <span>{board.monthPoints} points banked</span>
           </div>
-          <a
-            className="focus-content-launch-link"
-            href={`/focus-content/${board.settings.boardSlug}`}
-          >
-            Open Content Lab
-          </a>
+          {contentLabEnabled ? (
+            <a
+              className="focus-content-launch-link"
+              href={contentLabHref}
+            >
+              Open Content Lab
+            </a>
+          ) : null}
         </div>
 
         <div className="focus-hero-stickers">

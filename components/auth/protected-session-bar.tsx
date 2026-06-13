@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { signOutAction } from "@/app/login/actions";
 
 type ProtectedSessionBarProps = {
@@ -20,12 +21,10 @@ export function ProtectedSessionBar({
     <div className="topbar-shell topbar-shell-focus">
       <div className="topbar topbar-focus">
         <div className="brand-lockup">
-          <div className="brand-mark" aria-hidden="true">
-            <span className="brand-dot brand-dot-teal" />
-            <span className="brand-dot brand-dot-sage" />
-            <span className="brand-dot brand-dot-stone" />
+          <div className="brand-mark brand-mark-mascot" aria-hidden="true">
+            <Image alt="" height={44} priority src="/focus/mascot-rainbow.svg" width={44} />
           </div>
-          <div>
+          <div className="brand-copy">
             <p className="brand-name">FocusBoard</p>
             <p className="brand-subtitle">{title}</p>
           </div>
@@ -42,7 +41,7 @@ export function ProtectedSessionBar({
               {homeLabel}
             </Link>
           ) : null}
-          <form action={signOutAction}>
+          <form action={signOutAction} className="topbar-signout-form">
             <button className="button button-small topbar-focus-signout" type="submit">
               Sign out
             </button>

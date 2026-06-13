@@ -9,8 +9,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    icon: "/focus/sunburst-sprint-f3k9/icon",
-    apple: "/focus/sunburst-sprint-f3k9/apple-icon",
+    icon: "/focus/mascot-rainbow.svg",
+    shortcut: "/focus/mascot-rainbow.svg",
+    apple: "/focus/mascot-rainbow.svg",
   },
 };
 

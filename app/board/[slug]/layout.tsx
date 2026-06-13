@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
-import { Manrope, Sora } from "next/font/google";
-import "./globals.css";
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-body",
-});
-
-const sora = Sora({
-  subsets: ["latin"],
-  variable: "--font-display",
-});
 
 export const metadata: Metadata = {
   title: "FocusBoard",
   description: "Tiny weekly wins, loud colours, and silly rewards for the business-building jobs.",
+  appleWebApp: {
+    capable: true,
+    title: "FocusBoard",
+    statusBarStyle: "black-translucent",
+  },
   icons: {
     icon: "/focus/mascot-rainbow.svg",
     shortcut: "/focus/mascot-rainbow.svg",
@@ -22,14 +15,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default function BoardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body className={`${manrope.variable} ${sora.variable}`}>{children}</body>
-    </html>
-  );
+  return children;
 }

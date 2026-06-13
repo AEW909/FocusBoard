@@ -47,20 +47,20 @@ export default async function ClientsPage() {
               <div className="focus-client-actions">
                 <Link
                   className="button focus-client-manage-button"
-                  href={`/focus-control/${client.adminSlug}`}
+                  href={`/clients/${client.clientId}/manage`}
                 >
                   Manage dashboard
                 </Link>
                 <Link
                   className="button focus-client-open-button"
-                  href={`/focus/${client.boardSlug}`}
+                  href={`/board/${client.boardSlug}`}
                 >
                   Open board
                 </Link>
                 {client.contentLabEnabled ? (
                   <Link
                     className="button focus-client-content-button"
-                    href={`/focus-content/${client.boardSlug}`}
+                    href={`/clients/${client.clientId}/content`}
                   >
                     Content Lab
                   </Link>

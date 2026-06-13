@@ -1,29 +1,21 @@
-import { notFound } from "next/navigation";
-import { ProtectedSessionBar } from "@/components/auth/protected-session-bar";
-import { FocusContentLab } from "@/components/focus/focus-content-lab";
-import { requireRole } from "@/lib/auth/session";
+import { notFound, redirect } from "next/navigation";
 import { getFocusBoardRuntimeConfigByPublicSlug } from "@/lib/focus-board/runtime";
 
-type FocusContentPageProps = {
+export const dynamic = "force-dynamic";
+
+type LegacyFocusContentPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export default async function FocusContentPage({ params }: FocusContentPageProps) {
+export default async function LegacyFocusContentPage({
+  params,
+}: LegacyFocusContentPageProps) {
   const { slug } = await params;
-  await requireRole(["owner", "clinician", "admin"], `/focus-content/${slug}`);
   const runtime = await getFocusBoardRuntimeConfigByPublicSlug(slug);
 
-  if (!runtime) {
+  if (!runtime?.settings.clientId) {
     notFound();
   }
 
-  return (
-    <>
-      <ProtectedSessionBar
-        homeHref={`/focus/${runtime.settings.boardSlug}`}
-        title="Content Lab"
-      />
-      <FocusContentLab slug={slug} />
-    </>
-  );
+  redirect(`/clients/${runtime.settings.clientId}/content`);
 }

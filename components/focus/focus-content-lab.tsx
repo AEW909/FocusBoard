@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 type FocusContentLabProps = {
+  clientName: string;
   slug: string;
 };
 
@@ -44,7 +45,7 @@ const QUICK_TOPICS = [
   "Booking a consultation",
 ] as const;
 
-export function FocusContentLab({ slug }: FocusContentLabProps) {
+export function FocusContentLab({ clientName, slug }: FocusContentLabProps) {
   const [channel, setChannel] = useState<string>("Instagram");
   const [format, setFormat] = useState<string>("Post caption");
   const [tone, setTone] = useState<string>("Warm and reassuring");
@@ -72,6 +73,7 @@ export function FocusContentLab({ slug }: FocusContentLabProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          slug,
           channel,
           format,
           tone,
@@ -113,10 +115,10 @@ export function FocusContentLab({ slug }: FocusContentLabProps) {
       <div className="focus-content-container">
         <header className="focus-content-header">
           <div className="focus-content-logo-mark" aria-hidden="true">
-            S
+            F
           </div>
-          <h1>Skin Revive Aesthetics</h1>
-          <p>Content generator</p>
+          <h1>{clientName}</h1>
+          <p>Content Lab</p>
         </header>
 
         <section className="focus-content-card">

@@ -259,24 +259,21 @@ Completion:
 
 ### Slice 3 - Role-Aware Login And Client Home
 
-Status: `IN PROGRESS`
+Status: `COMPLETE`
 
 Goal:
 
 Make login the product home and route users to the correct destination.
 
-Implementation progress:
+Completion:
 
 - Implementation commit: `246539e`
-- Root login and role-aware destination routing implemented.
-- Platform client hub implemented at `/clients`.
-- Multi-membership board picker implemented at `/boards`.
-- Control-room authorization moved from PhysioNote profile roles to FocusBoard platform ownership.
+- Production verification: live Andrew and Liona sign-in flows were confirmed by the user on
+  2026-06-12.
 - Compatibility `/login` route preserves `next` and redirects to `/`.
-- Local signed-out route checks and live access-assignment SQL checks passed.
-- Production verification: `https://harris-focus-board.vercel.app/` serves the new login and
-  `/clients` redirects signed-out users to `/?next=/clients`.
-- Pending: post-password destination smoke test with the existing Andrew and Liona accounts.
+- Local verification: signed-out checks passed for `/`, `/clients`, `/boards`, and control-room
+  redirects.
+- Outstanding deployment work: none
 
 Deliverables:
 
@@ -299,7 +296,7 @@ Acceptance:
 
 ### Slice 4 - Authenticated Client Boards And Management
 
-Status: `PLANNED`
+Status: `COMPLETE`
 
 Goal:
 
@@ -324,9 +321,19 @@ Acceptance:
 - Board interaction and management match Liona's existing functionality.
 - Browser history and explicit Back to clients navigation behave predictably.
 
+Completion:
+
+- Canonical routes implemented: `/board/[slug]` and `/clients/[clientId]/manage`.
+- Legacy `/focus/[slug]` and `/focus-control/[slug]` now redirect into the canonical routes.
+- Board reads, board mutations, management pages, and management mutations now enforce
+  FocusBoard-specific server-side access checks.
+- Local verification: signed-out requests to board and legacy board routes redirect to login.
+- Checks: `npm run typecheck` and `npm run build`
+- Outstanding deployment work: none
+
 ### Slice 5 - Optional, Tenant-Aware Content Lab
 
-Status: `PLANNED`
+Status: `IN PROGRESS`
 
 Goal:
 
@@ -350,7 +357,42 @@ Acceptance:
 - Liona's generated content retains the current Skin Revive context.
 - Missing `ANTHROPIC_API_KEY` produces a clear operational error without breaking the board.
 
-### Slice 6 - Client Provisioning And Operational Polish
+Implementation progress:
+
+- Canonical Content Lab route implemented at `/clients/[clientId]/content`.
+- Legacy `/focus-content/[slug]` now redirects into the canonical route.
+- Content Lab page and API now enforce both client-level enablement and membership-level access.
+- Content Lab launch links now hide unless the client feature is enabled and the user is assigned.
+- Membership-level `content_lab_access` migration applied to Supabase project
+  `xoafnjhsxxczmfavmwoq` on 2026-06-13.
+- Verification: existing Liona memberships were backfilled with `content_lab_access = true`.
+- Pending: replace the hardcoded Skin Revive prompt with client content profiles and editing tools.
+
+### Slice 6 - Membership And User Management
+
+Status: `PLANNED`
+
+Goal:
+
+Let the platform owner manage which users can access each client without dropping into SQL.
+
+Deliverables:
+
+- Show current client memberships inside the platform owner management flow.
+- Add an existing Supabase Auth user to a client by email.
+- Change membership role between `client_user` and `client_admin`.
+- Deactivate or remove a client's access cleanly.
+- Show useful empty and error states when a user is missing, duplicated, or inactive.
+- Keep all membership checks enforced server-side through the `focusboard` schema.
+
+Acceptance:
+
+- The platform owner can grant a user access to a client without manual SQL edits.
+- The platform owner can revoke a user's access and that user immediately loses board access.
+- Membership changes do not affect other clients.
+- Existing Liona and Andrew access remains intact through the migration.
+
+### Slice 7 - Client Provisioning And Operational Polish
 
 Status: `PLANNED`
 
@@ -419,6 +461,10 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-12: Preserve Liona's board as the migration baseline.
 - 2026-06-12: Make Content Lab a per-client optional entitlement.
 - 2026-06-12: Make login the root page and route by FocusBoard-specific access.
+- 2026-06-12: Pull basic user management ahead of full client provisioning so platform operations do
+  not depend on SQL once multiple clients exist.
+- 2026-06-13: Add membership-level Content Lab access so the client feature flag and per-user
+  entitlement can be managed independently.
 
 ## Change Log
 
@@ -434,5 +480,15 @@ Each implementation slice should run the checks relevant to its scope:
   resolved board context; temporary two-board application and SQL isolation checks passed.
 - 2026-06-12: Slice 3 started. Root login routing and FocusBoard-specific platform/client access
   resolution are being implemented.
-- 2026-06-12: Slice 3 implementation prepared for deployment. Authenticated production smoke
-  testing remains before the slice can be marked complete.
+- 2026-06-12: Slice 3 completed after live user verification. Andrew lands on `/clients`; Liona
+  lands on her assigned board.
+- 2026-06-12: Slice 4 started. Canonical authenticated board and management routes are replacing
+  legacy slug-only entry points.
+- 2026-06-12: Basic user management was pulled ahead of full provisioning and is now planned as
+  Slice 6.
+- 2026-06-13: Slice 4 completed. Boards and management now use canonical authenticated routes with
+  legacy compatibility redirects.
+- 2026-06-13: Slice 5 started. Content Lab is moving onto canonical client routes with
+  client-scoped and membership-scoped authorization.
+- 2026-06-13: Membership management controls were pulled forward again to support Content Lab
+  per-user assignment before the rest of Slice 6 is complete.

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
+import { requireFocusBoardAccessBySlug } from "@/lib/focus-board/access";
 import { getFocusBoardRuntimeConfigByPublicSlug } from "@/lib/focus-board/runtime";
 
 function getValue(formData: FormData, key: string) {
@@ -32,6 +33,7 @@ export async function updateFocusBoardAction(
   const taskKey = getValue(formData, "taskKey");
   const metricKey = getValue(formData, "metricKey");
   const direction = getValue(formData, "direction");
+  await requireFocusBoardAccessBySlug(slug, `/board/${slug}`);
 
   const runtime = await getFocusBoardRuntimeConfigByPublicSlug(slug);
 
@@ -95,6 +97,7 @@ export async function updateFocusBoardAction(
     }
   }
 
+  revalidatePath(`/board/${runtime.settings.boardSlug}`);
   revalidatePath(`/focus/${runtime.settings.boardSlug}`);
   return {};
 }

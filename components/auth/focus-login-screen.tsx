@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import { signOutAction } from "@/app/login/actions";
 import { LoginForm } from "@/components/auth/login-form";
 
@@ -19,10 +20,8 @@ export function FocusLoginScreen({
         <div className="auth-focus-orb auth-focus-orb-lime" aria-hidden="true" />
 
         <div className="auth-focus-brand">
-          <div className="brand-mark" aria-hidden="true">
-            <span className="brand-dot brand-dot-teal" />
-            <span className="brand-dot brand-dot-sage" />
-            <span className="brand-dot brand-dot-stone" />
+          <div className="brand-mark brand-mark-mascot" aria-hidden="true">
+            <Image alt="" height={44} priority src="/focus/mascot-rainbow.svg" width={44} />
           </div>
           <p className="auth-focus-brand-name">FocusBoard</p>
         </div>
