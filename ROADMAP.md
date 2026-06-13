@@ -413,7 +413,7 @@ Completion:
 
 ### Slice 7 - Client Provisioning And Operational Polish
 
-Status: `IN PROGRESS`
+Status: `COMPLETE`
 
 Goal:
 
@@ -446,8 +446,9 @@ Acceptance:
 - Single-board users do not see unnecessary board-switching UI.
 - End-to-end verification covers platform owner and client user journeys.
 
-Implementation progress:
+Completion:
 
+- Implementation commits: `686f976`, `5fa2013`
 - `/clients` now includes a `Create client workspace` flow for platform owners.
 - New clients receive collision-resistant `client_key`, `board_slug`, and `admin_slug` values.
 - Provisioning seeds starter board settings, tasks, metrics, weekly reward data, reward tiers, and
@@ -464,8 +465,20 @@ Implementation progress:
 - Documentation now covers provisioning and recovery checks in `README.md`.
 - Verification SQL now includes client provisioning checks and the login-destination query was
   updated to the canonical `/board/...` route.
-- Pending: live provisioning smoke test against the shared Supabase project before marking this
-  slice complete.
+- Migration `focusboard_admin_actor_tracking` applied to Supabase project
+  `xoafnjhsxxczmfavmwoq` on 2026-06-13.
+- Live provisioning verification: two disposable clients were created through the production
+  provisioning helper, including one with an existing Auth user linked.
+- Seed verification: each disposable board resolved through the runtime loader with 3 starter
+  tasks, 4 metrics, 4 reward tiers, one content profile, unique board/control slugs, and the
+  platform owner recorded as actor.
+- Multi-board verification: linking Liona to the disposable client increased her active accessible
+  board count from 1 to 2; deactivating the client reduced it to 1; reactivation restored it to 2.
+- Cleanup verification: all disposable client/board rows were removed after testing. Production
+  returned to 1 client, 1 board, and 2 Liona memberships.
+- Preserved Liona data after verification: 7 tasks, 17 metrics, 4 reward tiers, and 51 events.
+- Checks: `npm run typecheck`, `npm run build`, and `git diff --check`
+- Outstanding deployment work: none
 
 ## Verification Matrix
 
@@ -560,3 +573,6 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-13: Slice 7 started. Client provisioning, client activation controls, multi-board switch
   entry points, loading states, admin actor tracking, and provisioning documentation are now in
   place pending live smoke verification.
+- 2026-06-13: Slice 7 completed. Disposable live provisioning, existing-user linking,
+  runtime seed loading, activate/deactivate behavior, multi-board membership resolution, cleanup,
+  and Liona data preservation were verified against the shared Supabase project.
