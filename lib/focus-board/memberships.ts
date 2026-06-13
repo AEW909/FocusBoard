@@ -71,6 +71,15 @@ async function listAllAuthUsers() {
   return users;
 }
 
+async function tryListAllAuthUsers() {
+  try {
+    return await listAllAuthUsers();
+  } catch (error) {
+    console.error("FocusBoard auth user lookup failed:", error);
+    return [] satisfies AuthUserSummary[];
+  }
+}
+
 export async function findAuthUserByEmail(email: string) {
   const targetEmail = normaliseEmail(email);
 
@@ -115,7 +124,11 @@ export async function getManagedFocusClientMemberships(clientId: string) {
   const profilesById = new Map(
     ((profiles ?? []) as ProfileRow[]).map((profile) => [profile.id, profile]),
   );
-  const authUsers = await listAllAuthUsers();
+  const needsAuthFallback = memberships.some((membership) => {
+    const profile = profilesById.get(membership.user_id);
+    return !profile?.email || !profile?.full_name;
+  });
+  const authUsers = needsAuthFallback ? await tryListAllAuthUsers() : [];
   const authUsersById = new Map(authUsers.map((user) => [user.id, user]));
 
   return memberships.map((membership) => {

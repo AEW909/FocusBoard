@@ -507,3 +507,6 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-13: Fixed platform-owner client management routing so `/clients/[clientId]/manage` and
   `/clients/[clientId]/content` resolve managed clients by `focus_board_settings.client_id`
   instead of a nonexistent `id` column.
+- 2026-06-13: Hardened client membership rendering so the manage page no longer hard-fails when
+  Supabase Auth admin user listing is unavailable; it now renders from `public.profiles` first and
+  only uses Auth admin data as a best-effort fallback.
