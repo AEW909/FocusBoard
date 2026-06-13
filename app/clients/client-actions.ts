@@ -38,23 +38,15 @@ export async function createFocusClientAction(formData: FormData) {
     redirect(getClientsPath(undefined, "Client name is required."));
   }
 
+  let provisioned;
+
   try {
-    const provisioned = await provisionFocusClient({
+    provisioned = await provisionFocusClient({
       actorUserId: user.id,
       contentLabEnabled,
       displayName,
       ownerEmail: ownerEmail || undefined,
     });
-
-    revalidatePath("/clients");
-    revalidatePath("/boards");
-    revalidatePath(`/clients/${provisioned.clientId}/manage`);
-
-    const message = provisioned.linkedEmail
-      ? `Created ${displayName} and linked ${provisioned.linkedEmail}.`
-      : `Created ${displayName}. Add users from the management dashboard when ready.`;
-
-    redirect(getClientsPath(message));
   } catch (error) {
     redirect(
       getClientsPath(
@@ -63,6 +55,16 @@ export async function createFocusClientAction(formData: FormData) {
       ),
     );
   }
+
+  revalidatePath("/clients");
+  revalidatePath("/boards");
+  revalidatePath(`/clients/${provisioned.clientId}/manage`);
+
+  const message = provisioned.linkedEmail
+    ? `Created ${displayName} and linked ${provisioned.linkedEmail}.`
+    : `Created ${displayName}. Add users from the management dashboard when ready.`;
+
+  redirect(getClientsPath(message));
 }
 
 export async function setFocusClientStatusAction(formData: FormData) {
