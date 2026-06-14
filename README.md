@@ -33,9 +33,9 @@ Shared objects that stay outside this repo's schema:
 
 Legacy shared-database cleanup note:
 
-- Old `public.focus_board_*` tables from the PhysioNote-era implementation are deprecated.
-- They should only be dropped after PhysioNote has been redeployed without any remaining
-  FocusBoard runtime dependency and the redirect-only decommission has been verified.
+- Old `public.focus_board_*` tables from the PhysioNote-era implementation were removed from the
+  shared Supabase project on 2026-06-14 after PhysioNote was redeployed with redirect-only FocusBoard
+  shims and Liona's migrated data was re-verified in `focusboard.*`.
 
 FocusBoard-owned objects that live in `focusboard.*`:
 

@@ -482,7 +482,7 @@ Completion:
 
 ### Slice 8 - PhysioNote Decommission And Legacy Cleanup
 
-Status: `IN PROGRESS`
+Status: `COMPLETE`
 
 Goal:
 
@@ -509,6 +509,21 @@ Acceptance:
   explicitly documented.
 - Legacy `public.focus_board_*` cleanup is either completed safely or left behind with a documented,
   verified removal procedure and no live application dependency.
+
+Completion:
+
+- FocusBoard documentation commit: pending local commit in this repository
+- PhysioNote decommission commit: `7f89c15`
+- PhysioNote redirect deployment was user-verified on 2026-06-14 before destructive cleanup.
+- Shared Supabase migration `focusboard_drop_legacy_public_tables` applied to project
+  `xoafnjhsxxczmfavmwoq` on 2026-06-14.
+- Pre-drop verification: Liona's migrated board retained `board_key = 'liona-growth-board'`,
+  `board_slug = 'sunburst-sprint-f3k9'`, `admin_slug = 'sunburst-sprint-hq-m8v2'`, `51` events,
+  `7` tasks, and `4` reward tiers inside `focusboard.*`.
+- Post-drop verification: `public.focus_board_*` tables no longer exist; live data remains in
+  `focusboard.*` with `2` board settings rows, `10` tasks, `21` task metrics, `8` reward tiers,
+  and `51` events.
+- Outstanding deployment work: none
 
 ## Verification Matrix
 
@@ -560,6 +575,9 @@ Each implementation slice should run the checks relevant to its scope:
   entitlement can be managed independently.
 - 2026-06-14: Decommission FocusBoard from PhysioNote as a separate follow-on slice once the
   standalone multi-client app was verified in production.
+- 2026-06-14: After PhysioNote was redeployed with redirect-only shims, remove the legacy
+  `public.focus_board_*` tables from the shared Supabase project and keep FocusBoard data solely in
+  `focusboard.*`.
 
 ## Change Log
 
@@ -611,3 +629,6 @@ Each implementation slice should run the checks relevant to its scope:
   and Liona data preservation were verified against the shared Supabase project.
 - 2026-06-14: Slice 8 started. PhysioNote decommission and legacy `public.focus_board_*` cleanup
   are being handled as a dedicated follow-on phase after standalone production verification.
+- 2026-06-14: Slice 8 completed. PhysioNote now redirects legacy FocusBoard URLs to the standalone
+  app, embedded PhysioNote FocusBoard code has been removed, and the legacy `public.focus_board_*`
+  tables were dropped from the shared Supabase project after migration verification.
