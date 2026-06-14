@@ -524,9 +524,13 @@ a {
   display: grid;
   gap: 8px;
   font-weight: 700;
+  min-width: 0;
 }
 
 .field input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--surface-strong);
@@ -537,6 +541,9 @@ a {
 }
 
 .select-field {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 16px;
   appearance: none;
@@ -553,6 +560,9 @@ a {
 }
 
 .field textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--surface-strong);
@@ -562,6 +572,15 @@ a {
   padding: 14px 16px;
   min-height: 96px;
   resize: vertical;
+}
+
+.focus-field-help {
+  display: block;
+  margin-top: -2px;
+  color: rgba(244, 240, 255, 0.62);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  font-weight: 600;
 }
 
 .checkbox-panel {

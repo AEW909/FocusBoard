@@ -39,6 +39,27 @@ function getManagePath(clientId: string | null, adminSlug: string) {
   return clientId ? `/clients/${clientId}/manage` : `/focus-control/${adminSlug}`;
 }
 
+function getManagePathWithFeedback(
+  clientId: string | null,
+  adminSlug: string,
+  message?: string,
+  error?: string,
+) {
+  const basePath = getManagePath(clientId, adminSlug);
+  const params = new URLSearchParams();
+
+  if (message) {
+    params.set("boardSettingsMessage", message);
+  }
+
+  if (error) {
+    params.set("boardSettingsError", error);
+  }
+
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
+}
+
 function revalidateFocusPaths(boardSlug: string, adminSlug: string, clientId: string | null) {
   revalidatePath(`/board/${boardSlug}`);
   revalidatePath(`/clients`);
@@ -62,7 +83,7 @@ export async function updateFocusBoardSettingsAction(formData: FormData) {
     ? (requestedTheme as FocusThemePreset)
     : runtime.settings.themePreset;
 
-  await admin
+  const { error } = await admin
     .from("focus_board_settings")
     .update({
       title,
@@ -72,10 +93,28 @@ export async function updateFocusBoardSettingsAction(formData: FormData) {
     })
     .eq("board_key", runtime.settings.boardKey);
 
+  if (error) {
+    redirect(
+      getManagePathWithFeedback(
+        runtime.settings.clientId,
+        runtime.settings.adminSlug,
+        undefined,
+        `Could not save board settings: ${error.message}`,
+      ),
+    );
+  }
+
   revalidateFocusPaths(
     runtime.settings.boardSlug,
     runtime.settings.adminSlug,
     runtime.settings.clientId,
+  );
+  redirect(
+    getManagePathWithFeedback(
+      runtime.settings.clientId,
+      runtime.settings.adminSlug,
+      "Board settings saved.",
+    ),
   );
 }
 

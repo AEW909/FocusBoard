@@ -34,6 +34,8 @@ type FocusClientManagePageProps = {
     membershipError?: string;
     contentProfileMessage?: string;
     contentProfileError?: string;
+    boardSettingsMessage?: string;
+    boardSettingsError?: string;
   }>;
 };
 
@@ -382,6 +384,12 @@ export default async function FocusClientManagePage({
           >
             <form action={updateFocusBoardSettingsAction} className="focus-control-form">
               <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+              {query.boardSettingsMessage ? (
+                <p className="form-success">{query.boardSettingsMessage}</p>
+              ) : null}
+              {query.boardSettingsError ? (
+                <p className="form-error">{query.boardSettingsError}</p>
+              ) : null}
               <label className="field">
                 <span>Title / kicker</span>
                 <input defaultValue={runtime.settings.title} name="title" />
@@ -399,10 +407,13 @@ export default async function FocusClientManagePage({
                 >
                   {FOCUS_THEME_OPTIONS.map((theme) => (
                     <option key={theme.value} value={theme.value}>
-                      {theme.label} - {theme.description}
+                      {theme.label}
                     </option>
                   ))}
                 </select>
+                <small className="focus-field-help">
+                  Fun preset palettes only for now. Layout and typography stay shared.
+                </small>
               </label>
               <button className="button button-primary" type="submit">
                 Save board settings
