@@ -2846,11 +2846,11 @@ a {
   --focus-page-glow-a: rgba(0, 255, 214, 0.18);
   --focus-page-glow-b: rgba(255, 77, 202, 0.2);
   --focus-page-glow-c: rgba(149, 255, 74, 0.16);
-  --focus-page-start: #030309;
-  --focus-page-mid: #090816;
-  --focus-page-end: #10051d;
-  --focus-surface: rgba(10, 9, 20, 0.9);
-  --focus-surface-strong: rgba(8, 8, 18, 0.94);
+  --focus-page-start: #14203c;
+  --focus-page-mid: #3f1761;
+  --focus-page-end: #102d39;
+  --focus-surface: rgba(26, 22, 62, 0.84);
+  --focus-surface-strong: rgba(34, 24, 74, 0.88);
   --focus-text: #f4f0ff;
   --focus-text-strong: #fff9ff;
   --focus-text-soft: rgba(244, 240, 255, 0.78);
@@ -2865,9 +2865,9 @@ a {
   --focus-action-to: #64ff6a;
   --focus-action-alt-from: #ff4bcf;
   --focus-action-alt-to: #9f6dff;
-  --focus-task-surface-1: rgba(8, 18, 24, 0.96);
-  --focus-task-surface-2: rgba(11, 21, 14, 0.96);
-  --focus-task-surface-3: rgba(20, 12, 24, 0.96);
+  --focus-task-surface-1: rgba(18, 45, 64, 0.9);
+  --focus-task-surface-2: rgba(27, 64, 42, 0.9);
+  --focus-task-surface-3: rgba(61, 27, 76, 0.9);
   --focus-task-glow-1: rgba(0, 255, 214, 0.2);
   --focus-task-glow-2: rgba(149, 255, 74, 0.18);
   --focus-task-glow-3: rgba(255, 108, 221, 0.2);
@@ -2885,14 +2885,18 @@ a {
 }
 
 .focus-theme-sunset_pop {
-  --focus-page-glow-a: rgba(255, 138, 91, 0.22);
-  --focus-page-glow-b: rgba(255, 93, 177, 0.18);
-  --focus-page-glow-c: rgba(255, 209, 102, 0.16);
-  --focus-page-start: #12050b;
-  --focus-page-mid: #20101d;
-  --focus-page-end: #2c0f1b;
-  --focus-surface: rgba(24, 10, 18, 0.92);
-  --focus-surface-strong: rgba(28, 11, 20, 0.95);
+  --focus-page-glow-a: rgba(255, 138, 91, 0.3);
+  --focus-page-glow-b: rgba(255, 93, 177, 0.26);
+  --focus-page-glow-c: rgba(255, 209, 102, 0.24);
+  --focus-page-start: #ffb48f;
+  --focus-page-mid: #ff72a9;
+  --focus-page-end: #ffca7f;
+  --focus-surface: rgba(130, 44, 96, 0.3);
+  --focus-surface-strong: rgba(114, 35, 84, 0.42);
+  --focus-text: #fff7ff;
+  --focus-text-strong: #ffffff;
+  --focus-text-soft: rgba(255, 247, 255, 0.86);
+  --focus-text-muted: rgba(255, 247, 255, 0.74);
   --focus-accent: #ffb07a;
   --focus-accent-bright: #ff8a5b;
   --focus-accent-secondary: #ff5db1;
@@ -2903,23 +2907,27 @@ a {
   --focus-action-to: #ffd166;
   --focus-action-alt-from: #ff5db1;
   --focus-action-alt-to: #a677ff;
-  --focus-task-surface-1: rgba(36, 18, 20, 0.96);
-  --focus-task-surface-2: rgba(34, 16, 28, 0.96);
-  --focus-task-surface-3: rgba(27, 17, 35, 0.96);
-  --focus-task-glow-1: rgba(255, 138, 91, 0.22);
-  --focus-task-glow-2: rgba(255, 209, 102, 0.18);
-  --focus-task-glow-3: rgba(255, 93, 177, 0.22);
+  --focus-task-surface-1: rgba(255, 154, 120, 0.26);
+  --focus-task-surface-2: rgba(255, 210, 110, 0.22);
+  --focus-task-surface-3: rgba(207, 99, 184, 0.26);
+  --focus-task-glow-1: rgba(255, 138, 91, 0.28);
+  --focus-task-glow-2: rgba(255, 209, 102, 0.24);
+  --focus-task-glow-3: rgba(255, 93, 177, 0.28);
 }
 
 .focus-theme-lagoon_bounce {
-  --focus-page-glow-a: rgba(99, 242, 255, 0.22);
-  --focus-page-glow-b: rgba(255, 119, 207, 0.18);
-  --focus-page-glow-c: rgba(110, 255, 195, 0.16);
-  --focus-page-start: #031018;
-  --focus-page-mid: #071923;
-  --focus-page-end: #10122a;
-  --focus-surface: rgba(7, 18, 27, 0.92);
-  --focus-surface-strong: rgba(8, 19, 30, 0.95);
+  --focus-page-glow-a: rgba(99, 242, 255, 0.3);
+  --focus-page-glow-b: rgba(255, 119, 207, 0.22);
+  --focus-page-glow-c: rgba(110, 255, 195, 0.24);
+  --focus-page-start: #77e7ff;
+  --focus-page-mid: #3da9ff;
+  --focus-page-end: #7dffd5;
+  --focus-surface: rgba(12, 101, 136, 0.26);
+  --focus-surface-strong: rgba(12, 89, 126, 0.38);
+  --focus-text: #f6ffff;
+  --focus-text-strong: #ffffff;
+  --focus-text-soft: rgba(246, 255, 255, 0.84);
+  --focus-text-muted: rgba(246, 255, 255, 0.72);
   --focus-accent: #7cf4ff;
   --focus-accent-bright: #63f2ff;
   --focus-accent-secondary: #ff77cf;
@@ -2930,23 +2938,27 @@ a {
   --focus-action-to: #6effc3;
   --focus-action-alt-from: #ff77cf;
   --focus-action-alt-to: #4f8dff;
-  --focus-task-surface-1: rgba(8, 24, 34, 0.96);
-  --focus-task-surface-2: rgba(10, 31, 27, 0.96);
-  --focus-task-surface-3: rgba(17, 17, 40, 0.96);
-  --focus-task-glow-1: rgba(99, 242, 255, 0.24);
-  --focus-task-glow-2: rgba(110, 255, 195, 0.2);
-  --focus-task-glow-3: rgba(255, 119, 207, 0.2);
+  --focus-task-surface-1: rgba(71, 209, 246, 0.26);
+  --focus-task-surface-2: rgba(89, 255, 208, 0.24);
+  --focus-task-surface-3: rgba(120, 132, 255, 0.22);
+  --focus-task-glow-1: rgba(99, 242, 255, 0.28);
+  --focus-task-glow-2: rgba(110, 255, 195, 0.24);
+  --focus-task-glow-3: rgba(255, 119, 207, 0.24);
 }
 
 .focus-theme-citrus_blast {
-  --focus-page-glow-a: rgba(198, 255, 63, 0.22);
-  --focus-page-glow-b: rgba(255, 123, 84, 0.18);
-  --focus-page-glow-c: rgba(255, 183, 3, 0.18);
-  --focus-page-start: #0a1004;
-  --focus-page-mid: #1a1205;
-  --focus-page-end: #241009;
-  --focus-surface: rgba(18, 16, 8, 0.92);
-  --focus-surface-strong: rgba(20, 18, 8, 0.95);
+  --focus-page-glow-a: rgba(198, 255, 63, 0.28);
+  --focus-page-glow-b: rgba(255, 123, 84, 0.22);
+  --focus-page-glow-c: rgba(255, 183, 3, 0.24);
+  --focus-page-start: #d7ff67;
+  --focus-page-mid: #ffc648;
+  --focus-page-end: #ff8b5d;
+  --focus-surface: rgba(126, 98, 12, 0.24);
+  --focus-surface-strong: rgba(124, 73, 18, 0.38);
+  --focus-text: #fffef7;
+  --focus-text-strong: #ffffff;
+  --focus-text-soft: rgba(255, 254, 247, 0.84);
+  --focus-text-muted: rgba(255, 254, 247, 0.72);
   --focus-accent: #d3ff6c;
   --focus-accent-bright: #c6ff3f;
   --focus-accent-secondary: #ff7b54;
@@ -2957,12 +2969,12 @@ a {
   --focus-action-to: #ffb703;
   --focus-action-alt-from: #ff7b54;
   --focus-action-alt-to: #72f1b8;
-  --focus-task-surface-1: rgba(23, 24, 10, 0.96);
-  --focus-task-surface-2: rgba(28, 20, 8, 0.96);
-  --focus-task-surface-3: rgba(30, 14, 10, 0.96);
-  --focus-task-glow-1: rgba(198, 255, 63, 0.2);
-  --focus-task-glow-2: rgba(255, 183, 3, 0.18);
-  --focus-task-glow-3: rgba(255, 123, 84, 0.22);
+  --focus-task-surface-1: rgba(190, 255, 79, 0.24);
+  --focus-task-surface-2: rgba(255, 205, 61, 0.24);
+  --focus-task-surface-3: rgba(255, 131, 92, 0.24);
+  --focus-task-glow-1: rgba(198, 255, 63, 0.24);
+  --focus-task-glow-2: rgba(255, 183, 3, 0.22);
+  --focus-task-glow-3: rgba(255, 123, 84, 0.26);
 }
 
 .focus-board-shell,
