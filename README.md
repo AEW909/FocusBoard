@@ -31,6 +31,12 @@ Shared objects that stay outside this repo's schema:
 - `auth.*`
 - `public.profiles`
 
+Legacy shared-database cleanup note:
+
+- Old `public.focus_board_*` tables from the PhysioNote-era implementation are deprecated.
+- They should only be dropped after PhysioNote has been redeployed without any remaining
+  FocusBoard runtime dependency and the redirect-only decommission has been verified.
+
 FocusBoard-owned objects that live in `focusboard.*`:
 
 - `focus_board_settings`

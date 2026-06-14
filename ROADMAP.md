@@ -480,6 +480,36 @@ Completion:
 - Checks: `npm run typecheck`, `npm run build`, and `git diff --check`
 - Outstanding deployment work: none
 
+### Slice 8 - PhysioNote Decommission And Legacy Cleanup
+
+Status: `IN PROGRESS`
+
+Goal:
+
+Fully separate the FocusBoard application surface from PhysioNote while keeping only the intended
+shared Supabase overlap (`auth.*` and `public.profiles`).
+
+Deliverables:
+
+- Remove or hard-redirect all FocusBoard application routes from PhysioNote.
+- Remove PhysioNote middleware allowances and code paths that still serve FocusBoard URLs.
+- Remove FocusBoard-specific runtime, actions, components, and assets from PhysioNote where they no
+  longer support any live PhysioNote behavior.
+- Document the remaining shared Supabase boundary explicitly.
+- Add a controlled cleanup plan for legacy `public.focus_board_*` tables and any old storage or
+  route assumptions.
+- Do not break the standalone FocusBoard production app or Liona's preserved history during the
+  decommission.
+
+Acceptance:
+
+- PhysioNote no longer serves or owns the FocusBoard experience.
+- FocusBoard continues to run entirely from this repository against `focusboard.*`.
+- Shared overlap is limited to Supabase Auth and `public.profiles`, unless another shared object is
+  explicitly documented.
+- Legacy `public.focus_board_*` cleanup is either completed safely or left behind with a documented,
+  verified removal procedure and no live application dependency.
+
 ## Verification Matrix
 
 Each implementation slice should run the checks relevant to its scope:
@@ -494,6 +524,7 @@ Each implementation slice should run the checks relevant to its scope:
 - Cross-client write denial
 - Content Lab enabled and disabled checks
 - Asset upload tenant-boundary check
+- PhysioNote no longer resolves FocusBoard routes
 
 ## Migration Safety
 
@@ -527,6 +558,8 @@ Each implementation slice should run the checks relevant to its scope:
   not depend on SQL once multiple clients exist.
 - 2026-06-13: Add membership-level Content Lab access so the client feature flag and per-user
   entitlement can be managed independently.
+- 2026-06-14: Decommission FocusBoard from PhysioNote as a separate follow-on slice once the
+  standalone multi-client app was verified in production.
 
 ## Change Log
 
@@ -576,3 +609,5 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-13: Slice 7 completed. Disposable live provisioning, existing-user linking,
   runtime seed loading, activate/deactivate behavior, multi-board membership resolution, cleanup,
   and Liona data preservation were verified against the shared Supabase project.
+- 2026-06-14: Slice 8 started. PhysioNote decommission and legacy `public.focus_board_*` cleanup
+  are being handled as a dedicated follow-on phase after standalone production verification.
