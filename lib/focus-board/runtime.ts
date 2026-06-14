@@ -8,9 +8,11 @@ import {
   DEFAULT_FOCUS_WEEKLY_REWARD,
   FOCUS_BOARD_ADMIN_SLUG,
   FOCUS_BOARD_SLUG,
+  FOCUS_THEME_PRESETS,
   type FocusBoardSettings,
   type FocusBoardTask,
   type FocusBoardTaskMetric,
+  type FocusThemePreset,
   type FocusRewardTier,
   type FocusWeeklyReward,
 } from "@/lib/focus-board/config";
@@ -20,6 +22,7 @@ type FocusBoardSettingsRow = {
   board_key: string;
   board_slug: string;
   admin_slug: string;
+  theme_preset: string;
   title: string;
   subtitle: string;
   weekly_target: number;
@@ -86,11 +89,16 @@ function mapSettings(row?: FocusBoardSettingsRow | null): FocusBoardSettings {
     return DEFAULT_FOCUS_BOARD_SETTINGS;
   }
 
+  const themePreset = FOCUS_THEME_PRESETS.includes(row.theme_preset as FocusThemePreset)
+    ? (row.theme_preset as FocusThemePreset)
+    : DEFAULT_FOCUS_BOARD_SETTINGS.themePreset;
+
   return {
     clientId: row.client_id || null,
     boardKey: row.board_key || DEFAULT_FOCUS_BOARD_SETTINGS.boardKey,
     boardSlug: row.board_slug || FOCUS_BOARD_SLUG,
     adminSlug: row.admin_slug || FOCUS_BOARD_ADMIN_SLUG,
+    themePreset,
     title: row.title || DEFAULT_FOCUS_BOARD_SETTINGS.title,
     subtitle: row.subtitle || DEFAULT_FOCUS_BOARD_SETTINGS.subtitle,
     weeklyTarget: row.weekly_target || DEFAULT_FOCUS_BOARD_SETTINGS.weeklyTarget,
@@ -212,7 +220,7 @@ async function getFocusBoardRuntimeConfigBy(
   const settingsResult = await admin
     .from("focus_board_settings")
     .select(
-      "client_id, board_key, board_slug, admin_slug, title, subtitle, weekly_target, weekly_reward_label, weekly_reward_description, weekly_reward_locked_description, weekly_reward_unlocked_description, weekly_reward_locked_sticker_src, weekly_reward_unlocked_sticker_src, weekly_reward_sticker_alt",
+      "client_id, board_key, board_slug, admin_slug, theme_preset, title, subtitle, weekly_target, weekly_reward_label, weekly_reward_description, weekly_reward_locked_description, weekly_reward_unlocked_description, weekly_reward_locked_sticker_src, weekly_reward_unlocked_sticker_src, weekly_reward_sticker_alt",
     )
     .eq(selector, value)
     .maybeSingle<FocusBoardSettingsRow>();

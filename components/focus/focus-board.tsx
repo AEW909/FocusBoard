@@ -4,20 +4,45 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { updateFocusBoardAction, type UpdateFocusBoardState } from "@/app/focus/actions";
 import { FocusImageWithFallback } from "@/components/focus/focus-image-with-fallback";
+import type { FocusThemePreset } from "@/lib/focus-board/config";
 import type { FocusBoardData } from "@/lib/focus-board/queries";
 
 const initialState: UpdateFocusBoardState = {};
 
-const FOCUS_BREAKDOWN_COLORS = [
-  "#00f5d4",
-  "#ffd84d",
-  "#ff4dca",
-  "#8f7cff",
-  "#ff7a59",
-  "#73e06c",
-  "#55a7ff",
-  "#ff8fb8",
-];
+const FOCUS_THEME_PALETTES: Record<
+  FocusThemePreset,
+  {
+    breakdownColors: string[];
+    chartLine: string;
+    currentDot: string;
+    historyDot: string;
+  }
+> = {
+  neon: {
+    breakdownColors: ["#00f5d4", "#ffd84d", "#ff4dca", "#8f7cff", "#ff7a59", "#73e06c", "#55a7ff", "#ff8fb8"],
+    chartLine: "#00f5d4",
+    currentDot: "#95ff4a",
+    historyDot: "#ff4dca",
+  },
+  sunset_pop: {
+    breakdownColors: ["#ff8a5b", "#ffd166", "#ff5db1", "#a677ff", "#7ce6ff", "#ffb86b", "#83ff8f", "#ff7f7f"],
+    chartLine: "#ff8a5b",
+    currentDot: "#ffd166",
+    historyDot: "#ff5db1",
+  },
+  lagoon_bounce: {
+    breakdownColors: ["#63f2ff", "#6effc3", "#4f8dff", "#ff77cf", "#a7ff6f", "#71d0ff", "#ffd36a", "#9f7bff"],
+    chartLine: "#63f2ff",
+    currentDot: "#6effc3",
+    historyDot: "#ff77cf",
+  },
+  citrus_blast: {
+    breakdownColors: ["#c6ff3f", "#ffb703", "#ff7b54", "#72f1b8", "#ffe66d", "#ff5c8a", "#7cc7ff", "#b68cff"],
+    chartLine: "#c6ff3f",
+    currentDot: "#ffb703",
+    historyDot: "#ff5c8a",
+  },
+};
 
 type FocusBoardProps = {
   board: FocusBoardData;
@@ -123,6 +148,8 @@ function buildDonutSegments(values: { color: string; value: number }[], circumfe
 export function FocusBoard({ board, contentLabEnabled, initialView }: FocusBoardProps) {
   const [state, formAction, pending] = useActionState(updateFocusBoardAction, initialState);
   const [view, setView] = useState<FocusView>(initialView);
+  const themePalette =
+    FOCUS_THEME_PALETTES[board.settings.themePreset] ?? FOCUS_THEME_PALETTES.neon;
 
   const currentWeek = board.currentWeek;
   const weeklyPrizeImageSrc = currentWeek?.hitTarget
@@ -147,9 +174,10 @@ export function FocusBoard({ board, contentLabEnabled, initialView }: FocusBoard
     () =>
       board.monthlyBreakdown.map((item, index) => ({
         ...item,
-        color: FOCUS_BREAKDOWN_COLORS[index % FOCUS_BREAKDOWN_COLORS.length],
+        color:
+          themePalette.breakdownColors[index % themePalette.breakdownColors.length],
       })),
-    [board.monthlyBreakdown],
+    [board.monthlyBreakdown, themePalette],
   );
   const pieSegments = useMemo(() => {
     if (totalBreakdownPoints === 0) {
@@ -556,13 +584,28 @@ export function FocusBoard({ board, contentLabEnabled, initialView }: FocusBoard
                   <path d="M0 115 H280" stroke="rgba(255,255,255,0.16)" strokeWidth="2" />
                   {linePath ? (
                     <>
-                      <path d={linePath} fill="none" stroke="#00f5d4" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d={linePath}
+                        fill="none"
+                        stroke={themePalette.chartLine}
+                        strokeWidth="5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                       {board.monthHistory.map((month, index) => {
                         const maxValue = Math.max(...lineValues, 1);
                         const x = board.monthHistory.length === 1 ? 140 : (index / (board.monthHistory.length - 1)) * 280;
                         const y = 120 - (month.points / maxValue) * 110 - 5;
 
-                        return <circle cx={x} cy={y} fill={month.isCurrent ? "#95ff4a" : "#ff4dca"} key={month.monthKey} r="5" />;
+                        return (
+                          <circle
+                            cx={x}
+                            cy={y}
+                            fill={month.isCurrent ? themePalette.currentDot : themePalette.historyDot}
+                            key={month.monthKey}
+                            r="5"
+                          />
+                        );
                       })}
                     </>
                   ) : null}

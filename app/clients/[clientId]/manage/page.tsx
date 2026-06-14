@@ -20,6 +20,7 @@ import { FocusImageSelect } from "@/components/focus/focus-image-select";
 import { FocusPullToRefresh } from "@/components/focus/focus-pull-to-refresh";
 import { getFocusAssetOptions } from "@/lib/focus-board/assets";
 import { requireManagedFocusClientById } from "@/lib/focus-board/access";
+import { FOCUS_THEME_OPTIONS } from "@/lib/focus-board/config";
 import { getFocusContentProfile } from "@/lib/focus-board/content-profiles";
 import { getManagedFocusClientMemberships } from "@/lib/focus-board/memberships";
 import { getFocusBoardRuntimeConfigByClientId } from "@/lib/focus-board/runtime";
@@ -106,7 +107,9 @@ export default async function FocusClientManagePage({
         homeHref={`/board/${runtime.settings.boardSlug}`}
         title="Control Room"
       />
-      <main className="shell focus-public-page focus-public-page-neon focus-board-shell-neon focus-control-page">
+      <main
+        className={`shell focus-public-page focus-public-page-neon focus-board-shell-neon focus-control-page focus-theme-${runtime.settings.themePreset}`}
+      >
         <FocusPullToRefresh label="Release to refresh controls" />
         <section className="focus-arcade-hero focus-control-hero">
           <p className="focus-kicker">Secret focus control room</p>
@@ -386,6 +389,20 @@ export default async function FocusClientManagePage({
               <label className="field">
                 <span>Main headline</span>
                 <textarea defaultValue={runtime.settings.subtitle} name="subtitle" />
+              </label>
+              <label className="field">
+                <span>Board colour theme</span>
+                <select
+                  className="select-field"
+                  defaultValue={runtime.settings.themePreset}
+                  name="themePreset"
+                >
+                  {FOCUS_THEME_OPTIONS.map((theme) => (
+                    <option key={theme.value} value={theme.value}>
+                      {theme.label} - {theme.description}
+                    </option>
+                  ))}
+                </select>
               </label>
               <button className="button button-primary" type="submit">
                 Save board settings

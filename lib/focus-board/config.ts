@@ -2,6 +2,14 @@ export const FOCUS_BOARD_SLUG = "sunburst-sprint-f3k9";
 export const FOCUS_BOARD_ADMIN_SLUG = "sunburst-sprint-hq-m8v2";
 export const FOCUS_BOARD_KEY = "liona-growth-board";
 export const FOCUS_WEEKLY_TARGET = 50;
+export const FOCUS_THEME_PRESETS = [
+  "neon",
+  "sunset_pop",
+  "lagoon_bounce",
+  "citrus_blast",
+] as const;
+
+export type FocusThemePreset = (typeof FOCUS_THEME_PRESETS)[number];
 
 export type FocusMetricKind = "count" | "toggle";
 
@@ -63,6 +71,7 @@ export type FocusBoardSettings = {
   boardKey: string;
   boardSlug: string;
   adminSlug: string;
+  themePreset: FocusThemePreset;
   title: string;
   subtitle: string;
   weeklyTarget: number;
@@ -73,10 +82,38 @@ export const DEFAULT_FOCUS_BOARD_SETTINGS: FocusBoardSettings = {
   boardKey: FOCUS_BOARD_KEY,
   boardSlug: FOCUS_BOARD_SLUG,
   adminSlug: FOCUS_BOARD_ADMIN_SLUG,
+  themePreset: "neon",
   title: "Liona's tiny-task disco",
   subtitle: "Business admin, but make it feel like stickers, sparks, and prize tokens.",
   weeklyTarget: FOCUS_WEEKLY_TARGET,
 };
+
+export const FOCUS_THEME_OPTIONS: Array<{
+  value: FocusThemePreset;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "neon",
+    label: "Neon Arcade",
+    description: "The current electric FocusBoard default.",
+  },
+  {
+    value: "sunset_pop",
+    label: "Sunset Pop",
+    description: "Warm coral, melon, and disco apricot energy.",
+  },
+  {
+    value: "lagoon_bounce",
+    label: "Lagoon Bounce",
+    description: "Ocean candy blues with mint and bubblegum accents.",
+  },
+  {
+    value: "citrus_blast",
+    label: "Citrus Blast",
+    description: "Punchy lime, tangerine, and lemonade tones.",
+  },
+];
 
 export const DEFAULT_FOCUS_WEEKLY_REWARD: FocusWeeklyReward = {
   label: "Weekly Treat",

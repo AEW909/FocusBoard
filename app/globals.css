@@ -2824,17 +2824,126 @@ a {
 }
 
 .focus-public-page-neon {
+  --focus-page-glow-a: rgba(0, 255, 214, 0.18);
+  --focus-page-glow-b: rgba(255, 77, 202, 0.2);
+  --focus-page-glow-c: rgba(149, 255, 74, 0.16);
+  --focus-page-start: #030309;
+  --focus-page-mid: #090816;
+  --focus-page-end: #10051d;
+  --focus-surface: rgba(10, 9, 20, 0.9);
+  --focus-surface-strong: rgba(8, 8, 18, 0.94);
+  --focus-text: #f4f0ff;
+  --focus-text-strong: #fff9ff;
+  --focus-text-soft: rgba(244, 240, 255, 0.78);
+  --focus-text-muted: rgba(244, 240, 255, 0.72);
+  --focus-accent: #59f4d6;
+  --focus-accent-bright: #00f5d4;
+  --focus-accent-secondary: #ff4dca;
+  --focus-accent-tertiary: #95ff4a;
+  --focus-accent-warm: #ffd84d;
+  --focus-accent-violet: #8f7cff;
+  --focus-action-from: #00ffd5;
+  --focus-action-to: #64ff6a;
+  --focus-action-alt-from: #ff4bcf;
+  --focus-action-alt-to: #9f6dff;
+  --focus-task-surface-1: rgba(8, 18, 24, 0.96);
+  --focus-task-surface-2: rgba(11, 21, 14, 0.96);
+  --focus-task-surface-3: rgba(20, 12, 24, 0.96);
+  --focus-task-glow-1: rgba(0, 255, 214, 0.2);
+  --focus-task-glow-2: rgba(149, 255, 74, 0.18);
+  --focus-task-glow-3: rgba(255, 108, 221, 0.2);
   margin-top: 0;
   border-radius: 38px;
   padding: 18px 14px 40px;
   background:
-    radial-gradient(circle at 10% 10%, rgba(0, 255, 214, 0.18), transparent 22%),
-    radial-gradient(circle at 86% 10%, rgba(255, 77, 202, 0.2), transparent 22%),
-    radial-gradient(circle at 50% 86%, rgba(149, 255, 74, 0.16), transparent 28%),
-    linear-gradient(180deg, #030309 0%, #090816 50%, #10051d 100%);
+    radial-gradient(circle at 10% 10%, var(--focus-page-glow-a), transparent 22%),
+    radial-gradient(circle at 86% 10%, var(--focus-page-glow-b), transparent 22%),
+    radial-gradient(circle at 50% 86%, var(--focus-page-glow-c), transparent 28%),
+    linear-gradient(180deg, var(--focus-page-start) 0%, var(--focus-page-mid) 50%, var(--focus-page-end) 100%);
   box-shadow:
     0 28px 70px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.focus-theme-sunset_pop {
+  --focus-page-glow-a: rgba(255, 138, 91, 0.22);
+  --focus-page-glow-b: rgba(255, 93, 177, 0.18);
+  --focus-page-glow-c: rgba(255, 209, 102, 0.16);
+  --focus-page-start: #12050b;
+  --focus-page-mid: #20101d;
+  --focus-page-end: #2c0f1b;
+  --focus-surface: rgba(24, 10, 18, 0.92);
+  --focus-surface-strong: rgba(28, 11, 20, 0.95);
+  --focus-accent: #ffb07a;
+  --focus-accent-bright: #ff8a5b;
+  --focus-accent-secondary: #ff5db1;
+  --focus-accent-tertiary: #ffd166;
+  --focus-accent-warm: #ffd166;
+  --focus-accent-violet: #a677ff;
+  --focus-action-from: #ff8a5b;
+  --focus-action-to: #ffd166;
+  --focus-action-alt-from: #ff5db1;
+  --focus-action-alt-to: #a677ff;
+  --focus-task-surface-1: rgba(36, 18, 20, 0.96);
+  --focus-task-surface-2: rgba(34, 16, 28, 0.96);
+  --focus-task-surface-3: rgba(27, 17, 35, 0.96);
+  --focus-task-glow-1: rgba(255, 138, 91, 0.22);
+  --focus-task-glow-2: rgba(255, 209, 102, 0.18);
+  --focus-task-glow-3: rgba(255, 93, 177, 0.22);
+}
+
+.focus-theme-lagoon_bounce {
+  --focus-page-glow-a: rgba(99, 242, 255, 0.22);
+  --focus-page-glow-b: rgba(255, 119, 207, 0.18);
+  --focus-page-glow-c: rgba(110, 255, 195, 0.16);
+  --focus-page-start: #031018;
+  --focus-page-mid: #071923;
+  --focus-page-end: #10122a;
+  --focus-surface: rgba(7, 18, 27, 0.92);
+  --focus-surface-strong: rgba(8, 19, 30, 0.95);
+  --focus-accent: #7cf4ff;
+  --focus-accent-bright: #63f2ff;
+  --focus-accent-secondary: #ff77cf;
+  --focus-accent-tertiary: #6effc3;
+  --focus-accent-warm: #ffd36a;
+  --focus-accent-violet: #9f7bff;
+  --focus-action-from: #63f2ff;
+  --focus-action-to: #6effc3;
+  --focus-action-alt-from: #ff77cf;
+  --focus-action-alt-to: #4f8dff;
+  --focus-task-surface-1: rgba(8, 24, 34, 0.96);
+  --focus-task-surface-2: rgba(10, 31, 27, 0.96);
+  --focus-task-surface-3: rgba(17, 17, 40, 0.96);
+  --focus-task-glow-1: rgba(99, 242, 255, 0.24);
+  --focus-task-glow-2: rgba(110, 255, 195, 0.2);
+  --focus-task-glow-3: rgba(255, 119, 207, 0.2);
+}
+
+.focus-theme-citrus_blast {
+  --focus-page-glow-a: rgba(198, 255, 63, 0.22);
+  --focus-page-glow-b: rgba(255, 123, 84, 0.18);
+  --focus-page-glow-c: rgba(255, 183, 3, 0.18);
+  --focus-page-start: #0a1004;
+  --focus-page-mid: #1a1205;
+  --focus-page-end: #241009;
+  --focus-surface: rgba(18, 16, 8, 0.92);
+  --focus-surface-strong: rgba(20, 18, 8, 0.95);
+  --focus-accent: #d3ff6c;
+  --focus-accent-bright: #c6ff3f;
+  --focus-accent-secondary: #ff7b54;
+  --focus-accent-tertiary: #ffb703;
+  --focus-accent-warm: #ffe66d;
+  --focus-accent-violet: #b68cff;
+  --focus-action-from: #c6ff3f;
+  --focus-action-to: #ffb703;
+  --focus-action-alt-from: #ff7b54;
+  --focus-action-alt-to: #72f1b8;
+  --focus-task-surface-1: rgba(23, 24, 10, 0.96);
+  --focus-task-surface-2: rgba(28, 20, 8, 0.96);
+  --focus-task-surface-3: rgba(30, 14, 10, 0.96);
+  --focus-task-glow-1: rgba(198, 255, 63, 0.2);
+  --focus-task-glow-2: rgba(255, 183, 3, 0.18);
+  --focus-task-glow-3: rgba(255, 123, 84, 0.22);
 }
 
 .focus-board-shell,
@@ -2844,7 +2953,7 @@ a {
 }
 
 .focus-board-shell-neon {
-  color: #f4f0ff;
+  color: var(--focus-text);
 }
 
 .focus-arcade-hero {
@@ -2855,19 +2964,19 @@ a {
   border-radius: 34px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background:
-    radial-gradient(circle at top left, rgba(0, 255, 214, 0.18), transparent 26%),
-    radial-gradient(circle at top right, rgba(255, 77, 202, 0.22), transparent 26%),
-    radial-gradient(circle at bottom center, rgba(149, 255, 74, 0.14), transparent 42%),
-    rgba(8, 8, 18, 0.94);
+    radial-gradient(circle at top left, var(--focus-page-glow-a), transparent 26%),
+    radial-gradient(circle at top right, var(--focus-page-glow-b), transparent 26%),
+    radial-gradient(circle at bottom center, var(--focus-page-glow-c), transparent 42%),
+    var(--focus-surface-strong);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.04) inset,
     0 24px 60px rgba(0, 0, 0, 0.42),
-    0 0 44px rgba(63, 255, 218, 0.08);
+    0 0 44px color-mix(in srgb, var(--focus-accent-bright) 28%, transparent);
 }
 
 .focus-kicker {
   margin: 0 0 10px;
-  color: #59f4d6;
+  color: var(--focus-accent);
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -2880,14 +2989,14 @@ a {
   font-size: clamp(2rem, 6.5vw, 3.4rem);
   line-height: 0.93;
   letter-spacing: -0.05em;
-  color: #fff9ff;
-  text-shadow: 0 0 18px rgba(255, 0, 140, 0.2);
+  color: var(--focus-text-strong);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-secondary) 40%, transparent);
 }
 
 .focus-hero-copy {
   margin: 0;
   max-width: 58ch;
-  color: rgba(244, 240, 255, 0.78);
+  color: var(--focus-text-soft);
   line-height: 1.75;
 }
 
@@ -2959,15 +3068,19 @@ a {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.04);
-  color: #f4f0ff;
+  color: var(--focus-text);
   font-weight: 800;
   cursor: pointer;
 }
 
 .focus-view-chip-active {
-  border-color: rgba(89, 244, 214, 0.54);
-  background: linear-gradient(135deg, rgba(0, 255, 214, 0.18), rgba(255, 0, 140, 0.16));
-  box-shadow: 0 0 24px rgba(89, 244, 214, 0.22);
+  border-color: color-mix(in srgb, var(--focus-accent) 60%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--focus-accent-bright) 18%, transparent),
+    color-mix(in srgb, var(--focus-accent-secondary) 16%, transparent)
+  );
+  box-shadow: 0 0 24px color-mix(in srgb, var(--focus-accent) 28%, transparent);
 }
 
 .focus-scene {
@@ -2984,11 +3097,11 @@ a {
 .focus-win-chip {
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(10, 9, 20, 0.9);
+  background: var(--focus-surface);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
     0 20px 54px rgba(0, 0, 0, 0.42),
-    0 0 40px rgba(63, 255, 218, 0.08);
+    0 0 40px color-mix(in srgb, var(--focus-accent-bright) 28%, transparent);
 }
 
 .focus-score-splash {
@@ -2997,9 +3110,9 @@ a {
   padding: 20px 18px 18px;
   border-radius: 36px 36px 28px 28px;
   background:
-    radial-gradient(circle at top left, rgba(0, 255, 214, 0.18), transparent 30%),
-    radial-gradient(circle at 85% 25%, rgba(255, 77, 202, 0.18), transparent 30%),
-    rgba(10, 9, 20, 0.94);
+    radial-gradient(circle at top left, var(--focus-page-glow-a), transparent 30%),
+    radial-gradient(circle at 85% 25%, var(--focus-page-glow-b), transparent 30%),
+    var(--focus-surface-strong);
 }
 
 .focus-week-nav,
@@ -3019,7 +3132,7 @@ a {
 
 .focus-week-edit-note {
   margin: 0;
-  color: rgba(244, 240, 255, 0.72);
+  color: var(--focus-text-muted);
   font-size: 0.84rem;
 }
 
@@ -3068,10 +3181,15 @@ a {
   border-radius: 999px;
   background:
     radial-gradient(circle at center, rgba(8, 8, 18, 0.96) 0 53%, transparent 54%),
-    conic-gradient(#00f5d4 0 28%, #95ff4a 28% 56%, #ffd84d 56% 72%, #ff4dca 72% 100%);
+    conic-gradient(
+      var(--focus-accent-bright) 0 28%,
+      var(--focus-accent-tertiary) 28% 56%,
+      var(--focus-accent-warm) 56% 72%,
+      var(--focus-accent-secondary) 72% 100%
+    );
   box-shadow:
     0 0 0 10px rgba(255, 255, 255, 0.04),
-    0 0 36px rgba(0, 255, 214, 0.16);
+    0 0 36px color-mix(in srgb, var(--focus-accent-bright) 32%, transparent);
 }
 
 .focus-score-ring-inner {
@@ -3091,7 +3209,7 @@ a {
 }
 
 .focus-score-ring-inner span {
-  color: rgba(244, 240, 255, 0.72);
+  color: var(--focus-text-muted);
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -3147,7 +3265,7 @@ a {
 
 .focus-reward-bubble-topline {
   margin: 0;
-  color: #ffd84d;
+  color: var(--focus-accent-warm);
   font-size: 0.86rem;
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -3173,9 +3291,9 @@ a {
 }
 
 .focus-reward-state-unlocked {
-  background: rgba(149, 255, 74, 0.12);
-  color: #95ff4a;
-  box-shadow: 0 0 18px rgba(149, 255, 74, 0.12);
+  background: color-mix(in srgb, var(--focus-accent-tertiary) 12%, transparent);
+  color: var(--focus-accent-tertiary);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-tertiary) 20%, transparent);
 }
 
 .focus-reward-bubble-main,
@@ -3184,7 +3302,7 @@ a {
 .focus-task-sticker-copy p,
 .focus-month-tier p {
   margin: 0;
-  color: rgba(244, 240, 255, 0.78);
+  color: var(--focus-text-soft);
   line-height: 1.65;
 }
 
@@ -3299,7 +3417,7 @@ a {
   min-height: 48px;
   width: 100%;
   border-radius: 999px;
-  border: 1px solid rgba(89, 244, 214, 0.28);
+  border: 1px solid color-mix(in srgb, var(--focus-accent) 36%, transparent);
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   font-weight: 800;
@@ -3321,20 +3439,20 @@ a {
 
 .focus-task-teal {
   background:
-    radial-gradient(circle at top left, rgba(0, 255, 214, 0.2), transparent 32%),
-    rgba(8, 18, 24, 0.96);
+    radial-gradient(circle at top left, var(--focus-task-glow-1), transparent 32%),
+    var(--focus-task-surface-1);
 }
 
 .focus-task-sage {
   background:
-    radial-gradient(circle at top left, rgba(149, 255, 74, 0.18), transparent 32%),
-    rgba(11, 21, 14, 0.96);
+    radial-gradient(circle at top left, var(--focus-task-glow-2), transparent 32%),
+    var(--focus-task-surface-2);
 }
 
 .focus-task-stone {
   background:
-    radial-gradient(circle at top left, rgba(255, 108, 221, 0.2), transparent 32%),
-    rgba(20, 12, 24, 0.96);
+    radial-gradient(circle at top left, var(--focus-task-glow-3), transparent 32%),
+    var(--focus-task-surface-3);
 }
 
 .focus-task-sticker-top {
@@ -3410,7 +3528,7 @@ a {
 .focus-week-label,
 .focus-metric-meta {
   margin: 0;
-  color: rgba(244, 240, 255, 0.64);
+  color: color-mix(in srgb, var(--focus-text) 64%, transparent);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -3428,8 +3546,8 @@ a {
   border-radius: 999px;
   font-weight: 900;
   color: #fff;
-  background: linear-gradient(135deg, #00e8ff 0%, #ff1aa8 100%);
-  box-shadow: 0 0 22px rgba(0, 232, 255, 0.24);
+  background: linear-gradient(135deg, var(--focus-accent-bright) 0%, var(--focus-accent-secondary) 100%);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--focus-accent-bright) 32%, transparent);
 }
 
 .focus-progress-meter {
@@ -3455,13 +3573,13 @@ a {
 .focus-mini-bar-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #00ffd5 0%, #64ff6a 100%);
-  box-shadow: 0 0 18px rgba(0, 255, 213, 0.42);
+  background: linear-gradient(90deg, var(--focus-action-from) 0%, var(--focus-action-to) 100%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-action-from) 42%, transparent);
 }
 
 .focus-progress-fill-pink {
-  background: linear-gradient(90deg, #ff4bcf 0%, #9f6dff 100%);
-  box-shadow: 0 0 18px rgba(255, 75, 207, 0.38);
+  background: linear-gradient(90deg, var(--focus-action-alt-from) 0%, var(--focus-action-alt-to) 100%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-action-alt-from) 38%, transparent);
 }
 
 .focus-progress-meta {
@@ -3470,7 +3588,7 @@ a {
 }
 
 .focus-progress-meta strong {
-  color: #59f4d6;
+  color: var(--focus-accent);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -3499,7 +3617,7 @@ a {
   justify-content: center;
   cursor: pointer;
   font-weight: 900;
-  color: #59f4d6;
+  color: var(--focus-accent);
 }
 
 .focus-help summary::-webkit-details-marker {
@@ -3539,7 +3657,7 @@ a {
 
 .focus-mini-celebration {
   margin: 8px 0 0;
-  color: #ffd34d;
+  color: var(--focus-accent-warm);
   font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0.1em;
@@ -3547,7 +3665,7 @@ a {
 }
 
 .focus-mini-celebration-soft {
-  color: #59f4d6;
+  color: var(--focus-accent);
 }
 
 .focus-metric-controls {
@@ -3578,9 +3696,9 @@ a {
 }
 
 .focus-icon-button-plus {
-  background: linear-gradient(135deg, #00ffd5 0%, #ff1aa8 100%);
+  background: linear-gradient(135deg, var(--focus-accent-bright) 0%, var(--focus-accent-secondary) 100%);
   border-color: transparent;
-  box-shadow: 0 0 18px rgba(255, 26, 168, 0.24);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-secondary) 24%, transparent);
 }
 
 .focus-metric-count {
@@ -3594,9 +3712,13 @@ a {
 }
 
 .focus-metric-count-hit {
-  background: linear-gradient(135deg, rgba(255, 211, 77, 0.22), rgba(255, 120, 64, 0.2));
-  color: #ffd34d;
-  box-shadow: 0 0 18px rgba(255, 211, 77, 0.16);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--focus-accent-warm) 22%, transparent),
+    color-mix(in srgb, var(--focus-accent-secondary) 20%, transparent)
+  );
+  color: var(--focus-accent-warm);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-warm) 18%, transparent);
 }
 
 .focus-month-tier {
@@ -3645,14 +3767,19 @@ a {
 
 .focus-month-tier-active {
   background:
-    radial-gradient(circle at top left, rgba(255, 216, 77, 0.26), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(0, 245, 212, 0.24), transparent 30%),
-    linear-gradient(135deg, rgba(255, 82, 191, 0.3), rgba(0, 232, 255, 0.22) 52%, rgba(255, 216, 77, 0.26));
-  border-color: rgba(255, 211, 77, 0.58);
+    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-accent-warm) 26%, transparent), transparent 24%),
+    radial-gradient(circle at bottom right, color-mix(in srgb, var(--focus-accent-bright) 24%, transparent), transparent 30%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--focus-accent-secondary) 30%, transparent),
+      color-mix(in srgb, var(--focus-accent-bright) 22%, transparent) 52%,
+      color-mix(in srgb, var(--focus-accent-warm) 26%, transparent)
+    );
+  border-color: color-mix(in srgb, var(--focus-accent-warm) 58%, transparent);
   box-shadow:
     0 22px 60px rgba(0, 0, 0, 0.42),
-    0 0 36px rgba(255, 211, 77, 0.18),
-    0 0 48px rgba(0, 245, 212, 0.14);
+    0 0 36px color-mix(in srgb, var(--focus-accent-warm) 18%, transparent),
+    0 0 48px color-mix(in srgb, var(--focus-accent-bright) 14%, transparent);
 }
 
 .focus-tier-status {
@@ -3672,8 +3799,8 @@ a {
   padding: 18px;
   border-radius: 28px;
   background:
-    radial-gradient(circle at top right, rgba(255, 216, 77, 0.18), transparent 28%),
-    rgba(10, 9, 20, 0.92);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--focus-accent-warm) 18%, transparent), transparent 28%),
+    var(--focus-surface);
 }
 
 .focus-month-peek-copy {
@@ -3682,7 +3809,7 @@ a {
 }
 
 .focus-month-peek-reward {
-  color: #59f4d6 !important;
+  color: var(--focus-accent) !important;
   font-weight: 800;
 }
 
@@ -3693,8 +3820,8 @@ a {
   border-radius: 30px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background:
-    radial-gradient(circle at top left, rgba(0, 245, 212, 0.12), transparent 28%),
-    rgba(10, 9, 20, 0.92);
+    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-accent-bright) 12%, transparent), transparent 28%),
+    var(--focus-surface);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
     0 20px 54px rgba(0, 0, 0, 0.42);

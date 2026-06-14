@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireFocusPlatformOwner } from "@/lib/focus-board/access";
 import {
+  FOCUS_THEME_PRESETS,
   getAccentClassForIndex,
   normaliseFocusKey,
   type FocusMetricKind,
+  type FocusThemePreset,
 } from "@/lib/focus-board/config";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import { getFocusBoardRuntimeConfigByAdminSlug } from "@/lib/focus-board/runtime";
@@ -55,12 +57,17 @@ export async function updateFocusBoardSettingsAction(formData: FormData) {
   const title = getValue(formData, "title") || runtime.settings.title;
   const subtitle = getValue(formData, "subtitle") || runtime.settings.subtitle;
   const weeklyTarget = Math.max(1, getIntValue(formData, "weeklyTarget", runtime.settings.weeklyTarget));
+  const requestedTheme = getValue(formData, "themePreset");
+  const themePreset = FOCUS_THEME_PRESETS.includes(requestedTheme as FocusThemePreset)
+    ? (requestedTheme as FocusThemePreset)
+    : runtime.settings.themePreset;
 
   await admin
     .from("focus_board_settings")
     .update({
       title,
       subtitle,
+      theme_preset: themePreset,
       weekly_target: weeklyTarget,
     })
     .eq("board_key", runtime.settings.boardKey);

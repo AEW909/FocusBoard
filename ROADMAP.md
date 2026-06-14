@@ -527,7 +527,7 @@ Completion:
 
 ### Slice 9 - Platform User Administration
 
-Status: `IN PROGRESS`
+Status: `COMPLETE`
 
 Goal:
 
@@ -554,6 +554,50 @@ Acceptance:
 - The user list makes it clear which boards each user can currently access.
 - Checks: `npm run typecheck` and `npm run build`
 
+Completion:
+
+- Commit: `7ca20cd`
+- Pushed: 2026-06-14
+- Platform owners can now open `/users`, create shared Supabase Auth users, optionally attach the
+  first board membership during creation, and review current FocusBoard board assignments from a
+  global user list.
+- Outstanding deployment work: none
+
+### Slice 10 - Board Theme Presets
+
+Status: `COMPLETE`
+
+Goal:
+
+Let platform owners switch each board between a few fun color presets while keeping the shared
+ FocusBoard layout, structure, and typography intact.
+
+Deliverables:
+
+- Add a persisted board theme preset to `focusboard.focus_board_settings`.
+- Keep the current neon look as the default preset.
+- Add a handful of curated colorful alternatives.
+- Apply the selected preset to the authenticated board and the control room.
+- Add a theme selector to the board settings form.
+
+Acceptance:
+
+- Existing boards keep the current neon look unless changed.
+- A platform owner can switch a board theme from the management screen.
+- Theme changes affect color styling only, not board structure or routing.
+- Checks: `npm run typecheck` and `npm run build`
+
+Completion:
+
+- Commit: pending local commit in this repository
+- Shared Supabase migration `focusboard_theme_presets` applied to project
+  `xoafnjhsxxczmfavmwoq` on 2026-06-14.
+- Theme preset support now includes `neon`, `sunset_pop`, `lagoon_bounce`, and
+  `citrus_blast`.
+- Board runtime, board rendering, and control-room rendering now read the selected theme preset
+  from `focusboard.focus_board_settings`.
+- Outstanding deployment work: push and redeploy this repository
+
 ## Verification Matrix
 
 Each implementation slice should run the checks relevant to its scope:
@@ -570,6 +614,7 @@ Each implementation slice should run the checks relevant to its scope:
 - Asset upload tenant-boundary check
 - PhysioNote no longer resolves FocusBoard routes
 - Platform owner can create a new FocusBoard user and see the expected board assignment
+- Platform owner can switch a board between theme presets and see the selected colors render
 
 ## Migration Safety
 
@@ -610,6 +655,8 @@ Each implementation slice should run the checks relevant to its scope:
   `focusboard.*`.
 - 2026-06-14: Build admin-controlled user creation inside FocusBoard before considering any
   self-serve sign-up path.
+- 2026-06-14: Keep board theming preset-based and color-focused for the first release rather than
+  introducing per-board freeform design controls.
 
 ## Change Log
 
@@ -666,3 +713,7 @@ Each implementation slice should run the checks relevant to its scope:
   tables were dropped from the shared Supabase project after migration verification.
 - 2026-06-14: Slice 9 started. Platform-owner user creation and global user management are being
   added as the next operational workflow.
+- 2026-06-14: Slice 9 completed. Platform owners can now create FocusBoard users and optionally
+  assign their first board without leaving the app.
+- 2026-06-14: Slice 10 completed locally. Board theme presets were added with a persisted
+  `theme_preset` setting and the live Supabase schema was updated accordingly.

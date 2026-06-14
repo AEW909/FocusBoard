@@ -39,7 +39,9 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
         switchHref={switchHref}
         title={client.displayName}
       />
-      <main className="shell focus-public-page focus-public-page-neon">
+      <main
+        className={`shell focus-public-page focus-public-page-neon focus-theme-${board.settings.themePreset}`}
+      >
         <FocusPullToRefresh label="Release to refresh board" />
         <FocusBoard
           board={board}
