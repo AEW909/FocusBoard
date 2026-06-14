@@ -41,44 +41,12 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
           </div>
         </section>
 
-        <section className="focus-client-create-card">
-          <div className="focus-client-create-copy">
-            <p className="focus-kicker">Provision a new board</p>
-            <h2>Create a client workspace</h2>
-            <p>
-              This creates a fresh board from the current starter template, generates unique board
-              links, and can optionally link an existing login straight away.
-            </p>
-          </div>
-
-          {query.clientMessage ? <p className="form-success">{query.clientMessage}</p> : null}
-          {query.clientError ? <p className="form-error">{query.clientError}</p> : null}
-
-          <form action={createFocusClientAction} className="focus-client-create-form">
-            <label className="field">
-              <span>Client / board name</span>
-              <input name="displayName" placeholder="Example: Harris Physio" required />
-            </label>
-            <label className="field">
-              <span>Initial user email (optional)</span>
-              <input name="ownerEmail" placeholder="name@example.com" type="email" />
-            </label>
-            <label className="field">
-              <span>Content Lab at launch</span>
-              <select className="select-field" defaultValue="false" name="contentLabEnabled">
-                <option value="false">Disabled</option>
-                <option value="true">Enabled</option>
-              </select>
-            </label>
-            <button className="button focus-client-manage-button" type="submit">
-              Create client board
-            </button>
-          </form>
-        </section>
-
         <section className="focus-client-grid">
           {clients.map((client) => (
-            <article className="focus-client-card" key={client.clientId}>
+            <article
+              className={`focus-client-card focus-public-page-neon focus-theme-${client.themePreset}`}
+              key={client.clientId}
+            >
               <div className="focus-client-card-head">
                 <div>
                   <p className="focus-client-label">Client</p>
@@ -140,6 +108,48 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
             No FocusBoard clients have been provisioned yet.
           </section>
         ) : null}
+
+        <section className="focus-client-create-wrap">
+          <details className="focus-client-create-card">
+            <summary className="focus-client-create-summary">
+              <div className="focus-client-create-copy">
+                <p className="focus-kicker">Provision a new board</p>
+                <h2>Create a client workspace</h2>
+                <p>
+                  Start collapsed, open when you need it, and spin up a fresh board from the
+                  current starter template.
+                </p>
+              </div>
+              <span className="focus-client-create-toggle">Open</span>
+            </summary>
+
+            <div className="focus-client-create-body">
+              {query.clientMessage ? <p className="form-success">{query.clientMessage}</p> : null}
+              {query.clientError ? <p className="form-error">{query.clientError}</p> : null}
+
+              <form action={createFocusClientAction} className="focus-client-create-form">
+                <label className="field">
+                  <span>Client / board name</span>
+                  <input name="displayName" placeholder="Example: Harris Physio" required />
+                </label>
+                <label className="field">
+                  <span>Initial user email (optional)</span>
+                  <input name="ownerEmail" placeholder="name@example.com" type="email" />
+                </label>
+                <label className="field">
+                  <span>Content Lab at launch</span>
+                  <select className="select-field" defaultValue="false" name="contentLabEnabled">
+                    <option value="false">Disabled</option>
+                    <option value="true">Enabled</option>
+                  </select>
+                </label>
+                <button className="button focus-client-manage-button" type="submit">
+                  Create client board
+                </button>
+              </form>
+            </div>
+          </details>
+        </section>
       </main>
     </>
   );

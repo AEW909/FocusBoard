@@ -766,9 +766,61 @@ a {
 
 .focus-client-create-card {
   display: grid;
-  gap: 18px;
-  padding: 22px;
+  gap: 0;
+  padding: 0;
   border-radius: 26px;
+  overflow: hidden;
+}
+
+.focus-client-create-wrap {
+  display: grid;
+}
+
+.focus-client-create-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 22px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.focus-client-create-summary::-webkit-details-marker {
+  display: none;
+}
+
+.focus-client-create-body {
+  display: grid;
+  gap: 18px;
+  padding: 0 22px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.focus-client-create-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f0ff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.focus-client-create-card[open] .focus-client-create-toggle {
+  font-size: 0;
+}
+
+.focus-client-create-card[open] .focus-client-create-toggle::before {
+  content: "Close";
+  font-size: 0.8rem;
 }
 
 .focus-client-create-copy h2,
@@ -807,6 +859,12 @@ a {
   min-width: 0;
   padding: 22px;
   border-radius: 26px;
+  color: var(--focus-text);
+  background:
+    radial-gradient(circle at top left, var(--focus-page-glow-a), transparent 28%),
+    radial-gradient(circle at top right, var(--focus-page-glow-b), transparent 26%),
+    radial-gradient(circle at bottom center, var(--focus-page-glow-c), transparent 34%),
+    var(--focus-surface-strong);
 }
 
 .focus-client-card-head {
@@ -818,7 +876,7 @@ a {
 
 .focus-client-card h2 {
   margin: 4px 0 0;
-  color: #fff;
+  color: var(--focus-text-strong);
   font-family: var(--font-display), sans-serif;
   font-size: 1.45rem;
   letter-spacing: -0.04em;
@@ -826,7 +884,7 @@ a {
 
 .focus-client-label {
   margin: 0;
-  color: #59f4d6;
+  color: var(--focus-accent);
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -867,19 +925,19 @@ a {
   align-items: center;
   padding: 0 11px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(244, 240, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--focus-text-soft);
   font-size: 0.76rem;
   font-weight: 800;
 }
 
 .focus-client-features .is-enabled {
-  color: #ffd84d;
+  color: var(--focus-text-strong);
 }
 
 .focus-client-features .is-disabled {
-  color: rgba(244, 240, 255, 0.42);
+  color: var(--focus-text-muted);
 }
 
 .focus-client-actions {
@@ -3213,8 +3271,8 @@ a {
   height: 42px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--focus-text-strong);
   font-size: 1.1rem;
   font-weight: 900;
 }
@@ -3237,7 +3295,7 @@ a {
 .focus-month-tier h3,
 .focus-month-peek h2 {
   margin: 0;
-  color: #fff;
+  color: var(--focus-text-strong);
   font-family: var(--font-display), sans-serif;
   letter-spacing: -0.03em;
 }
@@ -3249,7 +3307,7 @@ a {
   height: 180px;
   border-radius: 999px;
   background:
-    radial-gradient(circle at center, rgba(8, 8, 18, 0.96) 0 53%, transparent 54%),
+    radial-gradient(circle at center, color-mix(in srgb, var(--focus-surface-strong) 96%, black 12%) 0 53%, transparent 54%),
     conic-gradient(
       var(--focus-accent-bright) 0 28%,
       var(--focus-accent-tertiary) 28% 56%,
@@ -3267,12 +3325,12 @@ a {
   width: 124px;
   height: 124px;
   border-radius: 999px;
-  background: rgba(6, 6, 16, 0.96);
+  background: color-mix(in srgb, var(--focus-surface-strong) 94%, black 10%);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .focus-score-ring-inner strong {
-  color: #fff;
+  color: var(--focus-text-strong);
   font-size: 2.4rem;
   line-height: 1;
 }
@@ -3307,17 +3365,29 @@ a {
 
 .focus-reward-bubble-copy h3 {
   margin: 0;
-  color: #fff;
+  color: var(--focus-text-strong);
   font-family: var(--font-display), sans-serif;
   font-size: 1.35rem;
 }
 
 .focus-reward-bubble-base {
-  background: linear-gradient(135deg, rgba(255, 77, 202, 0.12), rgba(142, 93, 255, 0.12));
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-accent-secondary) 20%, transparent), transparent 30%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--focus-accent-secondary) 14%, transparent),
+      color-mix(in srgb, var(--focus-accent-violet) 14%, transparent)
+    );
 }
 
 .focus-reward-bubble-near {
-  background: linear-gradient(135deg, rgba(0, 245, 212, 0.18), rgba(255, 77, 202, 0.16));
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--focus-accent-bright) 20%, transparent), transparent 30%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--focus-accent-bright) 18%, transparent),
+      color-mix(in srgb, var(--focus-accent-secondary) 16%, transparent)
+    );
 }
 
 .focus-reward-bubble-victory {
@@ -3355,8 +3425,8 @@ a {
 }
 
 .focus-reward-state-locked {
-  background: rgba(255, 156, 227, 0.1);
-  color: #ff9ce3;
+  background: color-mix(in srgb, var(--focus-accent-secondary) 14%, transparent);
+  color: var(--focus-accent-secondary);
 }
 
 .focus-reward-state-unlocked {
@@ -3390,7 +3460,7 @@ a {
 }
 
 .focus-reward-bubble-art-locked {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -3667,7 +3737,7 @@ a {
 .focus-burst-copy,
 .focus-help-popover,
 .focus-link-card {
-  color: rgba(244, 240, 255, 0.76);
+  color: var(--focus-text-soft);
 }
 
 .focus-help {
@@ -3680,7 +3750,7 @@ a {
   height: 34px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.12);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3702,7 +3772,7 @@ a {
   padding: 14px 16px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(8, 8, 18, 0.98);
+  background: color-mix(in srgb, var(--focus-surface-strong) 94%, black 12%);
   box-shadow: 0 16px 42px rgba(0, 0, 0, 0.3);
   line-height: 1.55;
 }
@@ -3720,7 +3790,7 @@ a {
 .focus-metric-label,
 .focus-tier-points {
   margin: 0 0 4px;
-  color: #fff;
+  color: var(--focus-text-strong);
   font-weight: 900;
 }
 
@@ -3752,8 +3822,8 @@ a {
   height: 44px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--focus-text-strong);
   font-size: 1.2rem;
   font-weight: 900;
   cursor: pointer;
@@ -3774,8 +3844,8 @@ a {
   min-width: 88px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--focus-text-strong);
   text-align: center;
   font-weight: 900;
 }
@@ -3856,8 +3926,8 @@ a {
   width: fit-content;
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--focus-text-strong);
   font-size: 0.8rem;
   font-weight: 900;
 }
@@ -3898,7 +3968,7 @@ a {
 
 .focus-progress-snapshot-head h3 {
   margin: 0;
-  color: #fff;
+  color: var(--focus-text-strong);
   font-family: var(--font-display), sans-serif;
   letter-spacing: -0.03em;
 }
@@ -3918,7 +3988,7 @@ a {
 }
 
 .focus-chart-nav > span:not(.focus-nav-arrow) {
-  color: rgba(244, 240, 255, 0.72);
+  color: var(--focus-text-muted);
   font-size: 0.78rem;
   font-weight: 800;
   text-align: center;
@@ -3948,7 +4018,7 @@ a {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
-  color: rgba(244, 240, 255, 0.7);
+  color: var(--focus-text-muted);
   font-size: 0.75rem;
   text-align: center;
 }
@@ -3992,13 +4062,13 @@ a {
 }
 
 .focus-breakdown-item strong {
-  color: #fff;
+  color: var(--focus-text-strong);
   font-size: 0.88rem;
 }
 
 .focus-breakdown-item p {
   margin: 2px 0 0;
-  color: rgba(244, 240, 255, 0.7);
+  color: var(--focus-text-muted);
   font-size: 0.8rem;
 }
 
@@ -4010,8 +4080,8 @@ a {
   padding: 18px;
   border-radius: 30px;
   background:
-    radial-gradient(circle at top left, rgba(255, 77, 202, 0.18), transparent 26%),
-    rgba(10, 9, 20, 0.92);
+    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-accent-secondary) 22%, transparent), transparent 26%),
+    var(--focus-surface-strong);
 }
 
 .focus-month-monster {
@@ -4025,8 +4095,8 @@ a {
   padding: 16px;
   border-radius: 28px;
   background:
-    radial-gradient(circle at top right, rgba(0, 245, 212, 0.16), transparent 26%),
-    rgba(10, 9, 20, 0.92);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--focus-accent-bright) 22%, transparent), transparent 26%),
+    var(--focus-surface-strong);
 }
 
 .focus-month-progress-copy {
@@ -4037,13 +4107,13 @@ a {
 }
 
 .focus-month-progress-copy strong {
-  color: #fff;
+  color: var(--focus-text-strong);
   font-size: 2rem;
   line-height: 1;
 }
 
 .focus-month-progress-copy span {
-  color: rgba(244, 240, 255, 0.72);
+  color: var(--focus-text-muted);
   font-weight: 700;
 }
 
@@ -4058,11 +4128,15 @@ a {
   gap: 6px;
   padding: 14px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .focus-win-chip-hit {
-  background: linear-gradient(135deg, rgba(89, 244, 214, 0.2), rgba(147, 63, 255, 0.2));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--focus-accent-bright) 24%, transparent),
+    color-mix(in srgb, var(--focus-accent-violet) 22%, transparent)
+  );
 }
 
 .focus-reward-zigzag {
@@ -4072,8 +4146,8 @@ a {
 
 .focus-month-tier-zigzag {
   background:
-    radial-gradient(circle at top left, rgba(255, 216, 77, 0.12), transparent 26%),
-    rgba(10, 9, 20, 0.92);
+    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-accent-warm) 20%, transparent), transparent 26%),
+    var(--focus-surface-strong);
 }
 
 .focus-month-tier-offset {

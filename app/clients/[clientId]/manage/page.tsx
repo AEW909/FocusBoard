@@ -507,14 +507,14 @@ export default async function FocusClientManagePage({
           <FocusControlSection
             defaultOpen
             eyebrow="Goals"
-            summary={`${runtime.allTasks.length} challenge${runtime.allTasks.length === 1 ? "" : "s"} currently on the board.`}
+            summary={`${runtime.tasks.length} challenge${runtime.tasks.length === 1 ? "" : "s"} currently on the board.`}
             title="Existing weekly challenges"
           >
             <div className="focus-control-stack">
               <FocusControlExistingGoals
                 adminSlug={runtime.settings.adminSlug}
                 assets={assets}
-                tasks={runtime.allTasks}
+                tasks={runtime.tasks}
               />
             </div>
           </FocusControlSection>

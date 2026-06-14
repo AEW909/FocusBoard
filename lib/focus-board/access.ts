@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionUser, requireUser } from "@/lib/auth/session";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
+import type { FocusThemePreset } from "@/lib/focus-board/config";
 
 export type FocusClientAccess = {
   clientId: string;
@@ -13,6 +14,7 @@ export type FocusClientAccess = {
   boardKey: string;
   boardSlug: string;
   adminSlug: string;
+  themePreset: FocusThemePreset;
 };
 
 export type FocusBoardAccess = {
@@ -41,6 +43,7 @@ type BoardRow = {
   board_key: string;
   board_slug: string;
   admin_slug: string;
+  theme_preset: FocusThemePreset;
 };
 
 type FocusClientLookup = {
@@ -90,7 +93,7 @@ export async function getFocusBoardAccessForUser(userId: string): Promise<FocusB
       .in("id", clientIds),
     admin
       .from("focus_board_settings")
-      .select("client_id, board_key, board_slug, admin_slug")
+      .select("client_id, board_key, board_slug, admin_slug, theme_preset")
       .in("client_id", clientIds),
   ]);
 
@@ -130,6 +133,7 @@ export async function getFocusBoardAccessForUser(userId: string): Promise<FocusB
         boardKey: board.board_key,
         boardSlug: board.board_slug,
         adminSlug: board.admin_slug,
+        themePreset: board.theme_preset,
       }];
     }),
   };
@@ -184,7 +188,7 @@ export async function getManagedFocusClients(): Promise<FocusManagedClient[]> {
       .order("display_name", { ascending: true }),
     admin
       .from("focus_board_settings")
-      .select("client_id, board_key, board_slug, admin_slug"),
+      .select("client_id, board_key, board_slug, admin_slug, theme_preset"),
   ]);
 
   if (clientResult.error) {
@@ -216,6 +220,7 @@ export async function getManagedFocusClients(): Promise<FocusManagedClient[]> {
       boardKey: board.board_key,
       boardSlug: board.board_slug,
       adminSlug: board.admin_slug,
+      themePreset: board.theme_preset,
     }];
   });
 }
@@ -228,7 +233,7 @@ async function findManagedClientBy(
   const query = admin
     .from("focus_board_settings")
     .select(
-      "client_id, board_key, board_slug, admin_slug, clients!inner(id, client_key, display_name, status, content_lab_enabled)",
+      "client_id, board_key, board_slug, admin_slug, theme_preset, clients!inner(id, client_key, display_name, status, content_lab_enabled)",
     )
     .eq(selector, value)
     .maybeSingle();
@@ -255,6 +260,7 @@ async function findManagedClientBy(
     boardKey: data.board_key,
     boardSlug: data.board_slug,
     adminSlug: data.admin_slug,
+    themePreset: data.theme_preset,
   };
 }
 
