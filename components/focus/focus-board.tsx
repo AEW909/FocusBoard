@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
+import { signOutAction } from "@/app/login/actions";
 import { updateFocusBoardAction, type UpdateFocusBoardState } from "@/app/focus/actions";
 import { FocusImageWithFallback } from "@/components/focus/focus-image-with-fallback";
 import type { FocusThemePreset } from "@/lib/focus-board/config";
@@ -48,6 +49,7 @@ type FocusBoardProps = {
   board: FocusBoardData;
   contentLabEnabled: boolean;
   initialView: "week" | "month";
+  showInlineSignOut?: boolean;
 };
 
 type FocusView = "week" | "month";
@@ -145,7 +147,12 @@ function buildDonutSegments(values: { color: string; value: number }[], circumfe
   });
 }
 
-export function FocusBoard({ board, contentLabEnabled, initialView }: FocusBoardProps) {
+export function FocusBoard({
+  board,
+  contentLabEnabled,
+  initialView,
+  showInlineSignOut = false,
+}: FocusBoardProps) {
   const [state, formAction, pending] = useActionState(updateFocusBoardAction, initialState);
   const [view, setView] = useState<FocusView>(initialView);
   const themePalette =
@@ -220,6 +227,13 @@ export function FocusBoard({ board, contentLabEnabled, initialView }: FocusBoard
     <div className="focus-board-shell focus-board-shell-neon">
       <section className="focus-arcade-hero focus-arcade-hero-rebuilt">
         <div className="focus-hero-copy-wrap">
+          {showInlineSignOut ? (
+            <form action={signOutAction} className="focus-inline-signout-form">
+              <button className="focus-inline-signout" type="submit">
+                Sign out
+              </button>
+            </form>
+          ) : null}
           <p className="focus-kicker">{board.settings.title}</p>
           <h1>{board.settings.subtitle}</h1>
           <p className="focus-hero-copy">
@@ -391,6 +405,12 @@ export function FocusBoard({ board, contentLabEnabled, initialView }: FocusBoard
             {currentWeek.tasks.map((task) => (
               <article className={`focus-task-sticker ${task.accentClass}`} key={task.key}>
                 <div className="focus-task-sticker-top">
+                  <div className="focus-task-sticker-copy">
+                    <div className="focus-task-chip">{task.icon}</div>
+                    <h3>{task.title}</h3>
+                    {!task.isActive ? <p className="focus-retired-tag">Retired challenge</p> : null}
+                  </div>
+
                   <div className="focus-task-sticker-media">
                     <FocusImageWithFallback
                       alt={task.stickerAlt}
@@ -400,12 +420,6 @@ export function FocusBoard({ board, contentLabEnabled, initialView }: FocusBoard
                       src={task.stickerSrc}
                     />
                   </div>
-
-                  <div className="focus-task-sticker-copy">
-                  <div className="focus-task-chip">{task.icon}</div>
-                  <h3>{task.title}</h3>
-                  {!task.isActive ? <p className="focus-retired-tag">Retired challenge</p> : null}
-                </div>
 
                   <details className="focus-help focus-help-sticker">
                     <summary aria-label={`About ${task.title}`}>?</summary>

@@ -3133,6 +3133,29 @@ a {
   z-index: 1;
 }
 
+.focus-inline-signout-form {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
+.focus-inline-signout {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--focus-text-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.focus-inline-signout:hover,
+.focus-inline-signout:focus-visible {
+  color: var(--focus-text-strong);
+}
+
 .focus-hero-badges {
   display: flex;
   flex-wrap: wrap;
@@ -3596,29 +3619,36 @@ a {
 
 .focus-task-sticker-top {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 14px;
   align-items: start;
 }
 
 .focus-task-sticker-media {
   display: grid;
   place-items: center;
-  width: 92px;
-  min-width: 92px;
+  width: 132px;
+  min-width: 132px;
+  margin-top: -4px;
 }
 
 .focus-task-sticker-image {
   display: block;
-  width: 92px;
-  height: 92px;
-  object-fit: contain;
-  transform: rotate(-6deg);
+  width: 132px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  transform: rotate(8deg);
 }
 
 .focus-task-sticker-copy {
   display: grid;
   gap: 6px;
+  align-content: start;
 }
 
 .focus-task-chip {

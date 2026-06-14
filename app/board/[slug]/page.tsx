@@ -30,15 +30,18 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
   const backHref = access.isPlatformOwner ? "/clients" : undefined;
   const backLabel = "Back to clients";
   const switchHref = !access.isPlatformOwner && access.clients.length > 1 ? "/boards" : undefined;
+  const showSessionBar = access.isPlatformOwner;
 
   return (
     <>
-      <ProtectedSessionBar
-        backHref={backHref}
-        backLabel={backHref ? backLabel : undefined}
-        switchHref={switchHref}
-        title={client.displayName}
-      />
+      {showSessionBar ? (
+        <ProtectedSessionBar
+          backHref={backHref}
+          backLabel={backHref ? backLabel : undefined}
+          switchHref={switchHref}
+          title={client.displayName}
+        />
+      ) : null}
       <main
         className={`shell focus-public-page focus-public-page-neon focus-theme-${board.settings.themePreset}`}
       >
@@ -47,6 +50,7 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
           board={board}
           contentLabEnabled={client.contentLabEnabled && client.canUseContentLab}
           initialView={initialView}
+          showInlineSignOut={!showSessionBar}
         />
       </main>
     </>
