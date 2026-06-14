@@ -3018,13 +3018,13 @@ a {
   --focus-page-start: #77e7ff;
   --focus-page-mid: #3da9ff;
   --focus-page-end: #7dffd5;
-  --focus-surface: rgba(232, 250, 255, 0.68);
-  --focus-surface-strong: rgba(225, 244, 255, 0.82);
-  --focus-text: #103247;
-  --focus-text-strong: #0a2435;
-  --focus-text-soft: rgba(16, 50, 71, 0.86);
-  --focus-text-muted: rgba(16, 50, 71, 0.7);
-  --focus-accent: #7cf4ff;
+  --focus-surface: rgba(226, 247, 252, 0.74);
+  --focus-surface-strong: rgba(219, 240, 248, 0.88);
+  --focus-text: #14384d;
+  --focus-text-strong: #0b2637;
+  --focus-text-soft: rgba(20, 56, 77, 0.9);
+  --focus-text-muted: rgba(20, 56, 77, 0.8);
+  --focus-accent: #1a8fa9;
   --focus-accent-bright: #63f2ff;
   --focus-accent-secondary: #ff77cf;
   --focus-accent-tertiary: #6effc3;
@@ -3034,9 +3034,9 @@ a {
   --focus-action-to: #6effc3;
   --focus-action-alt-from: #ff77cf;
   --focus-action-alt-to: #4f8dff;
-  --focus-task-surface-1: rgba(226, 248, 255, 0.8);
-  --focus-task-surface-2: rgba(228, 255, 245, 0.78);
-  --focus-task-surface-3: rgba(233, 232, 255, 0.74);
+  --focus-task-surface-1: rgba(223, 246, 252, 0.88);
+  --focus-task-surface-2: rgba(225, 252, 242, 0.86);
+  --focus-task-surface-3: rgba(229, 231, 255, 0.82);
   --focus-task-glow-1: rgba(99, 242, 255, 0.28);
   --focus-task-glow-2: rgba(110, 255, 195, 0.24);
   --focus-task-glow-3: rgba(255, 119, 207, 0.24);
@@ -3658,8 +3658,8 @@ a {
   align-items: center;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff7ff;
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--focus-text-strong);
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -3689,17 +3689,17 @@ a {
   gap: 10px;
   padding: 14px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .focus-panel-label,
 .focus-week-label,
 .focus-metric-meta {
   margin: 0;
-  color: color-mix(in srgb, var(--focus-text) 64%, transparent);
+  color: var(--focus-text-muted);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
