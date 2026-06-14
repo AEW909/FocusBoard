@@ -525,6 +525,35 @@ Completion:
   and `51` events.
 - Outstanding deployment work: none
 
+### Slice 9 - Platform User Administration
+
+Status: `IN PROGRESS`
+
+Goal:
+
+Let platform owners create and manage FocusBoard user accounts from inside the app instead of
+ relying on separate Supabase dashboard work.
+
+Deliverables:
+
+- Add a platform-owner-only `/users` page.
+- Show a global user list with current client/board assignments.
+- Create a new Supabase Auth user from FocusBoard.
+- Allow optional initial board assignment during user creation.
+- Allow the platform owner to choose the initial FocusBoard role and Content Lab access for that
+  assignment.
+- Link the global user management surface from the platform workspace.
+- Keep shared-Auth overlap with PhysioNote explicit and avoid relying on PhysioNote roles for
+  FocusBoard authorization.
+
+Acceptance:
+
+- A platform owner can create a new login without leaving FocusBoard.
+- A newly created user can be assigned to at least one board during creation.
+- Existing memberships remain authoritative for FocusBoard access.
+- The user list makes it clear which boards each user can currently access.
+- Checks: `npm run typecheck` and `npm run build`
+
 ## Verification Matrix
 
 Each implementation slice should run the checks relevant to its scope:
@@ -540,6 +569,7 @@ Each implementation slice should run the checks relevant to its scope:
 - Content Lab enabled and disabled checks
 - Asset upload tenant-boundary check
 - PhysioNote no longer resolves FocusBoard routes
+- Platform owner can create a new FocusBoard user and see the expected board assignment
 
 ## Migration Safety
 
@@ -578,6 +608,8 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-14: After PhysioNote was redeployed with redirect-only shims, remove the legacy
   `public.focus_board_*` tables from the shared Supabase project and keep FocusBoard data solely in
   `focusboard.*`.
+- 2026-06-14: Build admin-controlled user creation inside FocusBoard before considering any
+  self-serve sign-up path.
 
 ## Change Log
 
@@ -632,3 +664,5 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-14: Slice 8 completed. PhysioNote now redirects legacy FocusBoard URLs to the standalone
   app, embedded PhysioNote FocusBoard code has been removed, and the legacy `public.focus_board_*`
   tables were dropped from the shared Supabase project after migration verification.
+- 2026-06-14: Slice 9 started. Platform-owner user creation and global user management are being
+  added as the next operational workflow.

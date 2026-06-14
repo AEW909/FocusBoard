@@ -25,17 +25,18 @@ type ProfileRow = {
   full_name: string | null;
 };
 
-type AuthUserSummary = {
+export type AuthUserSummary = {
   id: string;
   email: string;
   fullName: string | null;
+  createdAt: string | null;
 };
 
 function normaliseEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
-async function listAllAuthUsers() {
+export async function listAllAuthUsers() {
   const admin = createSupabaseAdminClient();
   const users: AuthUserSummary[] = [];
   const perPage = 200;
@@ -51,6 +52,7 @@ async function listAllAuthUsers() {
     const batch = (data?.users ?? []).map((user) => ({
       id: user.id,
       email: user.email?.trim().toLowerCase() ?? "",
+      createdAt: typeof user.created_at === "string" ? user.created_at : null,
       fullName:
         typeof user.user_metadata?.full_name === "string"
           ? user.user_metadata.full_name

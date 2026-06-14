@@ -34,6 +34,11 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
             Open the live board, tune its goals and rewards, or launch Content Lab when that
             feature is assigned.
           </p>
+          <div className="focus-client-actions">
+            <Link className="button focus-client-open-button" href="/users">
+              User management
+            </Link>
+          </div>
         </section>
 
         <section className="focus-client-create-card">
