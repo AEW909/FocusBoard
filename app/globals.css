@@ -3900,38 +3900,43 @@ a {
 .focus-month-tier-sticker-wrap {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: -4px;
+  margin-bottom: -10px;
 }
 
 .focus-liona-reward-art {
   position: relative;
-  width: 124px;
-  height: 124px;
+  width: 162px;
+  height: 150px;
   display: grid;
   place-items: center;
 }
 
 .focus-liona-reward-photo {
-  width: 112px;
-  height: 112px;
-  object-fit: contain;
-  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.28));
+  width: 150px;
+  height: 118px;
+  object-fit: cover;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  filter: drop-shadow(0 18px 20px rgba(0, 0, 0, 0.24));
 }
 
 .focus-liona-reward-art-1 .focus-liona-reward-photo {
-  transform: rotate(-7deg);
+  transform: rotate(-8deg);
 }
 
 .focus-liona-reward-art-2 .focus-liona-reward-photo {
-  transform: rotate(6deg);
+  transform: rotate(7deg);
 }
 
 .focus-liona-reward-art-3 .focus-liona-reward-photo {
-  transform: rotate(-5deg);
+  transform: rotate(-6deg);
 }
 
 .focus-liona-reward-art-4 .focus-liona-reward-photo {
-  transform: rotate(5deg);
+  transform: rotate(6deg);
 }
 
 .focus-month-tier-active {
@@ -4597,7 +4602,6 @@ a {
     width: min(100%, 210px);
   }
 
-  .focus-task-sticker-top,
   .focus-month-headline,
   .focus-win-strip,
   .focus-month-progress-copy,
@@ -4607,18 +4611,44 @@ a {
     display: grid;
   }
 
+  .focus-task-sticker-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 128px auto;
+    gap: 10px;
+    align-items: start;
+  }
+
   .focus-task-sticker-media {
-    width: 82px;
-    min-width: 82px;
+    width: 128px;
+    min-width: 128px;
+    justify-self: end;
+    margin-top: -2px;
   }
 
   .focus-task-sticker-image {
-    width: 82px;
-    height: 82px;
+    width: 128px;
+    height: 108px;
+    border-radius: 26px;
+    transform: rotate(10deg);
+  }
+
+  .focus-help-sticker {
+    justify-self: end;
   }
 
   .focus-month-monster {
     width: 94px;
+  }
+
+  .focus-liona-reward-art {
+    width: 146px;
+    height: 132px;
+  }
+
+  .focus-liona-reward-photo {
+    width: 138px;
+    height: 108px;
+    border-radius: 22px;
   }
 
   .focus-reward-bubble-art {

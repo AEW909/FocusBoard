@@ -15,11 +15,6 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: "FocusBoard",
   description: "Tiny weekly wins, loud colours, and silly rewards for the business-building jobs.",
-  icons: {
-    icon: "/focus/mascot-rainbow.svg",
-    shortcut: "/focus/mascot-rainbow.svg",
-    apple: "/focus/mascot-rainbow.svg",
-  },
 };
 
 export default function RootLayout({

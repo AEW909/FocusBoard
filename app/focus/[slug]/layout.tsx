@@ -8,11 +8,6 @@ export const metadata: Metadata = {
     title: "Reward Board",
     statusBarStyle: "black-translucent",
   },
-  icons: {
-    icon: "/focus/mascot-rainbow.svg",
-    shortcut: "/focus/mascot-rainbow.svg",
-    apple: "/focus/mascot-rainbow.svg",
-  },
 };
 
 export default function FocusLayout({

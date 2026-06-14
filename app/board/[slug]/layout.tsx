@@ -8,11 +8,6 @@ export const metadata: Metadata = {
     title: "FocusBoard",
     statusBarStyle: "black-translucent",
   },
-  icons: {
-    icon: "/focus/mascot-rainbow.svg",
-    shortcut: "/focus/mascot-rainbow.svg",
-    apple: "/focus/mascot-rainbow.svg",
-  },
 };
 
 export default function BoardLayout({
