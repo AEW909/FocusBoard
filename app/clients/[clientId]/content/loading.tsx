@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <>
       <ProtectedSessionBar title="Content Lab" />
-      <main className="focus-content-shell">
+      <main className="focus-content-shell focus-public-page focus-public-page-neon">
         <div className="focus-content-container">
           <header className="focus-content-header">
             <div className="focus-content-logo-mark" aria-hidden="true">

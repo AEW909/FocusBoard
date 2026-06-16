@@ -1,10 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import type { FocusThemePreset } from "@/lib/focus-board/config";
 
 type FocusContentLabProps = {
+  backHref?: string;
   clientName: string;
   slug: string;
+  themePreset: FocusThemePreset;
 };
 
 const CHANNELS = [
@@ -45,7 +49,12 @@ const QUICK_TOPICS = [
   "Why choose this business",
 ] as const;
 
-export function FocusContentLab({ clientName, slug }: FocusContentLabProps) {
+export function FocusContentLab({
+  backHref,
+  clientName,
+  slug,
+  themePreset,
+}: FocusContentLabProps) {
   const [channel, setChannel] = useState<string>("Instagram");
   const [format, setFormat] = useState<string>("Post caption");
   const [tone, setTone] = useState<string>("Warm and reassuring");
@@ -111,7 +120,7 @@ export function FocusContentLab({ clientName, slug }: FocusContentLabProps) {
   };
 
   return (
-    <main className="focus-content-shell">
+    <main className={`focus-content-shell focus-public-page focus-public-page-neon focus-theme-${themePreset}`}>
       <div className="focus-content-container">
         <header className="focus-content-header">
           <div className="focus-content-logo-mark" aria-hidden="true">
@@ -119,6 +128,11 @@ export function FocusContentLab({ clientName, slug }: FocusContentLabProps) {
           </div>
           <h1>{clientName}</h1>
           <p>Content Lab</p>
+          {backHref ? (
+            <Link className="focus-content-back-link" href={backHref}>
+              Back to board
+            </Link>
+          ) : null}
         </header>
 
         <section className="focus-content-card">

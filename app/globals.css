@@ -1760,8 +1760,7 @@ a {
 .focus-content-shell {
   min-height: 100vh;
   padding: 32px 16px 56px;
-  background: #faf7f4;
-  color: #1a1a1a;
+  color: var(--focus-text);
 }
 
 .focus-content-container {
@@ -1779,38 +1778,62 @@ a {
   width: 52px;
   height: 52px;
   border-radius: 999px;
-  background: #c9a97a;
-  color: #fff;
+  background: linear-gradient(135deg, var(--focus-accent-bright), var(--focus-accent-secondary));
+  color: var(--focus-text-strong);
   display: grid;
   place-items: center;
   margin: 0 auto 1rem;
-  font-family: Georgia, serif;
+  font-family: var(--font-display), sans-serif;
   font-size: 1.35rem;
+  font-weight: 900;
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--focus-accent-secondary) 20%, transparent);
 }
 
 .focus-content-header h1 {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-display), sans-serif;
   font-size: 1.65rem;
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.2;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.02em;
+  color: var(--focus-text-strong);
 }
 
 .focus-content-header p {
   margin: 0.35rem 0 0;
-  color: #888;
+  color: var(--focus-text-muted);
   font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
+.focus-content-back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-top: 1rem;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--focus-text-strong);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 .focus-content-card,
 .focus-content-output-card {
-  background: #fff;
-  border: 1px solid #e8e0d6;
-  border-radius: 16px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-page-glow-a) 90%, transparent), transparent 28%),
+    var(--focus-surface-strong);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
   padding: 1.75rem;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 20px 54px rgba(0, 0, 0, 0.24);
 }
 
 .focus-content-card {
@@ -1832,19 +1855,20 @@ a {
   min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  background: #f5ebe0;
-  color: #7a5828;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--focus-text-soft);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .focus-content-field-label {
   display: block;
   margin-bottom: 0.65rem;
-  color: #888;
+  color: var(--focus-text-muted);
   font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  font-weight: 800;
 }
 
 .focus-content-chip-row,
@@ -1868,17 +1892,21 @@ a {
 
 .focus-content-chip {
   padding: 6px 14px;
-  border: 1px solid #d4c8b8;
-  background: transparent;
-  color: #555;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--focus-text-soft);
   font-size: 0.8rem;
 }
 
 .focus-content-chip-active {
-  background: #f5ebe0;
-  border-color: #c9a97a;
-  color: #7a5828;
-  font-weight: 500;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--focus-accent-bright) 18%, transparent),
+    color-mix(in srgb, var(--focus-accent-secondary) 16%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--focus-accent) 44%, transparent);
+  color: var(--focus-text-strong);
+  font-weight: 700;
 }
 
 .focus-content-format-grid {
@@ -1891,16 +1919,20 @@ a {
 .focus-content-format-card {
   padding: 12px 10px;
   border-radius: 10px;
-  border: 1px solid #e8e0d6;
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
   text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .focus-content-format-card-active {
-  background: #f5ebe0;
-  border-color: #c9a97a;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--focus-accent-bright) 18%, transparent),
+    color-mix(in srgb, var(--focus-accent-secondary) 16%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--focus-accent) 44%, transparent);
 }
 
 .focus-content-format-icon,
@@ -1911,27 +1943,27 @@ a {
 
 .focus-content-format-icon {
   margin-bottom: 6px;
-  color: #7a5828;
+  color: var(--focus-accent);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
 
 .focus-content-format-name {
-  color: #1a1a1a;
+  color: var(--focus-text-strong);
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .focus-content-format-desc {
   margin-top: 2px;
-  color: #888;
+  color: var(--focus-text-muted);
   font-size: 0.72rem;
 }
 
 .focus-content-divider {
   height: 1px;
-  background: #e8e0d6;
+  background: rgba(255, 255, 255, 0.12);
   margin: 1.5rem 0;
 }
 
@@ -1939,10 +1971,10 @@ a {
   width: 100%;
   min-height: 96px;
   padding: 12px 14px;
-  border: 1px solid #d4c8b8;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 10px;
-  background: #faf7f4;
-  color: #1a1a1a;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--focus-text-strong);
   font-family: var(--font-body), sans-serif;
   font-size: 0.875rem;
   line-height: 1.6;
@@ -1950,13 +1982,13 @@ a {
 }
 
 .focus-content-textarea::placeholder {
-  color: #888;
+  color: var(--focus-text-muted);
 }
 
 .focus-content-textarea:focus {
   outline: none;
-  border-color: #c9a97a;
-  background: #fff;
+  border-color: color-mix(in srgb, var(--focus-accent) 48%, transparent);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .focus-content-quick-pills {
@@ -1965,9 +1997,9 @@ a {
 
 .focus-content-quick-pill {
   padding: 4px 11px;
-  border: 1px solid #e8e0d6;
-  background: #faf7f4;
-  color: #555;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--focus-text-soft);
   font-size: 0.75rem;
 }
 
@@ -1977,28 +2009,30 @@ a {
   padding: 14px;
   border: none;
   border-radius: 10px;
-  background: #c9a97a;
-  color: #fff;
+  background: linear-gradient(135deg, var(--focus-action-from), var(--focus-action-to));
+  color: var(--focus-text-strong);
   font-family: var(--font-body), sans-serif;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 800;
   letter-spacing: 0.04em;
   cursor: pointer;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--focus-action-from) 24%, transparent);
 }
 
 .focus-content-generate-button:disabled {
-  background: #ddd;
-  color: #999;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--focus-text-muted);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .focus-content-error {
   margin: 0 0 1rem;
   padding: 12px 16px;
-  border: 1px solid #f0c8c8;
+  border: 1px solid color-mix(in srgb, var(--focus-accent-secondary) 26%, transparent);
   border-radius: 10px;
-  background: #fdf0f0;
-  color: #a33;
+  background: color-mix(in srgb, var(--focus-accent-secondary) 10%, transparent);
+  color: var(--focus-text-strong);
   font-size: 0.85rem;
 }
 
@@ -2024,8 +2058,8 @@ a {
   min-height: 30px;
   padding: 4px 12px;
   border-radius: 999px;
-  background: #f5ebe0;
-  color: #7a5828;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--focus-text-soft);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2036,23 +2070,27 @@ a {
   align-items: center;
   min-height: 34px;
   padding: 5px 12px;
-  border: 1px solid #d4c8b8;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 10px;
-  background: transparent;
-  color: #555;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--focus-text-soft);
   font-family: var(--font-body), sans-serif;
   font-size: 0.78rem;
   cursor: pointer;
 }
 
 .focus-content-copy-button-copied {
-  background: #f5ebe0;
-  border-color: #c9a97a;
-  color: #7a5828;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--focus-accent-bright) 18%, transparent),
+    color-mix(in srgb, var(--focus-accent-secondary) 16%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--focus-accent) 44%, transparent);
+  color: var(--focus-text-strong);
 }
 
 .focus-content-output-body {
-  color: #1a1a1a;
+  color: var(--focus-text-strong);
   font-size: 0.9rem;
   line-height: 1.8;
   white-space: pre-wrap;
@@ -2067,7 +2105,12 @@ a {
 .focus-content-shimmer {
   height: 13px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #f0ece8 25%, #e8e2da 50%, #f0ece8 75%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.08) 75%
+  );
   background-size: 200% 100%;
   animation: focus-content-shimmer 1.4s infinite;
 }

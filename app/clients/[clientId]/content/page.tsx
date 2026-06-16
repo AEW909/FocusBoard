@@ -41,7 +41,12 @@ export default async function FocusClientContentPage({
         switchHref={switchHref}
         title="Content Lab"
       />
-      <FocusContentLab clientName={contentProfile.businessName} slug={runtime.settings.boardSlug} />
+      <FocusContentLab
+        backHref={!access.isPlatformOwner ? `/board/${runtime.settings.boardSlug}` : undefined}
+        clientName={contentProfile.businessName}
+        slug={runtime.settings.boardSlug}
+        themePreset={runtime.settings.themePreset}
+      />
     </>
   );
 }
