@@ -31,18 +31,21 @@ export default async function FocusClientContentPage({
   const backHref = access.isPlatformOwner ? "/clients" : `/board/${runtime.settings.boardSlug}`;
   const backLabel = access.isPlatformOwner ? "Back to clients" : "Back to board";
   const switchHref = !access.isPlatformOwner && access.clients.length > 1 ? "/boards" : undefined;
+  const showSessionBar = access.isPlatformOwner;
 
   return (
     <>
-      <ProtectedSessionBar
-        backHref={backHref}
-        backLabel={backLabel}
-        homeHref={`/board/${runtime.settings.boardSlug}`}
-        switchHref={switchHref}
-        title="Content Lab"
-      />
+      {showSessionBar ? (
+        <ProtectedSessionBar
+          backHref={backHref}
+          backLabel={backLabel}
+          homeHref={`/board/${runtime.settings.boardSlug}`}
+          switchHref={switchHref}
+          title="Content Lab"
+        />
+      ) : null}
       <FocusContentLab
-        backHref={!access.isPlatformOwner ? `/board/${runtime.settings.boardSlug}` : undefined}
+        backHref={!showSessionBar ? `/board/${runtime.settings.boardSlug}` : undefined}
         clientName={contentProfile.businessName}
         slug={runtime.settings.boardSlug}
         themePreset={runtime.settings.themePreset}
