@@ -29,6 +29,8 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
   const initialView = query.view === "month" ? "month" : "week";
   const backHref = access.isPlatformOwner ? "/clients" : undefined;
   const backLabel = "Back to clients";
+  const homeHref = access.isPlatformOwner ? `/clients/${client.clientId}/manage` : undefined;
+  const homeLabel = "Edit board";
   const switchHref = !access.isPlatformOwner && access.clients.length > 1 ? "/boards" : undefined;
   const showSessionBar = access.isPlatformOwner;
 
@@ -38,6 +40,8 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
         <ProtectedSessionBar
           backHref={backHref}
           backLabel={backHref ? backLabel : undefined}
+          homeHref={homeHref}
+          homeLabel={homeLabel}
           switchHref={switchHref}
           title={client.displayName}
         />
