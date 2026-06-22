@@ -165,7 +165,7 @@ export function getFocusBoardHomePath(access: FocusBoardAccess) {
     return "/boards";
   }
 
-  return null;
+  return "/no-board";
 }
 
 export async function requireFocusPlatformOwner(nextPath?: string) {

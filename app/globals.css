@@ -479,6 +479,28 @@ a {
   color: #ffd84d;
 }
 
+.no-board-card {
+  display: grid;
+  gap: 18px;
+}
+
+.no-board-note {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 216, 77, 0.2);
+  background:
+    radial-gradient(circle at top left, rgba(255, 216, 77, 0.13), transparent 30%),
+    rgba(255, 255, 255, 0.06);
+  color: rgba(244, 240, 255, 0.72);
+  line-height: 1.55;
+}
+
+.no-board-note strong {
+  color: #fff;
+}
+
 .auth-focus-orb {
   position: absolute;
   border-radius: 999px;

@@ -37,7 +37,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         return;
       }
 
-      router.push(nextPath);
+      router.push(nextPath === "/" ? "/" : `/?next=${encodeURIComponent(nextPath)}`);
       router.refresh();
     } finally {
       setPending(false);

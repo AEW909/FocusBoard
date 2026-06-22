@@ -35,7 +35,7 @@ export async function signInAction(
     return { error: error.message };
   }
 
-  redirect(nextPath);
+  redirect(nextPath === "/" ? "/" : `/?next=${encodeURIComponent(nextPath)}`);
 }
 
 export async function signOutAction() {

@@ -21,6 +21,10 @@ export default async function BoardsPage() {
 
   const directDestination = getFocusBoardHomePath(current.access);
 
+  if (directDestination === "/no-board") {
+    redirect("/no-board");
+  }
+
   if (directDestination && directDestination !== "/boards") {
     redirect(directDestination);
   }

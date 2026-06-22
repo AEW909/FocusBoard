@@ -21,16 +21,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     return <FocusLoginScreen nextPath={nextPath} />;
   }
 
-  const destination = nextPath !== "/" ? nextPath : getFocusBoardHomePath(current.access);
+  const homePath = getFocusBoardHomePath(current.access);
+  const destination = homePath === "/no-board" ? homePath : nextPath !== "/" ? nextPath : homePath;
 
-  if (destination) {
-    redirect(destination);
-  }
-
-  return (
-    <FocusLoginScreen
-      nextPath="/"
-      signedInEmail={current.user.email ?? "This account"}
-    />
-  );
+  redirect(destination);
 }
