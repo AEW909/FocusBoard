@@ -36,6 +36,8 @@ type FocusClientManagePageProps = {
     contentProfileError?: string;
     boardSettingsMessage?: string;
     boardSettingsError?: string;
+    challengeMessage?: string;
+    challengeError?: string;
   }>;
 };
 
@@ -422,12 +424,19 @@ export default async function FocusClientManagePage({
           </FocusControlSection>
 
           <FocusControlSection
+            defaultOpen={Boolean(query.challengeError)}
             eyebrow="Add a goal"
             summary="Create a fresh weekly challenge and give it its first scoring metric."
             title="New weekly challenge"
           >
             <form action={addFocusBoardTaskAction} className="focus-control-form">
               <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+              {query.challengeMessage ? (
+                <p className="form-success">{query.challengeMessage}</p>
+              ) : null}
+              {query.challengeError ? (
+                <p className="form-error">{query.challengeError}</p>
+              ) : null}
               <div className="focus-control-two-up">
                 <label className="field">
                   <span>Goal title</span>

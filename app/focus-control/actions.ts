@@ -60,6 +60,27 @@ function getManagePathWithFeedback(
   return query ? `${basePath}?${query}` : basePath;
 }
 
+function getManagePathWithChallengeFeedback(
+  clientId: string | null,
+  adminSlug: string,
+  message?: string,
+  error?: string,
+) {
+  const basePath = getManagePath(clientId, adminSlug);
+  const params = new URLSearchParams();
+
+  if (message) {
+    params.set("challengeMessage", message);
+  }
+
+  if (error) {
+    params.set("challengeError", error);
+  }
+
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
+}
+
 function revalidateFocusPaths(boardSlug: string, adminSlug: string, clientId: string | null) {
   revalidatePath(`/board/${boardSlug}`);
   revalidatePath(`/clients`);
@@ -162,7 +183,14 @@ export async function addFocusBoardTaskAction(formData: FormData) {
   const metricLabel = getValue(formData, "metricLabel");
 
   if (!title || !description || !metricLabel) {
-    throw new Error("New goals need a title, description, and metric label.");
+    redirect(
+      getManagePathWithChallengeFeedback(
+        runtime.settings.clientId,
+        runtime.settings.adminSlug,
+        undefined,
+        "New goals need a title, description, and metric label.",
+      ),
+    );
   }
 
   const currentSort = runtime.tasks.length + 1;
@@ -193,7 +221,19 @@ export async function addFocusBoardTaskAction(formData: FormData) {
     .single();
 
   if (taskError || !taskRow) {
-    throw new Error(taskError?.message ?? "Could not create the new goal.");
+    const message =
+      taskError?.code === "23505"
+        ? `A challenge with the key "${taskKey}" already exists. Try a more specific title.`
+        : taskError?.message ?? "Could not create the new goal.";
+
+    redirect(
+      getManagePathWithChallengeFeedback(
+        runtime.settings.clientId,
+        runtime.settings.adminSlug,
+        undefined,
+        message,
+      ),
+    );
   }
 
   const { error: metricError } = await admin.from("focus_board_task_metrics").insert({
@@ -207,13 +247,33 @@ export async function addFocusBoardTaskAction(formData: FormData) {
   });
 
   if (metricError) {
-    throw new Error(metricError.message);
+    await admin
+      .from("focus_board_tasks")
+      .delete()
+      .eq("id", taskRow.id)
+      .eq("board_key", runtime.settings.boardKey);
+
+    redirect(
+      getManagePathWithChallengeFeedback(
+        runtime.settings.clientId,
+        runtime.settings.adminSlug,
+        undefined,
+        `Could not create the scoring metric: ${metricError.message}`,
+      ),
+    );
   }
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
     runtime.settings.adminSlug,
     runtime.settings.clientId,
+  );
+  redirect(
+    getManagePathWithChallengeFeedback(
+      runtime.settings.clientId,
+      runtime.settings.adminSlug,
+      `Challenge "${title}" added.`,
+    ),
   );
 }
 
