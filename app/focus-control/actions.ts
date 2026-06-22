@@ -235,9 +235,49 @@ export async function updateFocusBoardTaskAction(formData: FormData) {
       icon: (getValue(formData, "icon") || "TASK").toUpperCase().slice(0, 6),
       sticker_src: getValue(formData, "stickerSrc") || "/focus/mascot-rainbow.svg",
       sticker_alt: getValue(formData, "stickerAlt") || "Goal sticker",
+      is_boosted: getValue(formData, "isBoosted") === "true",
     })
     .eq("id", taskId)
     .eq("board_key", runtime.settings.boardKey);
+
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
+}
+
+export async function reorderFocusBoardTasksAction(formData: FormData) {
+  const adminSlug = getValue(formData, "adminSlug");
+  const runtime = await getAdminContext(adminSlug);
+  const admin = createFocusBoardAdminClient();
+  const orderedTaskIds = formData
+    .getAll("taskIds")
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+  const knownTaskIds = new Set(runtime.tasks.map((task) => task.id).filter(Boolean));
+
+  if (orderedTaskIds.length !== runtime.tasks.length) {
+    throw new Error("The challenge order is out of date. Refresh and try again.");
+  }
+
+  if (!orderedTaskIds.every((taskId) => knownTaskIds.has(taskId))) {
+    throw new Error("One of those challenges does not belong to this board.");
+  }
+
+  const updates = await Promise.all(
+    orderedTaskIds.map((taskId, index) =>
+      admin
+        .from("focus_board_tasks")
+        .update({ sort_order: index + 1 })
+        .eq("id", taskId)
+        .eq("board_key", runtime.settings.boardKey),
+    ),
+  );
+  const failedUpdate = updates.find((result) => result.error);
+
+  if (failedUpdate?.error) {
+    throw new Error(failedUpdate.error.message);
+  }
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,

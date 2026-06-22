@@ -38,6 +38,7 @@ export type FocusBoardTask = {
   sortOrder?: number;
   isActive?: boolean;
   isVisible?: boolean;
+  isBoosted?: boolean;
   metrics: FocusBoardTaskMetric[];
 };
 

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useMemo, useState, useTransition, type DragEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   addFocusBoardMetricAction,
   deleteFocusBoardMetricAction,
   deleteFocusBoardTaskAction,
+  reorderFocusBoardTasksAction,
   toggleFocusBoardMetricVisibilityAction,
   toggleFocusBoardTaskVisibilityAction,
   updateFocusBoardMetricAction,
@@ -28,6 +29,7 @@ type TaskDraft = {
   description: string;
   stickerSrc: string;
   stickerAlt: string;
+  isBoosted: string;
 };
 
 type MetricDraft = {
@@ -98,6 +100,7 @@ function taskToDraft(task: FocusBoardTask): TaskDraft {
     description: task.description,
     stickerSrc: task.stickerSrc,
     stickerAlt: task.stickerAlt,
+    isBoosted: task.isBoosted ? "true" : "false",
   };
 }
 
@@ -107,6 +110,10 @@ function draftsMatch<T extends Record<string, string>>(left: T, right: T) {
 
 export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusControlExistingGoalsProps) {
   const [dirtyKeys, setDirtyKeys] = useState<Record<string, boolean>>({});
+  const [orderedTasks, setOrderedTasks] = useState(tasks);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [isReordering, startReorderTransition] = useTransition();
 
   const hasUnsavedChanges = useMemo(
     () => Object.values(dirtyKeys).some(Boolean),
@@ -114,6 +121,10 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
   );
 
   useUnsavedChangesWarning(hasUnsavedChanges);
+
+  useEffect(() => {
+    setOrderedTasks(tasks);
+  }, [tasks]);
 
   const setDirtyState = (key: string, dirty: boolean) => {
     setDirtyKeys((current) => {
@@ -134,15 +145,87 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
     });
   };
 
+  const persistOrder = (nextTasks: FocusBoardTask[]) => {
+    setOrderedTasks(nextTasks);
+    setOrderError(null);
+    startReorderTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.set("adminSlug", adminSlug);
+        nextTasks.forEach((task) => {
+          if (task.id) {
+            formData.append("taskIds", task.id);
+          }
+        });
+
+        await reorderFocusBoardTasksAction(formData);
+      } catch (error) {
+        setOrderError(error instanceof Error ? error.message : "Could not save the challenge order.");
+        setOrderedTasks(tasks);
+      }
+    });
+  };
+
+  const moveTask = (taskId: string | undefined, direction: -1 | 1) => {
+    if (!taskId || isReordering || hasUnsavedChanges) {
+      return;
+    }
+
+    const currentIndex = orderedTasks.findIndex((task) => task.id === taskId);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= orderedTasks.length) {
+      return;
+    }
+
+    const nextTasks = [...orderedTasks];
+    const [task] = nextTasks.splice(currentIndex, 1);
+    nextTasks.splice(nextIndex, 0, task);
+    persistOrder(nextTasks);
+  };
+
+  const dropTask = (targetTaskId: string | undefined) => {
+    if (!draggedTaskId || !targetTaskId || draggedTaskId === targetTaskId || hasUnsavedChanges) {
+      setDraggedTaskId(null);
+      return;
+    }
+
+    const fromIndex = orderedTasks.findIndex((task) => task.id === draggedTaskId);
+    const toIndex = orderedTasks.findIndex((task) => task.id === targetTaskId);
+    if (fromIndex < 0 || toIndex < 0) {
+      setDraggedTaskId(null);
+      return;
+    }
+
+    const nextTasks = [...orderedTasks];
+    const [task] = nextTasks.splice(fromIndex, 1);
+    nextTasks.splice(toIndex, 0, task);
+    setDraggedTaskId(null);
+    persistOrder(nextTasks);
+  };
+
   return (
     <div className="focus-control-stack">
-      {tasks.map((task) => (
+      {orderError ? <p className="focus-control-error-tag">{orderError}</p> : null}
+      {hasUnsavedChanges ? (
+        <p className="focus-control-order-note">Save open challenge edits before changing the order.</p>
+      ) : null}
+      {orderedTasks.map((task, index) => (
         <FocusControlTaskEditor
           adminSlug={adminSlug}
           assets={assets}
+          canReorder={!hasUnsavedChanges && !isReordering}
+          isDragging={draggedTaskId === task.id}
           key={task.id ?? task.key}
+          onDragEnd={() => setDraggedTaskId(null)}
+          onDragOver={(event) => event.preventDefault()}
+          onDragStart={() => setDraggedTaskId(task.id ?? null)}
+          onDrop={() => dropTask(task.id)}
           onDirtyChange={setDirtyState}
+          onMoveDown={() => moveTask(task.id, 1)}
+          onMoveUp={() => moveTask(task.id, -1)}
           task={task}
+          taskIndex={index}
+          taskTotal={orderedTasks.length}
         />
       ))}
     </div>
@@ -153,10 +236,35 @@ type FocusControlTaskEditorProps = {
   adminSlug: string;
   assets: FocusAssetOption[];
   task: FocusBoardTask;
+  taskIndex: number;
+  taskTotal: number;
+  canReorder: boolean;
+  isDragging: boolean;
+  onDragStart: () => void;
+  onDragOver: (event: DragEvent<HTMLElement>) => void;
+  onDrop: () => void;
+  onDragEnd: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
   onDirtyChange: (key: string, dirty: boolean) => void;
 };
 
-function FocusControlTaskEditor({ adminSlug, assets, task, onDirtyChange }: FocusControlTaskEditorProps) {
+function FocusControlTaskEditor({
+  adminSlug,
+  assets,
+  task,
+  taskIndex,
+  taskTotal,
+  canReorder,
+  isDragging,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  onMoveUp,
+  onMoveDown,
+  onDirtyChange,
+}: FocusControlTaskEditorProps) {
   const router = useRouter();
   const [taskDraft, setTaskDraft] = useState<TaskDraft>(() => taskToDraft(task));
   const [taskBaseline, setTaskBaseline] = useState<TaskDraft>(() => taskToDraft(task));
@@ -191,6 +299,7 @@ function FocusControlTaskEditor({ adminSlug, assets, task, onDirtyChange }: Focu
         formData.set("description", taskDraft.description);
         formData.set("stickerSrc", taskDraft.stickerSrc);
         formData.set("stickerAlt", taskDraft.stickerAlt);
+        formData.set("isBoosted", taskDraft.isBoosted);
 
         await updateFocusBoardTaskAction(formData);
         setTaskBaseline(taskDraft);
@@ -234,13 +343,58 @@ function FocusControlTaskEditor({ adminSlug, assets, task, onDirtyChange }: Focu
   };
 
   return (
-    <section className="focus-control-task-shell">
+    <section
+      className={`focus-control-task-shell ${isDragging ? "focus-control-task-shell-dragging" : ""}`}
+      draggable={canReorder}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart();
+      }}
+      onDrop={onDrop}
+    >
       <details
         className={`focus-control-task-collapsible ${isOpen ? "focus-control-task-collapsible-open" : ""}`}
         onToggle={(event) => setIsOpen(event.currentTarget.open)}
         open={isOpen}
       >
         <summary className="focus-control-task-summary">
+          <div
+            className="focus-control-drag-cluster"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+          >
+            <span
+              aria-label={`Drag ${task.title} to reorder`}
+              className="focus-control-drag-handle"
+              role="button"
+              tabIndex={canReorder ? 0 : -1}
+              title="Drag to reorder"
+            >
+              ::
+            </span>
+            <div className="focus-control-order-buttons">
+              <button
+                aria-label={`Move ${task.title} up`}
+                disabled={!canReorder || taskIndex === 0}
+                onClick={onMoveUp}
+                type="button"
+              >
+                ^
+              </button>
+              <button
+                aria-label={`Move ${task.title} down`}
+                disabled={!canReorder || taskIndex === taskTotal - 1}
+                onClick={onMoveDown}
+                type="button"
+              >
+                v
+              </button>
+            </div>
+          </div>
           <div className="focus-control-task-summary-copy">
             <p className="eyebrow">Challenge</p>
             <h3>{taskDraft.title || "Untitled goal"}</h3>
@@ -256,6 +410,7 @@ function FocusControlTaskEditor({ adminSlug, assets, task, onDirtyChange }: Focu
             >
               {isVisible ? "Visible" : "Paused"}
             </span>
+            {taskDraft.isBoosted === "true" ? <span className="focus-control-boost-pill">Boost x2</span> : null}
             {taskDirty ? <span className="focus-control-dirty-pill">Unsaved</span> : null}
             <span className="focus-control-collapse-icon" aria-hidden="true">
               {isOpen ? "−" : "+"}
@@ -325,6 +480,23 @@ function FocusControlTaskEditor({ adminSlug, assets, task, onDirtyChange }: Focu
                 />
               </label>
             </div>
+
+            <label className="focus-control-boost-toggle">
+              <input
+                checked={taskDraft.isBoosted === "true"}
+                onChange={(event) =>
+                  setTaskDraft((current) => ({
+                    ...current,
+                    isBoosted: event.target.checked ? "true" : "false",
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>
+                <strong>Boost this challenge</strong>
+                <small>Show a boosted tag on the board and double new points while active.</small>
+              </span>
+            </label>
 
             <div className="focus-control-task-action-row">
               <button

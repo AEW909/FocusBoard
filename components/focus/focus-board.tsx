@@ -403,10 +403,16 @@ export function FocusBoard({
 
           <section className="focus-task-reel">
             {currentWeek.tasks.map((task) => (
-              <article className={`focus-task-sticker ${task.accentClass}`} key={task.key}>
+              <article
+                className={`focus-task-sticker ${task.accentClass} ${task.isBoosted ? "focus-task-sticker-boosted" : ""}`}
+                key={task.key}
+              >
                 <div className="focus-task-sticker-top">
                   <div className="focus-task-sticker-copy">
-                    <div className="focus-task-chip">{task.icon}</div>
+                    <div className="focus-task-badge-row">
+                      <div className="focus-task-chip">{task.icon}</div>
+                      {task.isBoosted ? <span className="focus-task-boost-tag">Boosted x2</span> : null}
+                    </div>
                     <h3>{task.title}</h3>
                     {!task.isActive ? <p className="focus-retired-tag">Retired challenge</p> : null}
                   </div>
@@ -438,7 +444,7 @@ export function FocusBoard({
                         <div className="focus-metric-copy">
                           <p className="focus-metric-label">{metric.label}</p>
                           <p className="focus-metric-meta">
-                            {metric.points} pts each
+                            {task.isBoosted ? `${metric.points * 2} boosted pts` : `${metric.points} pts`} each
                             {metric.target > 0 ? ` - target ${metric.target}` : " - bonus"}
                           </p>
                           <div className="focus-mini-bar">

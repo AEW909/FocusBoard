@@ -65,7 +65,7 @@ export async function updateFocusBoardAction(
       week_start: weekKey,
       task_key: taskKey,
       metric_key: metricKey,
-      points: metric.points,
+      points: task.isBoosted ? metric.points * 2 : metric.points,
     });
 
     if (error) {

@@ -48,6 +48,7 @@ type FocusBoardTaskRow = {
   sort_order: number;
   is_active: boolean;
   is_visible: boolean;
+  is_boosted: boolean;
 };
 
 type FocusBoardTaskMetricRow = {
@@ -167,6 +168,7 @@ function mapTasks(taskRows: FocusBoardTaskRow[] | null, metricRows: FocusBoardTa
       sortOrder: row.sort_order,
       isActive: row.is_active,
       isVisible: row.is_visible,
+      isBoosted: row.is_boosted,
       metrics: (metricsByTask.get(row.id) ?? [])
         .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
     }))
@@ -233,7 +235,7 @@ async function getFocusBoardRuntimeConfigBy(
   const [tasksResult, rewardsResult] = await Promise.all([
     admin
       .from("focus_board_tasks")
-      .select("id, board_key, task_key, icon, sticker_src, sticker_alt, title, description, accent_class, sort_order, is_active, is_visible")
+      .select("id, board_key, task_key, icon, sticker_src, sticker_alt, title, description, accent_class, sort_order, is_active, is_visible, is_boosted")
       .eq("board_key", settingsRow.board_key)
       .order("sort_order", { ascending: true }),
     admin
