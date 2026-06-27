@@ -414,7 +414,7 @@ export function FocusBoard({
 
           <section className="focus-task-section-stack">
             {currentWeek.sections.map((section) => (
-              <details className="focus-board-section" key={section.key} open>
+              <details className="focus-board-section" key={section.key}>
                 <summary className="focus-board-section-head">
                   <div>
                     <p className="focus-panel-label">Goal area</p>
