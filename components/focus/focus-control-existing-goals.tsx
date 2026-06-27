@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition, type DragEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type DragEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   addFocusBoardSectionAction,
@@ -470,6 +470,7 @@ function FocusControlSectionEditor({
   onDirtyChange,
 }: FocusControlSectionEditorProps) {
   const router = useRouter();
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<SectionDraft>(() => sectionToDraft(section));
   const [baseline, setBaseline] = useState<SectionDraft>(() => sectionToDraft(section));
   const [saved, setSaved] = useState(false);
@@ -617,7 +618,15 @@ function FocusControlSectionEditor({
           </div>
           <div className="focus-control-section-title">
             <p className="eyebrow">Section</p>
-            <h3>{draft.title || "Untitled section"}</h3>
+            <h3
+              onDoubleClick={() => {
+                titleInputRef.current?.focus();
+                titleInputRef.current?.select();
+              }}
+              title="Double-click to edit"
+            >
+              {draft.title || "Untitled section"}
+            </h3>
             {draft.description ? <p>{draft.description}</p> : null}
           </div>
           <div className="focus-control-task-summary-meta">
@@ -639,7 +648,11 @@ function FocusControlSectionEditor({
         <div className="focus-control-section-fields">
           <label className="field">
             <span>Section name</span>
-            <input onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} value={draft.title} />
+            <input
+              onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
+              ref={titleInputRef}
+              value={draft.title}
+            />
           </label>
           <label className="field">
             <span>Description</span>
@@ -748,6 +761,7 @@ function FocusControlTaskEditor({
   onDirtyChange,
 }: FocusControlTaskEditorProps) {
   const router = useRouter();
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const [taskDraft, setTaskDraft] = useState<TaskDraft>(() => taskToDraft(task));
   const [taskBaseline, setTaskBaseline] = useState<TaskDraft>(() => taskToDraft(task));
   const [taskSaved, setTaskSaved] = useState(false);
@@ -889,7 +903,20 @@ function FocusControlTaskEditor({
           </div>
           <div className="focus-control-task-summary-copy">
             <p className="eyebrow">Challenge</p>
-            <h3>{taskDraft.title || "Untitled goal"}</h3>
+            <h3
+              onDoubleClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setIsOpen(true);
+                window.setTimeout(() => {
+                  titleInputRef.current?.focus();
+                  titleInputRef.current?.select();
+                }, 0);
+              }}
+              title="Double-click to edit"
+            >
+              {taskDraft.title || "Untitled goal"}
+            </h3>
             <p>
               {visibleMetrics.length} visible metric{visibleMetrics.length === 1 ? "" : "s"}
             </p>
@@ -951,6 +978,7 @@ function FocusControlTaskEditor({
                 <span>Task title</span>
                 <input
                   onChange={(event) => setTaskDraft((current) => ({ ...current, title: event.target.value }))}
+                  ref={titleInputRef}
                   value={taskDraft.title}
                 />
               </label>
@@ -1126,6 +1154,7 @@ function FocusControlMetricEditor({
   onDirtyChange,
 }: FocusControlMetricEditorProps) {
   const router = useRouter();
+  const labelInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<MetricDraft>(() => metricToDraft(metric));
   const [baseline, setBaseline] = useState<MetricDraft>(() => metricToDraft(metric));
   const [saved, setSaved] = useState(false);
@@ -1213,7 +1242,15 @@ function FocusControlMetricEditor({
       <div className="focus-control-metric-card-head">
         <div>
           <p className="eyebrow">Metric</p>
-          <h4>{draft.label || "Untitled metric"}</h4>
+          <h4
+            onDoubleClick={() => {
+              labelInputRef.current?.focus();
+              labelInputRef.current?.select();
+            }}
+            title="Double-click to edit"
+          >
+            {draft.label || "Untitled metric"}
+          </h4>
         </div>
         <div className="focus-control-metric-state">
           <span
@@ -1230,7 +1267,11 @@ function FocusControlMetricEditor({
       <div className="focus-control-metric-fields">
         <label className="field">
           <span>Metric label</span>
-          <input onChange={(event) => setDraft((current) => ({ ...current, label: event.target.value }))} value={draft.label} />
+          <input
+            onChange={(event) => setDraft((current) => ({ ...current, label: event.target.value }))}
+            ref={labelInputRef}
+            value={draft.label}
+          />
         </label>
         <label className="field">
           <span>Kind</span>

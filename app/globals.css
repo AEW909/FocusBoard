@@ -2682,6 +2682,16 @@ a {
   border-radius: 0 0 28px 28px;
 }
 
+.focus-control-section-group-body {
+  display: grid;
+  gap: 18px;
+  padding-inline: 0;
+  padding-bottom: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .focus-control-task-panel,
 .focus-control-reward-row {
   padding: 16px;

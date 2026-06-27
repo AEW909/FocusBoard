@@ -73,6 +73,36 @@ function FocusControlSection({
   );
 }
 
+type FocusControlGroupProps = {
+  eyebrow: string;
+  title: string;
+  summary?: string;
+  children: React.ReactNode;
+};
+
+function FocusControlGroup({
+  eyebrow,
+  title,
+  summary,
+  children,
+}: FocusControlGroupProps) {
+  return (
+    <details className="focus-control-section focus-control-section-group">
+      <summary className="focus-control-section-summary">
+        <div className="focus-control-section-copy">
+          <p className="eyebrow">{eyebrow}</p>
+          <h2>{title}</h2>
+          {summary ? <p>{summary}</p> : null}
+        </div>
+        <span className="focus-control-collapse-icon" aria-hidden="true">
+          +
+        </span>
+      </summary>
+      <div className="focus-control-section-body focus-control-section-group-body">{children}</div>
+    </details>
+  );
+}
+
 function formatMembershipRole(role: "client_admin" | "client_user") {
   return role === "client_admin" ? "Client admin" : "Client user";
 }
@@ -133,7 +163,124 @@ export default async function FocusClientManagePage({
           </div>
         </section>
 
-        <section className="focus-control-grid">
+        <section className="focus-control-stack">
+          <FocusControlSection
+            defaultOpen={Boolean(query.challengeError)}
+            eyebrow="Add a goal"
+            summary="Create a fresh weekly challenge and give it its first scoring metric."
+            title="New weekly challenge"
+          >
+            <form action={addFocusBoardTaskAction} className="focus-control-form">
+              <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+              {query.challengeMessage ? (
+                <p className="form-success">{query.challengeMessage}</p>
+              ) : null}
+              {query.challengeError ? (
+                <p className="form-error">{query.challengeError}</p>
+              ) : null}
+              <div className="focus-control-two-up">
+                <label className="field">
+                  <span>Section</span>
+                  <select className="select-field" name="sectionId" required>
+                    {runtime.allSections
+                      .filter((section) => section.isActive !== false)
+                      .map((section) => (
+                        <option key={section.id ?? section.key} value={section.id ?? ""}>
+                          {section.title}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label className="field">
+                  <span>Goal title</span>
+                  <input name="title" placeholder="Example: Ask for referrals" required />
+                </label>
+              </div>
+              <div className="focus-control-two-up">
+                <label className="field">
+                  <span>Badge text</span>
+                  <input name="icon" placeholder="REF" />
+                </label>
+              </div>
+              <label className="field">
+                <span>Description / help text</span>
+                <textarea
+                  name="description"
+                  placeholder="What counts as completing this one?"
+                  required
+                />
+              </label>
+              <div className="focus-control-three-up">
+                <label className="field">
+                  <span>Metric label</span>
+                  <input name="metricLabel" placeholder="Asked" required />
+                </label>
+                <label className="field">
+                  <span>Target</span>
+                  <input defaultValue={1} min={0} name="target" type="number" />
+                </label>
+                <label className="field">
+                  <span>Points each</span>
+                  <input defaultValue={5} name="points" type="number" />
+                </label>
+              </div>
+              <div className="focus-control-three-up">
+                <label className="field">
+                  <span>Kind</span>
+                  <select className="select-field" defaultValue="count" name="kind">
+                    <option value="count">Count</option>
+                    <option value="checkbox">Checkboxes</option>
+                  </select>
+                </label>
+                <FocusImageSelect
+                  assets={assets}
+                  label="Sticker image"
+                  name="stickerSrc"
+                  value={defaultChallengeSticker}
+                />
+                <label className="field">
+                  <span>Sticker alt (optional)</span>
+                  <input name="stickerAlt" placeholder="Custom goal sticker" />
+                </label>
+              </div>
+              <label className="field">
+                <span>Checkbox labels</span>
+                <textarea
+                  defaultValue={"MON\nTUE\nWED\nTHUR\nFRI"}
+                  name="checkboxLabels"
+                />
+                <small className="focus-field-help">
+                  Used when Kind is Checkboxes. Put one checkbox label per line.
+                </small>
+              </label>
+              <button className="button button-primary" type="submit">
+                Add weekly goal
+              </button>
+            </form>
+          </FocusControlSection>
+
+          <FocusControlSection
+            defaultOpen
+            eyebrow="Goals"
+            summary={`${runtime.tasks.length} challenge${runtime.tasks.length === 1 ? "" : "s"} currently on the board.`}
+            title="Existing weekly challenges"
+          >
+            <div className="focus-control-stack">
+              <FocusControlExistingGoals
+                adminSlug={runtime.settings.adminSlug}
+                assets={assets}
+                sections={runtime.allSections}
+                tasks={runtime.allTasks}
+              />
+            </div>
+          </FocusControlSection>
+
+          <FocusControlGroup
+            eyebrow="Admin"
+            summary="Client context, access, board copy, and reusable images."
+            title="Settings"
+          >
+            <div className="focus-control-grid">
           <FocusControlSection
             eyebrow="Content profile"
             summary="Store the business context that powers client-specific Content Lab prompts."
@@ -381,8 +528,8 @@ export default async function FocusClientManagePage({
 
           <FocusControlSection
             eyebrow="Board settings"
-            summary="Weekly target, title, and the bit of hype text at the top."
-            title="Weekly target + headline"
+            summary="Board title, hype text, and colour theme."
+            title="Board headline + theme"
           >
             <form action={updateFocusBoardSettingsAction} className="focus-control-form">
               <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
@@ -424,103 +571,6 @@ export default async function FocusClientManagePage({
           </FocusControlSection>
 
           <FocusControlSection
-            defaultOpen={Boolean(query.challengeError)}
-            eyebrow="Add a goal"
-            summary="Create a fresh weekly challenge and give it its first scoring metric."
-            title="New weekly challenge"
-          >
-            <form action={addFocusBoardTaskAction} className="focus-control-form">
-              <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
-              {query.challengeMessage ? (
-                <p className="form-success">{query.challengeMessage}</p>
-              ) : null}
-              {query.challengeError ? (
-                <p className="form-error">{query.challengeError}</p>
-              ) : null}
-              <div className="focus-control-two-up">
-                <label className="field">
-                  <span>Section</span>
-                  <select className="select-field" name="sectionId" required>
-                    {runtime.allSections
-                      .filter((section) => section.isActive !== false)
-                      .map((section) => (
-                        <option key={section.id ?? section.key} value={section.id ?? ""}>
-                          {section.title}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-                <label className="field">
-                  <span>Goal title</span>
-                  <input name="title" placeholder="Example: Ask for referrals" required />
-                </label>
-              </div>
-              <div className="focus-control-two-up">
-                <label className="field">
-                  <span>Badge text</span>
-                  <input name="icon" placeholder="REF" />
-                </label>
-              </div>
-              <label className="field">
-                <span>Description / help text</span>
-                <textarea
-                  name="description"
-                  placeholder="What counts as completing this one?"
-                  required
-                />
-              </label>
-              <div className="focus-control-three-up">
-                <label className="field">
-                  <span>Metric label</span>
-                  <input name="metricLabel" placeholder="Asked" required />
-                </label>
-                <label className="field">
-                  <span>Target</span>
-                  <input defaultValue={1} min={0} name="target" type="number" />
-                </label>
-                <label className="field">
-                  <span>Points each</span>
-                  <input defaultValue={5} name="points" type="number" />
-                </label>
-              </div>
-              <div className="focus-control-three-up">
-                <label className="field">
-                  <span>Kind</span>
-                  <select className="select-field" defaultValue="count" name="kind">
-                    <option value="count">Count</option>
-                    <option value="checkbox">Checkboxes</option>
-                  </select>
-                </label>
-                <FocusImageSelect
-                  assets={assets}
-                  label="Sticker image"
-                  name="stickerSrc"
-                  value={defaultChallengeSticker}
-                />
-                <label className="field">
-                  <span>Sticker alt (optional)</span>
-                  <input name="stickerAlt" placeholder="Custom goal sticker" />
-                </label>
-              </div>
-              <label className="field">
-                <span>Checkbox labels</span>
-                <textarea
-                  defaultValue={"MON\nTUE\nWED\nTHUR\nFRI"}
-                  name="checkboxLabels"
-                />
-                <small className="focus-field-help">
-                  Used when Kind is Checkboxes. Put one checkbox label per line.
-                </small>
-              </label>
-              <button className="button button-primary" type="submit">
-                Add weekly goal
-              </button>
-            </form>
-          </FocusControlSection>
-        </section>
-
-        <section className="focus-control-stack">
-          <FocusControlSection
             eyebrow="Images"
             summary="Upload extra artwork for challenge stickers and reward ladder images."
             title="Focus image library"
@@ -537,22 +587,15 @@ export default async function FocusClientManagePage({
             </div>
           </FocusControlSection>
 
-          <FocusControlSection
-            defaultOpen
-            eyebrow="Goals"
-            summary={`${runtime.tasks.length} challenge${runtime.tasks.length === 1 ? "" : "s"} currently on the board.`}
-            title="Existing weekly challenges"
+            </div>
+          </FocusControlGroup>
+
+          <FocusControlGroup
+            eyebrow="Rewards"
+            summary="Weekly targets, weekly prize copy, and the monthly ladder."
+            title="Rewards"
           >
             <div className="focus-control-stack">
-              <FocusControlExistingGoals
-                adminSlug={runtime.settings.adminSlug}
-                assets={assets}
-                sections={runtime.allSections}
-                tasks={runtime.allTasks}
-              />
-            </div>
-          </FocusControlSection>
-
           <FocusControlSection
             eyebrow="Weekly prize"
             summary="The immediate reward unlocked whenever the weekly points target is reached."
@@ -665,6 +708,8 @@ export default async function FocusClientManagePage({
               ))}
             </div>
           </FocusControlSection>
+            </div>
+          </FocusControlGroup>
         </section>
       </main>
     </>
