@@ -31,6 +31,24 @@ function getMetricKind(formData: FormData): FocusMetricKind {
   return getValue(formData, "kind") === "checkbox" ? "checkbox" : "count";
 }
 
+function getActiveTaskCountForSection(
+  runtime: NonNullable<Awaited<ReturnType<typeof getFocusBoardRuntimeConfigByAdminSlug>>>,
+  sectionId: string,
+) {
+  return runtime.allTasks.filter(
+    (task) => task.isActive !== false && task.sectionId === sectionId,
+  ).length;
+}
+
+function getVisibleTaskCountForSection(
+  runtime: NonNullable<Awaited<ReturnType<typeof getFocusBoardRuntimeConfigByAdminSlug>>>,
+  sectionId: string,
+) {
+  return runtime.allTasks.filter(
+    (task) => task.isActive !== false && task.isVisible !== false && task.sectionId === sectionId,
+  ).length;
+}
+
 function getCheckboxOptions(formData: FormData) {
   const raw = getValue(formData, "checkboxOptions");
 
@@ -201,6 +219,157 @@ export async function updateFocusWeeklyRewardAction(formData: FormData) {
   redirect(getManagePath(runtime.settings.clientId, runtime.settings.adminSlug));
 }
 
+export async function addFocusBoardSectionAction(formData: FormData) {
+  const adminSlug = getValue(formData, "adminSlug");
+  const runtime = await getAdminContext(adminSlug);
+  const admin = createFocusBoardAdminClient();
+  const title = getValue(formData, "title");
+  const description = getValue(formData, "description");
+
+  if (!title) {
+    throw new Error("Section name missing.");
+  }
+
+  const sectionKey = normaliseFocusKey(getValue(formData, "sectionKey") || title);
+  const { error } = await admin.from("focus_board_sections").insert({
+    board_key: runtime.settings.boardKey,
+    section_key: sectionKey,
+    title,
+    description,
+    sort_order: runtime.allSections.filter((section) => section.isActive !== false).length + 1,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error(`A section named "${title}" already exists.`);
+    }
+
+    throw new Error(error.message);
+  }
+
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
+}
+
+export async function updateFocusBoardSectionAction(formData: FormData) {
+  const adminSlug = getValue(formData, "adminSlug");
+  const runtime = await getAdminContext(adminSlug);
+  const admin = createFocusBoardAdminClient();
+  const sectionId = getValue(formData, "sectionId");
+  const section = runtime.allSections.find((item) => item.id === sectionId);
+
+  if (!section) {
+    throw new Error("Section not found.");
+  }
+
+  const { error } = await admin
+    .from("focus_board_sections")
+    .update({
+      title: getValue(formData, "title") || section.title,
+      description: getValue(formData, "description"),
+    })
+    .eq("id", sectionId)
+    .eq("board_key", runtime.settings.boardKey);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
+}
+
+export async function reorderFocusBoardSectionsAction(formData: FormData) {
+  const adminSlug = getValue(formData, "adminSlug");
+  const runtime = await getAdminContext(adminSlug);
+  const admin = createFocusBoardAdminClient();
+  const orderedSectionIds = formData
+    .getAll("sectionIds")
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+  const visibleSections = runtime.allSections.filter(
+    (section) => section.isActive !== false && section.isVisible !== false,
+  );
+  const knownSectionIds = new Set(visibleSections.map((section) => section.id).filter(Boolean));
+
+  if (orderedSectionIds.length !== visibleSections.length) {
+    throw new Error("The section order is out of date. Refresh and try again.");
+  }
+
+  if (!orderedSectionIds.every((sectionId) => knownSectionIds.has(sectionId))) {
+    throw new Error("One of those sections does not belong to this board.");
+  }
+
+  const updates = await Promise.all(
+    orderedSectionIds.map((sectionId, index) =>
+      admin
+        .from("focus_board_sections")
+        .update({ sort_order: index + 1 })
+        .eq("id", sectionId)
+        .eq("board_key", runtime.settings.boardKey),
+    ),
+  );
+  const failedUpdate = updates.find((result) => result.error);
+
+  if (failedUpdate?.error) {
+    throw new Error(failedUpdate.error.message);
+  }
+
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
+}
+
+export async function toggleFocusBoardSectionVisibilityAction(formData: FormData) {
+  const adminSlug = getValue(formData, "adminSlug");
+  const runtime = await getAdminContext(adminSlug);
+  const admin = createFocusBoardAdminClient();
+  const sectionId = getValue(formData, "sectionId");
+  const nextVisible = getValue(formData, "nextVisible");
+  const shouldShow = nextVisible === "true";
+  const section = runtime.allSections.find((item) => item.id === sectionId);
+
+  if (!section) {
+    throw new Error("Section not found.");
+  }
+
+  const visibleSections = runtime.allSections.filter(
+    (item) => item.isActive !== false && item.isVisible !== false,
+  );
+  const { error } = await admin
+    .from("focus_board_sections")
+    .update(
+      shouldShow
+        ? {
+            is_active: true,
+            is_visible: true,
+            sort_order: visibleSections.length + 1,
+          }
+        : {
+            is_visible: false,
+          },
+    )
+    .eq("id", sectionId)
+    .eq("board_key", runtime.settings.boardKey);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidateFocusPaths(
+    runtime.settings.boardSlug,
+    runtime.settings.adminSlug,
+    runtime.settings.clientId,
+  );
+}
+
 export async function addFocusBoardTaskAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
@@ -209,8 +378,12 @@ export async function addFocusBoardTaskAction(formData: FormData) {
   const title = getValue(formData, "title");
   const description = getValue(formData, "description");
   const metricLabel = getValue(formData, "metricLabel");
+  const requestedSectionId = getValue(formData, "sectionId");
+  const section = runtime.allSections.find(
+    (item) => item.id === requestedSectionId && item.isActive !== false,
+  ) ?? runtime.allSections.find((item) => item.isActive !== false);
 
-  if (!title || !description || !metricLabel) {
+  if (!title || !description || !metricLabel || !section?.id) {
     redirect(
       getManagePathWithChallengeFeedback(
         runtime.settings.clientId,
@@ -221,7 +394,7 @@ export async function addFocusBoardTaskAction(formData: FormData) {
     );
   }
 
-  const currentSort = runtime.allTasks.filter((task) => task.isActive !== false).length + 1;
+  const currentSort = getActiveTaskCountForSection(runtime, section.id) + 1;
   const taskKey = normaliseFocusKey(getValue(formData, "taskKey") || title);
   const metricKey = normaliseFocusKey(getValue(formData, "metricKey") || metricLabel);
   const icon = (getValue(formData, "icon") || title.slice(0, 4)).toUpperCase().slice(0, 6);
@@ -237,6 +410,7 @@ export async function addFocusBoardTaskAction(formData: FormData) {
     .from("focus_board_tasks")
     .insert({
       board_key: runtime.settings.boardKey,
+      section_id: section.id,
       task_key: taskKey,
       icon,
       sticker_src: stickerSrc,
@@ -316,10 +490,27 @@ export async function updateFocusBoardTaskAction(formData: FormData) {
   if (!taskId) {
     throw new Error("Task id missing.");
   }
+  const task = runtime.allTasks.find((item) => item.id === taskId);
+  const requestedSectionId = getValue(formData, "sectionId");
+  const nextSection = runtime.allSections.find(
+    (section) => section.id === requestedSectionId && section.isActive !== false,
+  );
+
+  if (!task) {
+    throw new Error("Task not found.");
+  }
+
+  const movedSection = Boolean(nextSection?.id && nextSection.id !== task.sectionId);
 
   await admin
     .from("focus_board_tasks")
     .update({
+      ...(movedSection && nextSection?.id
+        ? {
+            section_id: nextSection.id,
+            sort_order: getActiveTaskCountForSection(runtime, nextSection.id) + 1,
+          }
+        : {}),
       title: getValue(formData, "title"),
       description: getValue(formData, "description"),
       icon: (getValue(formData, "icon") || "TASK").toUpperCase().slice(0, 6),
@@ -341,10 +532,13 @@ export async function reorderFocusBoardTasksAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
   const admin = createFocusBoardAdminClient();
+  const sectionId = getValue(formData, "sectionId");
   const orderedTaskIds = formData
     .getAll("taskIds")
     .filter((value): value is string => typeof value === "string" && value.length > 0);
-  const visibleTasks = runtime.allTasks.filter((task) => task.isActive !== false && task.isVisible !== false);
+  const visibleTasks = runtime.allTasks.filter(
+    (task) => task.isActive !== false && task.isVisible !== false && task.sectionId === sectionId,
+  );
   const knownTaskIds = new Set(visibleTasks.map((task) => task.id).filter(Boolean));
 
   if (orderedTaskIds.length !== visibleTasks.length) {
@@ -390,12 +584,18 @@ export async function toggleFocusBoardTaskVisibilityAction(formData: FormData) {
   }
 
   const shouldShow = nextVisible === "true";
-  const visibleTasks = runtime.allTasks.filter((task) => task.isActive !== false && task.isVisible !== false);
+  const task = runtime.allTasks.find((item) => item.id === taskId);
+
+  if (!task?.sectionId) {
+    throw new Error("Task section missing.");
+  }
+
+  const visibleTasksCount = getVisibleTaskCountForSection(runtime, task.sectionId);
   const taskUpdate = shouldShow
     ? {
         is_active: true,
         is_visible: true,
-        sort_order: visibleTasks.length + 1,
+        sort_order: visibleTasksCount + 1,
       }
     : {
         is_visible: false,

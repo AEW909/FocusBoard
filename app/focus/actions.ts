@@ -39,6 +39,7 @@ export async function updateFocusBoardAction(
 
   const task = runtime.allTasks.find((item) => item.key === taskKey);
   const metric = task?.metrics.find((item) => item.key === metricKey);
+  const section = runtime.allSections.find((item) => item.id === task?.sectionId);
   const eventMonthKey = getWeekMonthKey(weekKey);
 
   if (!task || !metric || !weekKey || !eventMonthKey) {
@@ -56,7 +57,13 @@ export async function updateFocusBoardAction(
 
   const eventMetricKey = metric.kind === "checkbox" ? `${metric.key}:${checkboxOption?.key}` : metric.key;
 
-  if (task.isActive === false || task.isVisible === false || metric.isActive === false) {
+  if (
+    section?.isActive === false ||
+    section?.isVisible === false ||
+    task.isActive === false ||
+    task.isVisible === false ||
+    metric.isActive === false
+  ) {
     return { error: "That challenge has changed, so please refresh the board and try again." };
   }
 

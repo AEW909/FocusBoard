@@ -3,12 +3,16 @@
 import { useEffect, useMemo, useState, useTransition, type DragEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
+  addFocusBoardSectionAction,
   addFocusBoardMetricAction,
   deleteFocusBoardMetricAction,
   deleteFocusBoardTaskAction,
+  reorderFocusBoardSectionsAction,
   reorderFocusBoardTasksAction,
+  toggleFocusBoardSectionVisibilityAction,
   toggleFocusBoardMetricVisibilityAction,
   toggleFocusBoardTaskVisibilityAction,
+  updateFocusBoardSectionAction,
   updateFocusBoardMetricAction,
   updateFocusBoardTaskAction,
 } from "@/app/focus-control/actions";
@@ -18,6 +22,7 @@ import type { FocusAssetOption } from "@/lib/focus-board/assets";
 import {
   DEFAULT_FOCUS_CHECKBOX_OPTIONS,
   normaliseFocusCheckboxOptions,
+  type FocusBoardSection,
   type FocusBoardTask,
   type FocusCheckboxOption,
   type FocusMetricKind,
@@ -26,10 +31,17 @@ import {
 type FocusControlExistingGoalsProps = {
   adminSlug: string;
   assets: FocusAssetOption[];
+  sections: FocusBoardSection[];
   tasks: FocusBoardTask[];
 };
 
+type SectionDraft = {
+  title: string;
+  description: string;
+};
+
 type TaskDraft = {
+  sectionId: string;
   title: string;
   icon: string;
   description: string;
@@ -106,12 +118,20 @@ function metricToDraft(metric: FocusBoardTask["metrics"][number]): MetricDraft {
 
 function taskToDraft(task: FocusBoardTask): TaskDraft {
   return {
+    sectionId: task.sectionId ?? "",
     title: task.title,
     icon: task.icon,
     description: task.description,
     stickerSrc: task.stickerSrc,
     stickerAlt: task.stickerAlt,
     isBoosted: task.isBoosted ? "true" : "false",
+  };
+}
+
+function sectionToDraft(section: FocusBoardSection): SectionDraft {
+  return {
+    title: section.title,
+    description: section.description,
   };
 }
 
@@ -195,24 +215,29 @@ function FocusCheckboxOptionsEditor({ options, onChange }: FocusCheckboxOptionsE
   );
 }
 
-export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusControlExistingGoalsProps) {
+export function FocusControlExistingGoals({ adminSlug, assets, sections, tasks }: FocusControlExistingGoalsProps) {
   const [dirtyKeys, setDirtyKeys] = useState<Record<string, boolean>>({});
-  const activeTasks = useMemo(
-    () => tasks.filter((task) => task.isActive !== false),
-    [tasks],
+  const router = useRouter();
+  const activeSections = useMemo(
+    () => sections.filter((section) => section.isActive !== false),
+    [sections],
   );
-  const visibleTasks = useMemo(
-    () => activeTasks.filter((task) => task.isVisible !== false),
-    [activeTasks],
+  const visibleSections = useMemo(
+    () => activeSections.filter((section) => section.isVisible !== false),
+    [activeSections],
   );
-  const hiddenTasks = useMemo(
-    () => activeTasks.filter((task) => task.isVisible === false),
-    [activeTasks],
+  const hiddenSections = useMemo(
+    () => activeSections.filter((section) => section.isVisible === false),
+    [activeSections],
   );
-  const [orderedTasks, setOrderedTasks] = useState(visibleTasks);
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [orderedSections, setOrderedSections] = useState(visibleSections);
+  const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
+  const [sectionError, setSectionError] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [isReordering, startReorderTransition] = useTransition();
+  const [newSectionTitle, setNewSectionTitle] = useState("");
+  const [newSectionDescription, setNewSectionDescription] = useState("");
+  const [isAddingSection, startAddSectionTransition] = useTransition();
+  const [isReorderingSections, startReorderSectionsTransition] = useTransition();
 
   const hasUnsavedChanges = useMemo(
     () => Object.values(dirtyKeys).some(Boolean),
@@ -222,8 +247,8 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
   useUnsavedChangesWarning(hasUnsavedChanges);
 
   useEffect(() => {
-    setOrderedTasks(visibleTasks);
-  }, [visibleTasks]);
+    setOrderedSections(visibleSections);
+  }, [visibleSections]);
 
   const setDirtyState = (key: string, dirty: boolean) => {
     setDirtyKeys((current) => {
@@ -244,29 +269,290 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
     });
   };
 
-  const persistOrder = (nextTasks: FocusBoardTask[]) => {
-    setOrderedTasks(nextTasks);
+  const persistSectionOrder = (nextSections: FocusBoardSection[]) => {
+    setOrderedSections(nextSections);
     setOrderError(null);
+    startReorderSectionsTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.set("adminSlug", adminSlug);
+        nextSections.forEach((section) => {
+          if (section.id) {
+            formData.append("sectionIds", section.id);
+          }
+        });
+
+        await reorderFocusBoardSectionsAction(formData);
+      } catch (error) {
+        setOrderError(error instanceof Error ? error.message : "Could not save the section order.");
+        setOrderedSections(visibleSections);
+      }
+    });
+  };
+
+  const moveSection = (sectionId: string | undefined, direction: -1 | 1) => {
+    if (!sectionId || isReorderingSections || hasUnsavedChanges) {
+      return;
+    }
+
+    const currentIndex = orderedSections.findIndex((section) => section.id === sectionId);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= orderedSections.length) {
+      return;
+    }
+
+    const nextSections = [...orderedSections];
+    const [section] = nextSections.splice(currentIndex, 1);
+    nextSections.splice(nextIndex, 0, section);
+    persistSectionOrder(nextSections);
+  };
+
+  const dropSection = (targetSectionId: string | undefined) => {
+    if (!draggedSectionId || !targetSectionId || draggedSectionId === targetSectionId || hasUnsavedChanges) {
+      setDraggedSectionId(null);
+      return;
+    }
+
+    const fromIndex = orderedSections.findIndex((section) => section.id === draggedSectionId);
+    const toIndex = orderedSections.findIndex((section) => section.id === targetSectionId);
+    if (fromIndex < 0 || toIndex < 0) {
+      setDraggedSectionId(null);
+      return;
+    }
+
+    const nextSections = [...orderedSections];
+    const [section] = nextSections.splice(fromIndex, 1);
+    nextSections.splice(toIndex, 0, section);
+    setDraggedSectionId(null);
+    persistSectionOrder(nextSections);
+  };
+
+  const addSection = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+
+    startAddSectionTransition(async () => {
+      try {
+        await addFocusBoardSectionAction(formData);
+        setNewSectionTitle("");
+        setNewSectionDescription("");
+        setSectionError(null);
+        router.refresh();
+      } catch (error) {
+        setSectionError(error instanceof Error ? error.message : "Could not add the section.");
+      }
+    });
+  };
+
+  return (
+    <div className="focus-control-stack">
+      {orderError ? <p className="focus-control-error-tag">{orderError}</p> : null}
+      {sectionError ? <p className="focus-control-error-tag">{sectionError}</p> : null}
+      {hasUnsavedChanges ? (
+        <p className="focus-control-order-note">Save open section or challenge edits before changing the order.</p>
+      ) : null}
+      <form className="focus-control-section-new" onSubmit={addSection}>
+        <input name="adminSlug" type="hidden" value={adminSlug} />
+        <label className="field">
+          <span>New section name</span>
+          <input
+            name="title"
+            onChange={(event) => setNewSectionTitle(event.target.value)}
+            placeholder="Personal goals"
+            required
+            value={newSectionTitle}
+          />
+        </label>
+        <label className="field">
+          <span>Description</span>
+          <input
+            name="description"
+            onChange={(event) => setNewSectionDescription(event.target.value)}
+            placeholder="Optional helper text"
+            value={newSectionDescription}
+          />
+        </label>
+        <button className="button button-primary button-small" disabled={isAddingSection} type="submit">
+          {isAddingSection ? "Adding..." : "Add section"}
+        </button>
+      </form>
+      <div className="focus-control-section-list">
+        {orderedSections.map((section, index) => (
+          <FocusControlSectionEditor
+            adminSlug={adminSlug}
+            assets={assets}
+            availableSections={activeSections}
+            canReorder={!hasUnsavedChanges && !isReorderingSections}
+            isDragging={draggedSectionId === section.id}
+            key={section.id ?? section.key}
+            onDragEnd={() => setDraggedSectionId(null)}
+            onDragOver={(event) => event.preventDefault()}
+            onDragStart={() => setDraggedSectionId(section.id ?? null)}
+            onDrop={() => dropSection(section.id)}
+            onDirtyChange={setDirtyState}
+            onMoveDown={() => moveSection(section.id, 1)}
+            onMoveUp={() => moveSection(section.id, -1)}
+            section={section}
+            sectionIndex={index}
+            sectionTotal={orderedSections.length}
+            hasUnsavedChanges={hasUnsavedChanges}
+          />
+        ))}
+      </div>
+      {hiddenSections.length ? (
+        <div className="focus-control-hidden-list">
+          <div className="focus-control-hidden-list-head">
+            <p className="eyebrow">Paused sections</p>
+            <span>{hiddenSections.length}</span>
+          </div>
+          {hiddenSections.map((section, index) => (
+            <FocusControlSectionEditor
+              adminSlug={adminSlug}
+              assets={assets}
+              availableSections={activeSections}
+              canReorder={false}
+              hasUnsavedChanges={hasUnsavedChanges}
+              isDragging={false}
+              key={section.id ?? section.key}
+              onDirtyChange={setDirtyState}
+              onDragEnd={() => undefined}
+              onDragOver={() => undefined}
+              onDragStart={() => undefined}
+              onDrop={() => undefined}
+              onMoveDown={() => undefined}
+              onMoveUp={() => undefined}
+              section={section}
+              sectionIndex={index}
+              sectionTotal={hiddenSections.length}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type FocusControlSectionEditorProps = {
+  adminSlug: string;
+  assets: FocusAssetOption[];
+  availableSections: FocusBoardSection[];
+  section: FocusBoardSection;
+  sectionIndex: number;
+  sectionTotal: number;
+  canReorder: boolean;
+  hasUnsavedChanges: boolean;
+  isDragging: boolean;
+  onDragStart: () => void;
+  onDragOver: (event: DragEvent<HTMLElement>) => void;
+  onDrop: () => void;
+  onDragEnd: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDirtyChange: (key: string, dirty: boolean) => void;
+};
+
+function FocusControlSectionEditor({
+  adminSlug,
+  assets,
+  availableSections,
+  section,
+  sectionIndex,
+  sectionTotal,
+  canReorder,
+  hasUnsavedChanges,
+  isDragging,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  onMoveUp,
+  onMoveDown,
+  onDirtyChange,
+}: FocusControlSectionEditorProps) {
+  const router = useRouter();
+  const [draft, setDraft] = useState<SectionDraft>(() => sectionToDraft(section));
+  const [baseline, setBaseline] = useState<SectionDraft>(() => sectionToDraft(section));
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(section.isActive !== false && section.isVisible !== false);
+  const [orderedTasks, setOrderedTasks] = useState(section.tasks.filter((task) => task.isActive !== false && task.isVisible !== false));
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [taskOrderError, setTaskOrderError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [isReorderingTasks, startReorderTransition] = useTransition();
+  const hiddenTasks = section.tasks.filter((task) => task.isActive !== false && task.isVisible === false);
+  const dirty = !draftsMatch(draft, baseline);
+  const dirtyKey = `section:${section.id ?? section.key}`;
+
+  useEffect(() => {
+    setOrderedTasks(section.tasks.filter((task) => task.isActive !== false && task.isVisible !== false));
+  }, [section.tasks]);
+
+  useEffect(() => {
+    onDirtyChange(dirtyKey, dirty);
+    return () => onDirtyChange(dirtyKey, false);
+  }, [dirty, dirtyKey, onDirtyChange]);
+
+  const saveSection = () => {
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.set("adminSlug", adminSlug);
+        formData.set("sectionId", section.id ?? "");
+        formData.set("title", draft.title);
+        formData.set("description", draft.description);
+        await updateFocusBoardSectionAction(formData);
+        setBaseline(draft);
+        setSaved(true);
+        setError(null);
+        router.refresh();
+        window.setTimeout(() => setSaved(false), 1800);
+      } catch (actionError) {
+        setError(actionError instanceof Error ? actionError.message : "Could not save the section.");
+      }
+    });
+  };
+
+  const toggleVisibility = () => {
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.set("adminSlug", adminSlug);
+        formData.set("sectionId", section.id ?? "");
+        formData.set("nextVisible", isVisible ? "false" : "true");
+        await toggleFocusBoardSectionVisibilityAction(formData);
+        setIsVisible((current) => !current);
+        setError(null);
+        router.refresh();
+      } catch (actionError) {
+        setError(actionError instanceof Error ? actionError.message : "Could not change section visibility.");
+      }
+    });
+  };
+
+  const persistTaskOrder = (nextTasks: FocusBoardTask[]) => {
+    setOrderedTasks(nextTasks);
+    setTaskOrderError(null);
     startReorderTransition(async () => {
       try {
         const formData = new FormData();
         formData.set("adminSlug", adminSlug);
+        formData.set("sectionId", section.id ?? "");
         nextTasks.forEach((task) => {
           if (task.id) {
             formData.append("taskIds", task.id);
           }
         });
-
         await reorderFocusBoardTasksAction(formData);
-      } catch (error) {
-        setOrderError(error instanceof Error ? error.message : "Could not save the challenge order.");
-        setOrderedTasks(visibleTasks);
+      } catch (actionError) {
+        setTaskOrderError(actionError instanceof Error ? actionError.message : "Could not save the challenge order.");
+        setOrderedTasks(section.tasks.filter((task) => task.isActive !== false && task.isVisible !== false));
       }
     });
   };
 
   const moveTask = (taskId: string | undefined, direction: -1 | 1) => {
-    if (!taskId || isReordering || hasUnsavedChanges) {
+    if (!taskId || isReorderingTasks || hasUnsavedChanges) {
       return;
     }
 
@@ -279,7 +565,7 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
     const nextTasks = [...orderedTasks];
     const [task] = nextTasks.splice(currentIndex, 1);
     nextTasks.splice(nextIndex, 0, task);
-    persistOrder(nextTasks);
+    persistTaskOrder(nextTasks);
   };
 
   const dropTask = (targetTaskId: string | undefined) => {
@@ -299,70 +585,137 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
     const [task] = nextTasks.splice(fromIndex, 1);
     nextTasks.splice(toIndex, 0, task);
     setDraggedTaskId(null);
-    persistOrder(nextTasks);
+    persistTaskOrder(nextTasks);
   };
 
   return (
-    <div className="focus-control-stack">
-      {orderError ? <p className="focus-control-error-tag">{orderError}</p> : null}
-      {hasUnsavedChanges ? (
-        <p className="focus-control-order-note">Save open challenge edits before changing the order.</p>
-      ) : null}
-      <div className="focus-control-drag-list">
-        {orderedTasks.map((task, index) => (
-          <FocusControlTaskEditor
-            adminSlug={adminSlug}
-            assets={assets}
-            canReorder={!hasUnsavedChanges && !isReordering}
-            isDragging={draggedTaskId === task.id}
-            key={task.id ?? task.key}
-            onDragEnd={() => setDraggedTaskId(null)}
-            onDragOver={(event) => event.preventDefault()}
-            onDragStart={() => setDraggedTaskId(task.id ?? null)}
-            onDrop={() => dropTask(task.id)}
-            onDirtyChange={setDirtyState}
-            onMoveDown={() => moveTask(task.id, 1)}
-            onMoveUp={() => moveTask(task.id, -1)}
-            task={task}
-            taskIndex={index}
-            taskTotal={orderedTasks.length}
-          />
-        ))}
-      </div>
-      {hiddenTasks.length ? (
-        <div className="focus-control-hidden-list">
-          <div className="focus-control-hidden-list-head">
-            <p className="eyebrow">Paused challenges</p>
-            <span>{hiddenTasks.length}</span>
+    <section
+      className={`focus-control-section-shell ${isDragging ? "focus-control-task-shell-dragging" : ""}`}
+      draggable={canReorder}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart();
+      }}
+      onDrop={onDrop}
+    >
+      <div className="focus-control-section-card">
+        <div className="focus-control-section-card-head">
+          <div className="focus-control-drag-cluster">
+            <span className="focus-control-drag-handle" role="button" tabIndex={canReorder ? 0 : -1}>
+              ::
+            </span>
+            <div className="focus-control-order-buttons">
+              <button disabled={!canReorder || sectionIndex === 0} onClick={onMoveUp} type="button">
+                ^
+              </button>
+              <button disabled={!canReorder || sectionIndex === sectionTotal - 1} onClick={onMoveDown} type="button">
+                v
+              </button>
+            </div>
           </div>
-          {hiddenTasks.map((task, index) => (
+          <div className="focus-control-section-title">
+            <p className="eyebrow">Section</p>
+            <h3>{draft.title || "Untitled section"}</h3>
+            {draft.description ? <p>{draft.description}</p> : null}
+          </div>
+          <div className="focus-control-task-summary-meta">
+            <span className={`focus-control-task-status ${isVisible ? "focus-control-task-status-live" : "focus-control-task-status-hidden"}`}>
+              {isVisible ? "Visible" : "Paused"}
+            </span>
+            {dirty ? <span className="focus-control-dirty-pill">Unsaved</span> : null}
+            <button
+              aria-label={isVisible ? `Hide section ${section.title}` : `Show section ${section.title}`}
+              className={`focus-visibility-icon ${isVisible ? "focus-visibility-icon-live" : "focus-visibility-icon-hidden"}`}
+              disabled={isPending}
+              onClick={toggleVisibility}
+              type="button"
+            >
+              {isVisible ? "◉" : "○"}
+            </button>
+          </div>
+        </div>
+        <div className="focus-control-section-fields">
+          <label className="field">
+            <span>Section name</span>
+            <input onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} value={draft.title} />
+          </label>
+          <label className="field">
+            <span>Description</span>
+            <input onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} value={draft.description} />
+          </label>
+          <button
+            className={`button ${dirty ? "button-primary focus-control-save-button-active" : "button-secondary"} button-small`}
+            disabled={isPending}
+            onClick={saveSection}
+            type="button"
+          >
+            {isPending ? "Saving..." : "Save section"}
+          </button>
+          {saved ? <span className="focus-control-saved-tag">SAVED!</span> : null}
+          {error ? <span className="focus-control-error-tag">{error}</span> : null}
+        </div>
+        {taskOrderError ? <p className="focus-control-error-tag">{taskOrderError}</p> : null}
+        <div className="focus-control-drag-list">
+          {orderedTasks.map((task, index) => (
             <FocusControlTaskEditor
               adminSlug={adminSlug}
               assets={assets}
-              canReorder={false}
-              isDragging={false}
+              availableSections={availableSections}
+              canReorder={!hasUnsavedChanges && !isReorderingTasks}
+              isDragging={draggedTaskId === task.id}
               key={task.id ?? task.key}
-              onDragEnd={() => undefined}
-              onDragOver={() => undefined}
-              onDragStart={() => undefined}
-              onDrop={() => undefined}
-              onDirtyChange={setDirtyState}
-              onMoveDown={() => undefined}
-              onMoveUp={() => undefined}
+              onDragEnd={() => setDraggedTaskId(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDragStart={() => setDraggedTaskId(task.id ?? null)}
+              onDrop={() => dropTask(task.id)}
+              onDirtyChange={onDirtyChange}
+              onMoveDown={() => moveTask(task.id, 1)}
+              onMoveUp={() => moveTask(task.id, -1)}
               task={task}
               taskIndex={index}
-              taskTotal={hiddenTasks.length}
+              taskTotal={orderedTasks.length}
             />
           ))}
         </div>
-      ) : null}
-    </div>
+        {hiddenTasks.length ? (
+          <div className="focus-control-hidden-list focus-control-hidden-list-compact">
+            <div className="focus-control-hidden-list-head">
+              <p className="eyebrow">Paused challenges</p>
+              <span>{hiddenTasks.length}</span>
+            </div>
+            {hiddenTasks.map((task, index) => (
+              <FocusControlTaskEditor
+                adminSlug={adminSlug}
+                assets={assets}
+                availableSections={availableSections}
+                canReorder={false}
+                isDragging={false}
+                key={task.id ?? task.key}
+                onDragEnd={() => undefined}
+                onDragOver={() => undefined}
+                onDragStart={() => undefined}
+                onDrop={() => undefined}
+                onDirtyChange={onDirtyChange}
+                onMoveDown={() => undefined}
+                onMoveUp={() => undefined}
+                task={task}
+                taskIndex={index}
+                taskTotal={hiddenTasks.length}
+              />
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </section>
   );
 }
 
 type FocusControlTaskEditorProps = {
   adminSlug: string;
   assets: FocusAssetOption[];
+  availableSections: FocusBoardSection[];
   task: FocusBoardTask;
   taskIndex: number;
   taskTotal: number;
@@ -380,6 +733,7 @@ type FocusControlTaskEditorProps = {
 function FocusControlTaskEditor({
   adminSlug,
   assets,
+  availableSections,
   task,
   taskIndex,
   taskTotal,
@@ -432,6 +786,7 @@ function FocusControlTaskEditor({
         formData.set("stickerSrc", taskDraft.stickerSrc);
         formData.set("stickerAlt", taskDraft.stickerAlt);
         formData.set("isBoosted", taskDraft.isBoosted);
+        formData.set("sectionId", taskDraft.sectionId);
 
         await updateFocusBoardTaskAction(formData);
         setTaskBaseline(taskDraft);
@@ -578,6 +933,20 @@ function FocusControlTaskEditor({
 
           <div className="focus-control-form">
             <div className="focus-control-two-up">
+              <label className="field">
+                <span>Section</span>
+                <select
+                  className="select-field"
+                  onChange={(event) => setTaskDraft((current) => ({ ...current, sectionId: event.target.value }))}
+                  value={taskDraft.sectionId}
+                >
+                  {availableSections.map((section) => (
+                    <option key={section.id ?? section.key} value={section.id ?? ""}>
+                      {section.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="field">
                 <span>Task title</span>
                 <input

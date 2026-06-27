@@ -164,6 +164,22 @@ export async function getFocusWeeklyRoundupData(boardKey: string, userId: string
       };
     })
     .filter((task) => task.points > 0 || task.eventCount > 0);
+  const sectionBreakdown = runtime.allSections
+    .filter((section) => section.isActive !== false)
+    .map((section) => {
+      const points = section.tasks.reduce((sum, task) => {
+        const taskEvents = weekEvents.filter((event) => event.task_key === task.key);
+        return sum + taskEvents.reduce((taskSum, event) => taskSum + event.points, 0);
+      }, 0);
+
+      return {
+        key: section.key,
+        title: section.title,
+        description: section.description,
+        points,
+      };
+    })
+    .filter((section) => section.points > 0);
 
   return {
     boardKey,
@@ -183,6 +199,7 @@ export async function getFocusWeeklyRoundupData(boardKey: string, userId: string
     nextReward,
     nextRewardPointsNeeded: nextReward ? Math.max(nextReward.minPoints - monthPoints, 0) : 0,
     nextRewardWeeksNeeded: nextReward ? Math.max(nextReward.minWeeksHit - weeksHit, 0) : 0,
+    sectionBreakdown,
     taskBreakdown,
     hasSeen: Boolean(seenRow),
   };

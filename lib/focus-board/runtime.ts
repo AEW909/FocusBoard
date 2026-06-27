@@ -3,6 +3,7 @@ import { getBundledFocusFallback } from "@/lib/focus-board/assets";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import {
   DEFAULT_FOCUS_BOARD_SETTINGS,
+  DEFAULT_FOCUS_BOARD_SECTION,
   DEFAULT_FOCUS_CHECKBOX_OPTIONS,
   DEFAULT_FOCUS_BOARD_TASKS,
   DEFAULT_FOCUS_REWARD_TIERS,
@@ -12,6 +13,7 @@ import {
   FOCUS_THEME_PRESETS,
   normaliseFocusCheckboxOptions,
   type FocusBoardSettings,
+  type FocusBoardSection,
   type FocusBoardTask,
   type FocusBoardTaskMetric,
   type FocusCheckboxOption,
@@ -40,6 +42,7 @@ type FocusBoardSettingsRow = {
 
 type FocusBoardTaskRow = {
   id: string;
+  section_id: string | null;
   board_key: string;
   task_key: string;
   icon: string;
@@ -52,6 +55,17 @@ type FocusBoardTaskRow = {
   is_active: boolean;
   is_visible: boolean;
   is_boosted: boolean;
+};
+
+type FocusBoardSectionRow = {
+  id: string;
+  board_key: string;
+  section_key: string;
+  title: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  is_visible: boolean;
 };
 
 type FocusBoardTaskMetricRow = {
@@ -83,6 +97,8 @@ type FocusRewardTierRow = {
 
 export type FocusBoardRuntimeConfig = {
   settings: FocusBoardSettings;
+  sections: FocusBoardSection[];
+  allSections: FocusBoardSection[];
   tasks: FocusBoardTask[];
   allTasks: FocusBoardTask[];
   rewards: FocusRewardTier[];
@@ -131,9 +147,25 @@ function mapWeeklyReward(row?: FocusBoardSettingsRow | null): FocusWeeklyReward 
   };
 }
 
-function mapTasks(taskRows: FocusBoardTaskRow[] | null, metricRows: FocusBoardTaskMetricRow[] | null) {
+function getDefaultSections(tasks = DEFAULT_FOCUS_BOARD_TASKS) {
+  return [
+    {
+      ...DEFAULT_FOCUS_BOARD_SECTION,
+      tasks,
+    },
+  ];
+}
+
+function mapTasks(
+  sectionRows: FocusBoardSectionRow[] | null,
+  taskRows: FocusBoardTaskRow[] | null,
+  metricRows: FocusBoardTaskMetricRow[] | null,
+) {
   if (!taskRows?.length) {
+    const defaultSections = getDefaultSections(DEFAULT_FOCUS_BOARD_TASKS);
     return {
+      sections: defaultSections,
+      allSections: defaultSections,
       tasks: DEFAULT_FOCUS_BOARD_TASKS,
       allTasks: DEFAULT_FOCUS_BOARD_TASKS,
     };
@@ -166,38 +198,84 @@ function mapTasks(taskRows: FocusBoardTaskRow[] | null, metricRows: FocusBoardTa
     metricsByTask.set(row.task_id, metrics);
   }
 
+  const sortedSectionRows = sectionRows?.length
+    ? [...sectionRows].sort((a, b) => a.sort_order - b.sort_order)
+    : [
+        {
+          id: "",
+          board_key: "",
+          section_key: DEFAULT_FOCUS_BOARD_SECTION.key,
+          title: DEFAULT_FOCUS_BOARD_SECTION.title,
+          description: DEFAULT_FOCUS_BOARD_SECTION.description,
+          sort_order: DEFAULT_FOCUS_BOARD_SECTION.sortOrder ?? 1,
+          is_active: true,
+          is_visible: true,
+        },
+      ];
+  const fallbackSection = sortedSectionRows[0];
+  const sectionById = new Map(sortedSectionRows.map((section) => [section.id, section]));
   const allTasks = [...taskRows]
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map((row) => ({
-      id: row.id,
-      key: row.task_key,
-      icon: row.icon,
-      stickerSrc: row.sticker_src,
-      stickerFallbackSrc: getBundledFocusFallback(row.sticker_src),
-      stickerAlt: row.sticker_alt,
-      title: row.title,
-      description: row.description,
-      accentClass: row.accent_class,
-      sortOrder: row.sort_order,
-      isActive: row.is_active,
-      isVisible: row.is_visible,
-      isBoosted: row.is_boosted,
-      metrics: (metricsByTask.get(row.id) ?? [])
-        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    .map((row) => {
+      const section = sectionById.get(row.section_id ?? "") ?? fallbackSection;
+
+      return {
+        id: row.id,
+        sectionId: section.id || null,
+        sectionKey: section.section_key,
+        sectionTitle: section.title,
+        key: row.task_key,
+        icon: row.icon,
+        stickerSrc: row.sticker_src,
+        stickerFallbackSrc: getBundledFocusFallback(row.sticker_src),
+        stickerAlt: row.sticker_alt,
+        title: row.title,
+        description: row.description,
+        accentClass: row.accent_class,
+        sortOrder: row.sort_order,
+        isActive: row.is_active,
+        isVisible: row.is_visible,
+        isBoosted: row.is_boosted,
+        metrics: (metricsByTask.get(row.id) ?? [])
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+      };
+    })
+    .filter((task) => task.metrics.length > 0);
+  const activeVisibleTasks = allTasks
+    .filter((task) => task.isActive !== false && task.isVisible !== false)
+    .map((task) => ({
+      ...task,
+      metrics: task.metrics.filter(
+        (metric) => metric.isActive !== false && metric.isVisible !== false,
+      ),
     }))
     .filter((task) => task.metrics.length > 0);
+  const allSections = sortedSectionRows
+    .map((section) => ({
+      id: section.id,
+      key: section.section_key,
+      title: section.title,
+      description: section.description,
+      sortOrder: section.sort_order,
+      isActive: section.is_active,
+      isVisible: section.is_visible,
+      tasks: allTasks.filter((task) => task.sectionId === section.id || (!task.sectionId && section === fallbackSection)),
+    }))
+    .filter((section) => section.isActive !== false);
+  const sections = allSections
+    .filter((section) => section.isVisible !== false)
+    .map((section) => ({
+      ...section,
+      tasks: activeVisibleTasks.filter((task) => task.sectionId === section.id || (!task.sectionId && section.id === fallbackSection.id)),
+    }))
+    .filter((section) => section.tasks.length > 0);
+  const tasks = sections.flatMap((section) => section.tasks);
 
   return {
+    sections,
+    allSections,
     allTasks,
-    tasks: allTasks
-      .filter((task) => task.isActive !== false && task.isVisible !== false)
-      .map((task) => ({
-        ...task,
-        metrics: task.metrics.filter(
-          (metric) => metric.isActive !== false && metric.isVisible !== false,
-        ),
-      }))
-      .filter((task) => task.metrics.length > 0),
+    tasks,
   };
 }
 
@@ -245,10 +323,15 @@ async function getFocusBoardRuntimeConfigBy(
   }
 
   const settingsRow = settingsResult.data;
-  const [tasksResult, rewardsResult] = await Promise.all([
+  const [sectionsResult, tasksResult, rewardsResult] = await Promise.all([
+    admin
+      .from("focus_board_sections")
+      .select("id, board_key, section_key, title, description, sort_order, is_active, is_visible")
+      .eq("board_key", settingsRow.board_key)
+      .order("sort_order", { ascending: true }),
     admin
       .from("focus_board_tasks")
-      .select("id, board_key, task_key, icon, sticker_src, sticker_alt, title, description, accent_class, sort_order, is_active, is_visible, is_boosted")
+      .select("id, section_id, board_key, task_key, icon, sticker_src, sticker_alt, title, description, accent_class, sort_order, is_active, is_visible, is_boosted")
       .eq("board_key", settingsRow.board_key)
       .order("sort_order", { ascending: true }),
     admin
@@ -260,10 +343,11 @@ async function getFocusBoardRuntimeConfigBy(
       .order("sort_order", { ascending: true }),
   ]);
 
-  if (tasksResult.error || rewardsResult.error) {
+  if (sectionsResult.error || tasksResult.error || rewardsResult.error) {
     return null;
   }
 
+  const sectionRows = (sectionsResult.data as FocusBoardSectionRow[] | null | undefined) ?? [];
   const taskRows = (tasksResult.data as FocusBoardTaskRow[] | null | undefined) ?? [];
   const taskIds = taskRows.map((task) => task.id);
   const metricsResult = taskIds.length
@@ -281,6 +365,7 @@ async function getFocusBoardRuntimeConfigBy(
   const settings = mapSettings(settingsRow);
   const weeklyReward = mapWeeklyReward(settingsRow);
   const taskConfig = mapTasks(
+    sectionRows,
     taskRows,
     (metricsResult.data as FocusBoardTaskMetricRow[] | null | undefined) ?? null,
   );
@@ -288,6 +373,8 @@ async function getFocusBoardRuntimeConfigBy(
 
   return {
     settings,
+    sections: taskConfig.sections,
+    allSections: taskConfig.allSections,
     tasks: taskConfig.tasks,
     allTasks: taskConfig.allTasks,
     rewards,

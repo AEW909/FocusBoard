@@ -159,6 +159,7 @@ export function FocusBoard({
     FOCUS_THEME_PALETTES[board.settings.themePreset] ?? FOCUS_THEME_PALETTES.neon;
 
   const currentWeek = board.currentWeek;
+  const showSectionHeaders = (currentWeek?.sections.length ?? 0) > 1;
   const weeklyPrizeImageSrc = currentWeek?.hitTarget
     ? board.weeklyReward.unlockedStickerSrc
     : board.weeklyReward.lockedStickerSrc;
@@ -177,6 +178,16 @@ export function FocusBoard({
   }, [board.currentReward]);
 
   const totalBreakdownPoints = board.monthlyBreakdown.reduce((sum, item) => sum + item.points, 0);
+  const totalSectionBreakdownPoints = board.sectionBreakdown.reduce((sum, item) => sum + item.points, 0);
+  const sectionBreakdownItems = useMemo(
+    () =>
+      board.sectionBreakdown.map((item, index) => ({
+        ...item,
+        color:
+          themePalette.breakdownColors[index % themePalette.breakdownColors.length],
+      })),
+    [board.sectionBreakdown, themePalette],
+  );
   const breakdownItems = useMemo(
     () =>
       board.monthlyBreakdown.map((item, index) => ({
@@ -401,12 +412,25 @@ export function FocusBoard({
             </button>
           </section>
 
-          <section className="focus-task-reel">
-            {currentWeek.tasks.map((task) => (
-              <article
-                className={`focus-task-sticker ${task.accentClass} ${task.isBoosted ? "focus-task-sticker-boosted" : ""}`}
-                key={task.key}
-              >
+          <section className="focus-task-section-stack">
+            {currentWeek.sections.map((section) => (
+              <div className="focus-board-section" key={section.key}>
+                {showSectionHeaders ? (
+                  <div className="focus-board-section-head">
+                    <div>
+                      <p className="focus-panel-label">Goal area</p>
+                      <h2>{section.title}</h2>
+                      {section.description ? <p>{section.description}</p> : null}
+                    </div>
+                    <span>{section.tasks.length} challenge{section.tasks.length === 1 ? "" : "s"}</span>
+                  </div>
+                ) : null}
+                <div className="focus-task-reel">
+                  {section.tasks.map((task) => (
+                    <article
+                      className={`focus-task-sticker ${task.accentClass} ${task.isBoosted ? "focus-task-sticker-boosted" : ""}`}
+                      key={task.key}
+                    >
                 <div className="focus-task-sticker-top">
                   <div className="focus-task-sticker-copy">
                     <div className="focus-task-badge-row">
@@ -526,7 +550,10 @@ export function FocusBoard({
                     );
                   })}
                 </div>
-              </article>
+                    </article>
+                  ))}
+                </div>
+              </div>
             ))}
           </section>
 
@@ -664,6 +691,30 @@ export function FocusBoard({
                   {board.monthHistory.map((month) => (
                     <span key={month.monthKey}>{month.label}</span>
                   ))}
+                </div>
+              </div>
+
+              <div className="focus-section-breakdown-card">
+                <p className="focus-panel-label">By goal area</p>
+                <div className="focus-section-breakdown-list">
+                  {sectionBreakdownItems.map((item) => {
+                    const share =
+                      totalSectionBreakdownPoints > 0
+                        ? Math.round((item.points / totalSectionBreakdownPoints) * 100)
+                        : 0;
+
+                    return (
+                      <div className="focus-section-breakdown-item" key={item.key}>
+                        <span className="focus-breakdown-dot" style={{ background: item.color }} />
+                        <div>
+                          <strong>{item.title}</strong>
+                          <p>
+                            {item.points} pts{share > 0 ? ` - ${share}%` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

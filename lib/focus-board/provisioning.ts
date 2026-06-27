@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import {
   DEFAULT_FOCUS_BOARD_SETTINGS,
+  DEFAULT_FOCUS_BOARD_SECTION,
   DEFAULT_FOCUS_BOARD_TASKS,
   DEFAULT_FOCUS_REWARD_TIERS,
   DEFAULT_FOCUS_WEEKLY_REWARD,
@@ -116,6 +117,24 @@ export async function provisionFocusClient({
       throw new Error(`Could not create the starter board: ${settingsError.message}`);
     }
 
+    const { data: sectionRow, error: sectionError } = await admin
+      .from("focus_board_sections")
+      .insert({
+        board_key: keys.boardKey,
+        description: DEFAULT_FOCUS_BOARD_SECTION.description,
+        is_active: true,
+        is_visible: true,
+        section_key: DEFAULT_FOCUS_BOARD_SECTION.key,
+        sort_order: DEFAULT_FOCUS_BOARD_SECTION.sortOrder ?? 1,
+        title: DEFAULT_FOCUS_BOARD_SECTION.title,
+      })
+      .select("id")
+      .single();
+
+    if (sectionError || !sectionRow) {
+      throw new Error(sectionError?.message ?? "Could not create starter board section.");
+    }
+
     const { data: taskRows, error: taskError } = await admin
       .from("focus_board_tasks")
       .insert(
@@ -124,6 +143,7 @@ export async function provisionFocusClient({
           board_key: keys.boardKey,
           description: task.description,
           icon: task.icon,
+          section_id: sectionRow.id,
           sort_order: task.sortOrder ?? 0,
           sticker_alt: task.stickerAlt,
           sticker_src: task.stickerSrc,

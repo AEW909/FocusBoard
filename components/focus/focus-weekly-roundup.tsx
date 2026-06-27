@@ -94,6 +94,7 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
     () => [...roundup.taskBreakdown].filter((task) => task.points > 0).sort((left, right) => right.points - left.points),
     [roundup.taskBreakdown],
   );
+  const sectionPointsTotal = roundup.sectionBreakdown.reduce((sum, section) => sum + section.points, 0);
   const pieTotal = pieTasks.reduce((sum, task) => sum + task.points, 0);
   let runningPercent = 0;
   const pieGradient = pieTasks.length
@@ -181,6 +182,29 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
       </section>
 
       <section className="focus-roundup-grid">
+        {roundup.sectionBreakdown.length ? (
+          <article className="focus-roundup-card">
+            <p className="focus-panel-label">Goal areas</p>
+            <div className="focus-roundup-section-list">
+              {roundup.sectionBreakdown.map((section, index) => {
+                const share = sectionPointsTotal > 0 ? Math.round((section.points / sectionPointsTotal) * 100) : 0;
+
+                return (
+                  <div className="focus-roundup-section-item" key={section.key}>
+                    <span style={{ background: CHART_COLORS[index % CHART_COLORS.length] }} />
+                    <div>
+                      <strong>{section.title}</strong>
+                      <p>
+                        {section.points} pts{share > 0 ? ` - ${share}%` : ""}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+        ) : null}
+
         <article
           className={`focus-roundup-card focus-roundup-card-breakdown ${
             breakdownInView.hasEntered ? "focus-roundup-card-visible" : ""

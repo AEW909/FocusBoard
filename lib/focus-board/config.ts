@@ -34,6 +34,9 @@ export type FocusBoardTaskMetric = {
 
 export type FocusBoardTask = {
   id?: string;
+  sectionId?: string | null;
+  sectionKey?: string;
+  sectionTitle?: string;
   key: string;
   icon: string;
   stickerSrc: string;
@@ -47,6 +50,17 @@ export type FocusBoardTask = {
   isVisible?: boolean;
   isBoosted?: boolean;
   metrics: FocusBoardTaskMetric[];
+};
+
+export type FocusBoardSection = {
+  id?: string;
+  key: string;
+  title: string;
+  description: string;
+  sortOrder?: number;
+  isActive?: boolean;
+  isVisible?: boolean;
+  tasks: FocusBoardTask[];
 };
 
 export type FocusRewardTier = {
@@ -140,8 +154,19 @@ export const DEFAULT_FOCUS_CHECKBOX_OPTIONS: FocusCheckboxOption[] = [
   { key: "fri", label: "FRI" },
 ];
 
+export const DEFAULT_FOCUS_BOARD_SECTION: Omit<FocusBoardSection, "tasks"> = {
+  key: "main_goals",
+  title: "Main goals",
+  description: "",
+  sortOrder: 1,
+  isActive: true,
+  isVisible: true,
+};
+
 export const DEFAULT_FOCUS_BOARD_TASKS: FocusBoardTask[] = [
   {
+    sectionKey: DEFAULT_FOCUS_BOARD_SECTION.key,
+    sectionTitle: DEFAULT_FOCUS_BOARD_SECTION.title,
     key: "google_reviews",
     icon: "STAR",
     stickerSrc: "/focus/review-star.svg",
@@ -157,6 +182,8 @@ export const DEFAULT_FOCUS_BOARD_TASKS: FocusBoardTask[] = [
     ],
   },
   {
+    sectionKey: DEFAULT_FOCUS_BOARD_SECTION.key,
+    sectionTitle: DEFAULT_FOCUS_BOARD_SECTION.title,
     key: "clinic_photos",
     icon: "SNAP",
     stickerSrc: "/focus/camera-zap.svg",
@@ -169,6 +196,8 @@ export const DEFAULT_FOCUS_BOARD_TASKS: FocusBoardTask[] = [
     metrics: [{ key: "photo", label: "Usable photo", target: 3, points: 8, kind: "count", sortOrder: 1 }],
   },
   {
+    sectionKey: DEFAULT_FOCUS_BOARD_SECTION.key,
+    sectionTitle: DEFAULT_FOCUS_BOARD_SECTION.title,
     key: "weekly_post",
     icon: "POST",
     stickerSrc: "/focus/post-rocket.svg",

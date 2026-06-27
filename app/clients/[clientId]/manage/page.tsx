@@ -439,9 +439,23 @@ export default async function FocusClientManagePage({
               ) : null}
               <div className="focus-control-two-up">
                 <label className="field">
+                  <span>Section</span>
+                  <select className="select-field" name="sectionId" required>
+                    {runtime.allSections
+                      .filter((section) => section.isActive !== false)
+                      .map((section) => (
+                        <option key={section.id ?? section.key} value={section.id ?? ""}>
+                          {section.title}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label className="field">
                   <span>Goal title</span>
                   <input name="title" placeholder="Example: Ask for referrals" required />
                 </label>
+              </div>
+              <div className="focus-control-two-up">
                 <label className="field">
                   <span>Badge text</span>
                   <input name="icon" placeholder="REF" />
@@ -533,6 +547,7 @@ export default async function FocusClientManagePage({
               <FocusControlExistingGoals
                 adminSlug={runtime.settings.adminSlug}
                 assets={assets}
+                sections={runtime.allSections}
                 tasks={runtime.allTasks}
               />
             </div>
