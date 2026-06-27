@@ -4308,9 +4308,9 @@ a {
 .focus-roundup-copy h1 {
   margin: 0;
   color: var(--focus-text-strong);
-  font-size: clamp(2rem, 7vw, 5.2rem);
+  font-size: clamp(2rem, 6vw, 4.8rem);
   line-height: 0.94;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .focus-roundup-copy p {
@@ -4378,7 +4378,6 @@ a {
 
 .focus-roundup-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.1fr);
   gap: 18px;
 }
 
@@ -4444,8 +4443,12 @@ a {
 
 .focus-roundup-reward-track::after {
   bottom: auto;
-  height: var(--roundup-progress);
+  height: 0;
   background: linear-gradient(180deg, var(--focus-accent-bright), var(--focus-accent-secondary));
+}
+
+.focus-roundup-card-visible .focus-roundup-reward-track::after {
+  height: var(--roundup-progress);
   animation: focusRoundupLadder 980ms ease both;
 }
 
@@ -4460,6 +4463,11 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transform: translateY(18px) scale(0.92);
+}
+
+.focus-roundup-card-visible .focus-roundup-reward {
   animation: focusRoundupRewardSlam 520ms cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
   animation-delay: var(--roundup-entry-delay);
 }
@@ -4523,7 +4531,8 @@ a {
 .focus-roundup-reward-copy strong,
 .focus-roundup-reward-copy p {
   display: block;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .focus-roundup-reward > span {
@@ -4545,6 +4554,60 @@ a {
   gap: 10px;
 }
 
+.focus-roundup-breakdown-wrap {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.45fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+}
+
+.focus-roundup-pie {
+  position: relative;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: min(230px, 62vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(var(--roundup-pie-gradient));
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.18);
+  clip-path: circle(0 at 50% 50%);
+}
+
+.focus-roundup-card-visible .focus-roundup-pie {
+  animation: focusRoundupPieReveal 850ms ease both;
+}
+
+.focus-roundup-pie::before {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--focus-panel) 82%, rgba(255, 255, 255, 0.14));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.13);
+}
+
+.focus-roundup-pie strong,
+.focus-roundup-pie span {
+  position: relative;
+  z-index: 1;
+}
+
+.focus-roundup-pie strong {
+  color: var(--focus-text-strong);
+  font-size: clamp(2.4rem, 10vw, 4.8rem);
+  line-height: 0.86;
+}
+
+.focus-roundup-pie span {
+  color: var(--focus-text);
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .focus-roundup-task {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
@@ -4562,7 +4625,7 @@ a {
   min-width: 48px;
   height: 48px;
   border-radius: 16px;
-  background: color-mix(in srgb, var(--focus-accent-bright) 20%, rgba(255, 255, 255, 0.12));
+  background: color-mix(in srgb, var(--roundup-task-color, var(--focus-accent-bright)) 28%, rgba(255, 255, 255, 0.12));
   color: var(--focus-text-strong);
   font-weight: 950;
 }
@@ -4664,6 +4727,20 @@ a {
   }
 }
 
+@keyframes focusRoundupPieReveal {
+  from {
+    opacity: 0;
+    clip-path: circle(0 at 50% 50%);
+    transform: rotate(-18deg) scale(0.88);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: circle(75% at 50% 50%);
+    transform: rotate(0) scale(1);
+  }
+}
+
 @keyframes focusRoundupLoading {
   0% {
     transform: translateX(-115%);
@@ -4680,25 +4757,44 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   .focus-roundup-totaliser,
+  .focus-roundup-pie,
   .focus-roundup-reward,
   .focus-roundup-reward-track::after,
   .focus-roundup-loading-bar span {
     animation: none;
   }
+
+  .focus-roundup-pie {
+    clip-path: circle(75% at 50% 50%);
+  }
+
+  .focus-roundup-reward {
+    opacity: 1;
+    transform: none;
+  }
+
+  .focus-roundup-reward-track::after {
+    height: var(--roundup-progress);
+  }
+}
+
+@media (max-width: 900px) {
+  .focus-roundup-hero {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
-  .focus-roundup-hero,
-  .focus-roundup-grid {
-    grid-template-columns: 1fr;
-  }
-
   .focus-roundup-copy h1 {
-    font-size: 2.6rem;
+    font-size: clamp(2rem, 12vw, 3rem);
   }
 
   .focus-roundup-totaliser {
     min-height: 190px;
+  }
+
+  .focus-roundup-breakdown-wrap {
+    grid-template-columns: 1fr;
   }
 
   .focus-roundup-card-head {

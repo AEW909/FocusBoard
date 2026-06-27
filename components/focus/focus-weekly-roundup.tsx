@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { completeFocusWeeklyRoundupAction } from "@/app/board/[slug]/roundup/actions";
 import { FocusImageWithFallback } from "@/components/focus/focus-image-with-fallback";
 import type { FocusWeeklyRoundupData } from "@/lib/focus-board/roundup";
@@ -19,9 +19,16 @@ function formatWeekRange(weekKey: string) {
   const start = new Date(`${weekKey}T00:00:00Z`);
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 6);
-  const formatter = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
+  const dayFormatter = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: "UTC" });
+  const fullFormatter = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+  const startMonth = start.getUTCMonth();
+  const endMonth = end.getUTCMonth();
 
-  return `${formatter.format(start)} - ${formatter.format(end)}`;
+  if (startMonth === endMonth) {
+    return `${dayFormatter.format(start)}-${fullFormatter.format(end)}`;
+  }
+
+  return `${fullFormatter.format(start)}-${fullFormatter.format(end)}`;
 }
 
 function getResultLine(roundup: FocusWeeklyRoundupData) {
@@ -36,9 +43,46 @@ function getResultLine(roundup: FocusWeeklyRoundupData) {
   return "A quiet week. Suspiciously quiet. The new one gets a fresh scoreboard.";
 }
 
+function useRoundupInView<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [hasEntered, setHasEntered] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+
+    if (!node || hasEntered) {
+      return;
+    }
+
+    if (!("IntersectionObserver" in window)) {
+      setHasEntered(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setHasEntered(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.28 },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasEntered]);
+
+  return { hasEntered, ref };
+}
+
+const CHART_COLORS = ["#ff7e45", "#ffd166", "#7bdff2", "#cdb4db", "#95d5b2", "#ffafcc"];
+
 export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRoundupProps) {
   const [displayPoints, setDisplayPoints] = useState(0);
   const [displayMonthPoints, setDisplayMonthPoints] = useState(0);
+  const breakdownInView = useRoundupInView<HTMLElement>();
+  const rewardsInView = useRoundupInView<HTMLElement>();
   const weeklyPercent = clampPercent((roundup.weekPoints / roundup.weeklyTarget) * 100);
   const maxRewardPoints = roundup.rewardTiers.at(-1)?.minPoints ?? roundup.weeklyTarget;
   const monthlyPercent = clampPercent((roundup.monthPoints / Math.max(maxRewardPoints, 1)) * 100);
@@ -46,6 +90,22 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
     () => [...roundup.taskBreakdown].sort((left, right) => right.points - left.points).slice(0, 4),
     [roundup.taskBreakdown],
   );
+  const pieTasks = useMemo(
+    () => [...roundup.taskBreakdown].filter((task) => task.points > 0).sort((left, right) => right.points - left.points),
+    [roundup.taskBreakdown],
+  );
+  const pieTotal = pieTasks.reduce((sum, task) => sum + task.points, 0);
+  let runningPercent = 0;
+  const pieGradient = pieTasks.length
+    ? pieTasks
+        .map((task, index) => {
+          const start = runningPercent;
+          const end = runningPercent + (task.points / pieTotal) * 100;
+          runningPercent = end;
+          return `${CHART_COLORS[index % CHART_COLORS.length]} ${start}% ${end}%`;
+        })
+        .join(", ")
+    : "rgba(255, 255, 255, 0.12) 0% 100%";
   const unlockedRewardCount = roundup.rewardTiers.filter(
     (tier) => roundup.monthPoints >= tier.minPoints && roundup.weeksHit >= tier.minWeeksHit,
   ).length;
@@ -99,7 +159,54 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
       </section>
 
       <section className="focus-roundup-grid">
-        <article className="focus-roundup-card focus-roundup-card-month">
+        <article
+          className={`focus-roundup-card focus-roundup-card-breakdown ${
+            breakdownInView.hasEntered ? "focus-roundup-card-visible" : ""
+          }`}
+          ref={breakdownInView.ref}
+        >
+          <p className="focus-panel-label">Challenge breakdown</p>
+          {pieTasks.length ? (
+            <div className="focus-roundup-breakdown-wrap">
+              <div
+                aria-label={`${roundup.weekPoints} points split by challenge`}
+                className="focus-roundup-pie"
+                role="img"
+                style={{ "--roundup-pie-gradient": pieGradient } as CSSProperties}
+              >
+                <strong>{roundup.weekPoints}</strong>
+                <span>pts</span>
+              </div>
+              <div className="focus-roundup-task-list">
+                {topTasks.map((task, index) => (
+                  <div
+                    className="focus-roundup-task"
+                    key={task.key}
+                    style={{ "--roundup-task-color": CHART_COLORS[index % CHART_COLORS.length] } as CSSProperties}
+                  >
+                    <span>{task.icon}</span>
+                    <div>
+                      <strong>{task.title}</strong>
+                      <p>
+                        {task.points} pts from {task.eventCount} action{task.eventCount === 1 ? "" : "s"}
+                        {task.isBoosted ? " - boosted" : ""}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p>No points landed last week. Rude of time to keep moving, but here we are.</p>
+          )}
+        </article>
+
+        <article
+          className={`focus-roundup-card focus-roundup-card-month ${
+            rewardsInView.hasEntered ? "focus-roundup-card-visible" : ""
+          }`}
+          ref={rewardsInView.ref}
+        >
           <div className="focus-roundup-card-head">
             <div>
               <p className="focus-panel-label">{roundup.monthLabel}</p>
@@ -145,28 +252,6 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
             </strong>
           ) : (
             <strong>Reward ladder complete</strong>
-          )}
-        </article>
-
-        <article className="focus-roundup-card">
-          <p className="focus-panel-label">Challenge breakdown</p>
-          {topTasks.length ? (
-            <div className="focus-roundup-task-list">
-              {topTasks.map((task) => (
-                <div className="focus-roundup-task" key={task.key}>
-                  <span>{task.icon}</span>
-                  <div>
-                    <strong>{task.title}</strong>
-                    <p>
-                      {task.points} pts from {task.eventCount} action{task.eventCount === 1 ? "" : "s"}
-                      {task.isBoosted ? " - boosted" : ""}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>No points landed last week. Rude of time to keep moving, but here we are.</p>
           )}
         </article>
       </section>
