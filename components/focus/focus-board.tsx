@@ -414,18 +414,20 @@ export function FocusBoard({
 
           <section className="focus-task-section-stack">
             {currentWeek.sections.map((section) => (
-              <div className="focus-board-section" key={section.key}>
-                {showSectionHeaders ? (
-                  <div className="focus-board-section-head">
-                    <div>
-                      <p className="focus-panel-label">Goal area</p>
-                      <h2>{section.title}</h2>
-                      {section.description ? <p>{section.description}</p> : null}
-                    </div>
-                    <span>{section.tasks.length} challenge{section.tasks.length === 1 ? "" : "s"}</span>
+              <details className="focus-board-section" key={section.key} open>
+                <summary className="focus-board-section-head">
+                  <div>
+                    <p className="focus-panel-label">Goal area</p>
+                    <h2>{section.title}</h2>
+                    {section.description ? <p>{section.description}</p> : null}
                   </div>
-                ) : null}
-                <div className="focus-task-reel">
+                  <div className="focus-board-section-actions">
+                    <span>{section.tasks.length} challenge{section.tasks.length === 1 ? "" : "s"}</span>
+                    <span className="focus-board-section-toggle" aria-hidden="true" />
+                  </div>
+                </summary>
+                <div className={showSectionHeaders ? "focus-board-section-body" : "focus-board-section-body focus-board-section-body-solo"}>
+                  <div className="focus-task-reel">
                   {section.tasks.map((task) => (
                     <article
                       className={`focus-task-sticker ${task.accentClass} ${task.isBoosted ? "focus-task-sticker-boosted" : ""}`}
@@ -552,8 +554,9 @@ export function FocusBoard({
                 </div>
                     </article>
                   ))}
+                  </div>
                 </div>
-              </div>
+              </details>
             ))}
           </section>
 

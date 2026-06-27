@@ -3956,20 +3956,35 @@ a {
 
 .focus-board-section {
   display: grid;
-  gap: 14px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--focus-accent) 26%, transparent);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-accent-bright) 12%, transparent), transparent 30%),
+    color-mix(in srgb, var(--focus-task-surface-1) 58%, rgba(255, 255, 255, 0.08));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #fff 5%, transparent) inset,
+    0 20px 44px color-mix(in srgb, var(--focus-accent) 12%, transparent);
+}
+
+.focus-board-section summary {
+  list-style: none;
+}
+
+.focus-board-section summary::-webkit-details-marker {
+  display: none;
 }
 
 .focus-board-section-head {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  align-items: flex-end;
-  padding: 16px 18px;
-  border: 1px solid color-mix(in srgb, var(--focus-accent) 22%, transparent);
-  border-radius: 24px;
+  align-items: center;
+  padding: 18px;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-accent-bright) 10%, transparent), transparent 30%),
-    rgba(255, 255, 255, 0.07);
+    linear-gradient(135deg, color-mix(in srgb, var(--focus-accent) 18%, transparent), transparent 62%),
+    rgba(255, 255, 255, 0.08);
+  cursor: pointer;
 }
 
 .focus-board-section-head h2,
@@ -3986,9 +4001,15 @@ a {
   line-height: 1.5;
 }
 
-.focus-board-section-head span {
+.focus-board-section-actions {
   display: inline-flex;
   flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.focus-board-section-actions > span:first-child {
+  display: inline-flex;
   min-height: 32px;
   align-items: center;
   padding: 0 10px;
@@ -3997,6 +4018,47 @@ a {
   color: var(--focus-text-strong);
   font-size: 0.78rem;
   font-weight: 900;
+}
+
+.focus-board-section-toggle {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border: 1px solid color-mix(in srgb, var(--focus-accent-bright) 34%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--focus-panel) 42%, transparent);
+}
+
+.focus-board-section-toggle::before,
+.focus-board-section-toggle::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--focus-text-strong);
+  transform: translate(-50%, -50%);
+}
+
+.focus-board-section-toggle::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.focus-board-section[open] .focus-board-section-toggle::after {
+  opacity: 0;
+}
+
+.focus-board-section-body {
+  display: grid;
+  gap: 16px;
+  margin: 0 14px 16px;
+  padding: 16px 0 0 16px;
+  border-left: 3px solid color-mix(in srgb, var(--focus-accent-bright) 42%, transparent);
+}
+
+.focus-board-section-body-solo {
+  margin-top: 0;
 }
 
 .focus-task-reel {
