@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import { requireFocusBoardAccessBySlug } from "@/lib/focus-board/access";
+import { getWeekMonthKey, getWeekStart, toIsoDate } from "@/lib/focus-board/dates";
 import { getFocusBoardRuntimeConfigByPublicSlug } from "@/lib/focus-board/runtime";
 
 function getValue(formData: FormData, key: string) {
@@ -15,27 +16,7 @@ export type UpdateFocusBoardState = {
 };
 
 function getCurrentWeekKey() {
-  const now = new Date();
-  const copy = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const day = copy.getUTCDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  copy.setUTCDate(copy.getUTCDate() + diff);
-  return copy.toISOString().slice(0, 10);
-}
-
-function getWeekMonthKey(weekKey: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(weekKey)) {
-    return null;
-  }
-
-  const weekStart = new Date(`${weekKey}T00:00:00Z`);
-  if (Number.isNaN(weekStart.getTime())) {
-    return null;
-  }
-
-  return new Date(Date.UTC(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), 1))
-    .toISOString()
-    .slice(0, 10);
+  return toIsoDate(getWeekStart());
 }
 
 export async function updateFocusBoardAction(

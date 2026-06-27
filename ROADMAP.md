@@ -660,6 +660,8 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-06-27: Treat each scoring week as belonging to the month containing that week's Monday, so
   weekly totals, monthly reward ladders, and future weekly roundup summaries use the same boundary
   rule.
+- 2026-06-27: Weekly roundups are user-scoped per board/week and store only seen-state; scores,
+  reward progress, and challenge breakdowns remain derived from `focusboard.focus_board_events`.
 
 ## Change Log
 

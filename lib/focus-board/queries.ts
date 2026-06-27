@@ -1,6 +1,14 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import { getFocusBoardRuntimeConfigByBoardKey } from "@/lib/focus-board/runtime";
+import {
+  addDays,
+  addMonths,
+  getMonthStart,
+  getWeekStart,
+  parseIsoDate,
+  toIsoDate,
+} from "@/lib/focus-board/dates";
 
 type FocusBoardEventRow = {
   id: string;
@@ -18,41 +26,6 @@ type FocusBoardParams = {
   month?: string;
   week?: string;
 };
-
-function getMonthStart(date = new Date()) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
-}
-
-function toIsoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function getWeekStart(date = new Date()) {
-  const copy = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const day = copy.getUTCDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  copy.setUTCDate(copy.getUTCDate() + diff);
-  return copy;
-}
-
-function parseIsoDate(value?: string | null) {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return null;
-  }
-
-  const date = new Date(`${value}T00:00:00Z`);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function addMonths(date: Date, months: number) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1));
-}
-
-function addDays(date: Date, days: number) {
-  const copy = new Date(date);
-  copy.setUTCDate(copy.getUTCDate() + days);
-  return copy;
-}
 
 function listMonthWeeks(monthStart: Date) {
   const nextMonthStart = addMonths(monthStart, 1);

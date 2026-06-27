@@ -1,9 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { FocusBoard } from "@/components/focus/focus-board";
 import { ProtectedSessionBar } from "@/components/auth/protected-session-bar";
 import { FocusPullToRefresh } from "@/components/focus/focus-pull-to-refresh";
 import { getFocusBoardData } from "@/lib/focus-board/queries";
 import { requireFocusBoardAccessBySlug } from "@/lib/focus-board/access";
+import { getPendingFocusWeeklyRoundup } from "@/lib/focus-board/roundup";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,13 @@ type BoardPageProps = {
 export default async function BoardPage({ params, searchParams }: BoardPageProps) {
   const { slug } = await params;
   const query = await searchParams;
-  const { access, client } = await requireFocusBoardAccessBySlug(slug, `/board/${slug}`);
+  const { user, access, client } = await requireFocusBoardAccessBySlug(slug, `/board/${slug}`);
+  const pendingRoundup = await getPendingFocusWeeklyRoundup(user.id, client.boardKey);
+
+  if (pendingRoundup) {
+    redirect(`/board/${client.boardSlug}/roundup?week=${pendingRoundup.weekKey}`);
+  }
+
   const board = await getFocusBoardData(client.boardKey, {
     history: query.history,
     month: query.month,
