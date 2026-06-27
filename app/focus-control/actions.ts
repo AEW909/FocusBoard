@@ -4,10 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireFocusPlatformOwner } from "@/lib/focus-board/access";
 import {
+  DEFAULT_FOCUS_CHECKBOX_OPTIONS,
   FOCUS_THEME_PRESETS,
   getAccentClassForIndex,
+  normaliseFocusCheckboxOptions,
   normaliseFocusKey,
   type FocusMetricKind,
+  type FocusCheckboxOption,
   type FocusThemePreset,
 } from "@/lib/focus-board/config";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
@@ -22,6 +25,31 @@ function getIntValue(formData: FormData, key: string, fallback = 0) {
   const raw = getValue(formData, key);
   const value = Number.parseInt(raw, 10);
   return Number.isFinite(value) ? value : fallback;
+}
+
+function getMetricKind(formData: FormData): FocusMetricKind {
+  return getValue(formData, "kind") === "checkbox" ? "checkbox" : "count";
+}
+
+function getCheckboxOptions(formData: FormData) {
+  const raw = getValue(formData, "checkboxOptions");
+
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as Array<Partial<FocusCheckboxOption>>;
+      const options = normaliseFocusCheckboxOptions(Array.isArray(parsed) ? parsed : []);
+      return options.length > 0 ? options : DEFAULT_FOCUS_CHECKBOX_OPTIONS;
+    } catch {
+      return DEFAULT_FOCUS_CHECKBOX_OPTIONS;
+    }
+  }
+
+  const labelOptions = getValue(formData, "checkboxLabels")
+    .split(/[\n,]+/)
+    .map((label) => ({ label: label.trim() }))
+    .filter((option) => option.label);
+  const options = normaliseFocusCheckboxOptions(labelOptions);
+  return options.length > 0 ? options : DEFAULT_FOCUS_CHECKBOX_OPTIONS;
 }
 
 async function getAdminContext(adminSlug: string) {
@@ -200,9 +228,10 @@ export async function addFocusBoardTaskAction(formData: FormData) {
   const stickerSrc = getValue(formData, "stickerSrc") || "/focus/mascot-rainbow.svg";
   const stickerAlt = getValue(formData, "stickerAlt") || `${title} sticker`;
   const accentClass = getAccentClassForIndex(runtime.tasks.length);
-  const target = Math.max(0, getIntValue(formData, "target", 1));
+  const kind = getMetricKind(formData);
+  const checkboxOptions = kind === "checkbox" ? getCheckboxOptions(formData) : [];
+  const target = kind === "checkbox" ? checkboxOptions.length : Math.max(0, getIntValue(formData, "target", 1));
   const points = getIntValue(formData, "points", 1);
-  const kind = (getValue(formData, "kind") || "count") as FocusMetricKind;
 
   const { data: taskRow, error: taskError } = await admin
     .from("focus_board_tasks")
@@ -243,6 +272,7 @@ export async function addFocusBoardTaskAction(formData: FormData) {
     target,
     points,
     kind,
+    checkbox_options: checkboxOptions,
     sort_order: 1,
   });
 
@@ -439,13 +469,16 @@ export async function addFocusBoardMetricAction(formData: FormData) {
   }
 
   const metricKey = normaliseFocusKey(getValue(formData, "metricKey") || metricLabel);
+  const kind = getMetricKind(formData);
+  const checkboxOptions = kind === "checkbox" ? getCheckboxOptions(formData) : [];
   const { error } = await admin.from("focus_board_task_metrics").insert({
     task_id: taskId,
     metric_key: metricKey,
     label: metricLabel,
-    target: Math.max(0, getIntValue(formData, "target", 0)),
+    target: kind === "checkbox" ? checkboxOptions.length : Math.max(0, getIntValue(formData, "target", 0)),
     points: getIntValue(formData, "points", 1),
-    kind: (getValue(formData, "kind") || "count") as FocusMetricKind,
+    kind,
+    checkbox_options: checkboxOptions,
     sort_order: task.metrics.length + 1,
   });
 
@@ -482,13 +515,17 @@ export async function updateFocusBoardMetricAction(formData: FormData) {
     throw new Error("Metric not found.");
   }
 
+  const kind = getMetricKind(formData);
+  const checkboxOptions = kind === "checkbox" ? getCheckboxOptions(formData) : [];
+
   await admin
     .from("focus_board_task_metrics")
     .update({
       label: getValue(formData, "label"),
-      target: Math.max(0, getIntValue(formData, "target", 0)),
+      target: kind === "checkbox" ? checkboxOptions.length : Math.max(0, getIntValue(formData, "target", 0)),
       points: getIntValue(formData, "points", 0),
-      kind: (getValue(formData, "kind") || "count") as FocusMetricKind,
+      kind,
+      checkbox_options: checkboxOptions,
     })
     .eq("id", metricId);
 

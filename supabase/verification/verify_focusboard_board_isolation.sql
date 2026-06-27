@@ -71,7 +71,7 @@ select
   'Verified',
   1,
   99,
-  'toggle',
+  'count',
   1
 from focusboard.focus_board_tasks
 where board_key = 'verification-board'

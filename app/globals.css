@@ -3111,6 +3111,51 @@ a {
     rgba(255, 255, 255, 0.035);
 }
 
+.focus-checkbox-options-editor {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.focus-checkbox-options-head,
+.focus-checkbox-option-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.focus-checkbox-options-head {
+  justify-content: space-between;
+}
+
+.focus-checkbox-options-head span {
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.focus-checkbox-options-list {
+  display: grid;
+  gap: 10px;
+}
+
+.focus-checkbox-option-row {
+  align-items: flex-end;
+}
+
+.focus-checkbox-option-row .field {
+  flex: 1;
+}
+
+.focus-checkbox-option-row .focus-delete-icon {
+  margin-bottom: 1px;
+}
+
 .focus-control-metric-card-head {
   display: grid;
   gap: 6px;
@@ -3925,6 +3970,10 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.focus-metric-bubble-checkbox {
+  gap: 12px;
+}
+
 .focus-panel-label,
 .focus-week-label,
 .focus-metric-meta {
@@ -4120,6 +4169,65 @@ a {
   );
   color: var(--focus-accent-warm);
   box-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-warm) 18%, transparent);
+}
+
+.focus-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+  gap: 8px;
+}
+
+.focus-checkbox-grid form {
+  min-width: 0;
+}
+
+.focus-checkbox-button {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--focus-text-strong);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.focus-checkbox-button span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--focus-accent-warm);
+  line-height: 1;
+}
+
+.focus-checkbox-button-checked {
+  border-color: color-mix(in srgb, var(--focus-accent-warm) 44%, transparent);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--focus-accent-warm) 20%, transparent),
+      color-mix(in srgb, var(--focus-accent-secondary) 18%, transparent)
+    ),
+    rgba(255, 255, 255, 0.08);
+  color: var(--focus-accent-warm);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-warm) 16%, transparent);
+}
+
+.focus-checkbox-button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
 }
 
 .focus-month-tier {

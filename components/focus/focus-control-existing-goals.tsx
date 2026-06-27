@@ -15,7 +15,13 @@ import {
 import { FocusDeleteButton } from "@/components/focus/focus-delete-button";
 import { FocusImageSelect } from "@/components/focus/focus-image-select";
 import type { FocusAssetOption } from "@/lib/focus-board/assets";
-import type { FocusBoardTask, FocusMetricKind } from "@/lib/focus-board/config";
+import {
+  DEFAULT_FOCUS_CHECKBOX_OPTIONS,
+  normaliseFocusCheckboxOptions,
+  type FocusBoardTask,
+  type FocusCheckboxOption,
+  type FocusMetricKind,
+} from "@/lib/focus-board/config";
 
 type FocusControlExistingGoalsProps = {
   adminSlug: string;
@@ -37,6 +43,7 @@ type MetricDraft = {
   target: string;
   points: string;
   kind: FocusMetricKind;
+  checkboxOptions: FocusCheckboxOption[];
 };
 
 function useUnsavedChangesWarning(hasUnsavedChanges: boolean) {
@@ -90,6 +97,10 @@ function metricToDraft(metric: FocusBoardTask["metrics"][number]): MetricDraft {
     target: String(metric.target),
     points: String(metric.points),
     kind: metric.kind,
+    checkboxOptions:
+      metric.kind === "checkbox" && metric.checkboxOptions?.length
+        ? metric.checkboxOptions
+        : DEFAULT_FOCUS_CHECKBOX_OPTIONS,
   };
 }
 
@@ -104,8 +115,84 @@ function taskToDraft(task: FocusBoardTask): TaskDraft {
   };
 }
 
-function draftsMatch<T extends Record<string, string>>(left: T, right: T) {
-  return Object.keys(left).every((key) => left[key] === right[key]);
+function draftsMatch<T>(left: T, right: T) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function getPreparedCheckboxOptions(options: FocusCheckboxOption[]) {
+  const prepared = normaliseFocusCheckboxOptions(options);
+  return prepared.length > 0 ? prepared : DEFAULT_FOCUS_CHECKBOX_OPTIONS;
+}
+
+function updateCheckboxOptionLabel(
+  options: FocusCheckboxOption[],
+  optionKey: string,
+  label: string,
+) {
+  return options.map((option) => (option.key === optionKey ? { ...option, label } : option));
+}
+
+function addCheckboxOption(options: FocusCheckboxOption[]) {
+  let nextNumber = options.length + 1;
+  while (options.some((option) => option.key === `box_${nextNumber}`)) {
+    nextNumber += 1;
+  }
+
+  return [
+    ...options,
+    {
+      key: `box_${nextNumber}`,
+      label: `BOX ${nextNumber}`,
+    },
+  ];
+}
+
+function removeCheckboxOption(options: FocusCheckboxOption[], optionKey: string) {
+  return options.filter((option) => option.key !== optionKey);
+}
+
+type FocusCheckboxOptionsEditorProps = {
+  options: FocusCheckboxOption[];
+  onChange: (options: FocusCheckboxOption[]) => void;
+};
+
+function FocusCheckboxOptionsEditor({ options, onChange }: FocusCheckboxOptionsEditorProps) {
+  return (
+    <div className="focus-checkbox-options-editor">
+      <div className="focus-checkbox-options-head">
+        <span>Checkbox labels</span>
+        <button
+          className="button button-secondary button-small"
+          onClick={() => onChange(addCheckboxOption(options))}
+          type="button"
+        >
+          Add checkbox
+        </button>
+      </div>
+      <div className="focus-checkbox-options-list">
+        {options.map((option, index) => (
+          <div className="focus-checkbox-option-row" key={option.key}>
+            <label className="field">
+              <span>Box {index + 1}</span>
+              <input
+                onChange={(event) => onChange(updateCheckboxOptionLabel(options, option.key, event.target.value))}
+                value={option.label}
+              />
+            </label>
+            <button
+              aria-label={`Remove checkbox ${option.label}`}
+              className="focus-delete-icon"
+              disabled={options.length <= 1}
+              onClick={() => onChange(removeCheckboxOption(options, option.key))}
+              type="button"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusControlExistingGoalsProps) {
@@ -273,6 +360,10 @@ function FocusControlTaskEditor({
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(task.isActive !== false && task.isVisible !== false);
   const [addMetricError, setAddMetricError] = useState<string | null>(null);
+  const [newMetricKind, setNewMetricKind] = useState<FocusMetricKind>("count");
+  const [newCheckboxOptions, setNewCheckboxOptions] = useState<FocusCheckboxOption[]>(
+    DEFAULT_FOCUS_CHECKBOX_OPTIONS,
+  );
   const [isAddingMetric, startAddMetricTransition] = useTransition();
   const [isPendingTask, startTaskTransition] = useTransition();
 
@@ -335,6 +426,8 @@ function FocusControlTaskEditor({
         await addFocusBoardMetricAction(formData);
         setAddMetricError(null);
         form.reset();
+        setNewMetricKind("count");
+        setNewCheckboxOptions(DEFAULT_FOCUS_CHECKBOX_OPTIONS);
         router.refresh();
       } catch (error) {
         setAddMetricError(error instanceof Error ? error.message : "Could not add the metric.");
@@ -540,20 +633,40 @@ function FocusControlTaskEditor({
                 </label>
                 <label className="field">
                   <span>Kind</span>
-                  <select className="select-field" defaultValue="count" name="kind">
+                  <select
+                    className="select-field"
+                    name="kind"
+                    onChange={(event) => setNewMetricKind(event.target.value as FocusMetricKind)}
+                    value={newMetricKind}
+                  >
                     <option value="count">Count</option>
-                    <option value="toggle">Toggle</option>
+                    <option value="checkbox">Checkboxes</option>
                   </select>
                 </label>
+                {newMetricKind === "count" ? (
+                  <label className="field">
+                    <span>Target</span>
+                    <input defaultValue={0} min={0} name="target" type="number" />
+                  </label>
+                ) : null}
                 <label className="field">
-                  <span>Target</span>
-                  <input defaultValue={0} min={0} name="target" type="number" />
-                </label>
-                <label className="field">
-                  <span>Points</span>
+                  <span>{newMetricKind === "checkbox" ? "Points per checkbox" : "Points"}</span>
                   <input defaultValue={5} name="points" type="number" />
                 </label>
               </div>
+              {newMetricKind === "checkbox" ? (
+                <>
+                  <input
+                    name="checkboxOptions"
+                    type="hidden"
+                    value={JSON.stringify(getPreparedCheckboxOptions(newCheckboxOptions))}
+                  />
+                  <FocusCheckboxOptionsEditor
+                    onChange={setNewCheckboxOptions}
+                    options={newCheckboxOptions}
+                  />
+                </>
+              ) : null}
               <button className="button button-primary button-small" disabled={isAddingMetric} type="submit">
                 {isAddingMetric ? "Adding metric..." : "Add metric"}
               </button>
@@ -608,6 +721,7 @@ function FocusControlMetricEditor({
         formData.set("target", draft.target);
         formData.set("points", draft.points);
         formData.set("kind", draft.kind);
+        formData.set("checkboxOptions", JSON.stringify(getPreparedCheckboxOptions(draft.checkboxOptions)));
 
         await updateFocusBoardMetricAction(formData);
         setBaseline(draft);
@@ -695,18 +809,32 @@ function FocusControlMetricEditor({
             value={draft.kind}
           >
             <option value="count">Count</option>
-            <option value="toggle">Toggle</option>
+            <option value="checkbox">Checkboxes</option>
           </select>
         </label>
+        {draft.kind === "count" ? (
+          <label className="field">
+            <span>Target</span>
+            <input onChange={(event) => setDraft((current) => ({ ...current, target: event.target.value }))} type="number" value={draft.target} />
+          </label>
+        ) : null}
         <label className="field">
-          <span>Target</span>
-          <input onChange={(event) => setDraft((current) => ({ ...current, target: event.target.value }))} type="number" value={draft.target} />
-        </label>
-        <label className="field">
-          <span>Points</span>
+          <span>{draft.kind === "checkbox" ? "Points per checkbox" : "Points"}</span>
           <input onChange={(event) => setDraft((current) => ({ ...current, points: event.target.value }))} type="number" value={draft.points} />
         </label>
       </div>
+      {draft.kind === "checkbox" ? (
+        <FocusCheckboxOptionsEditor
+          onChange={(options) =>
+            setDraft((current) => ({
+              ...current,
+              checkboxOptions: options,
+              target: String(getPreparedCheckboxOptions(options).length),
+            }))
+          }
+          options={draft.checkboxOptions}
+        />
+      ) : null}
 
       <div className="focus-control-task-action-row">
         <button

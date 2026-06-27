@@ -32,6 +32,7 @@ export async function updateFocusBoardAction(
   const monthKey = getValue(formData, "monthKey");
   const taskKey = getValue(formData, "taskKey");
   const metricKey = getValue(formData, "metricKey");
+  const checkboxKey = getValue(formData, "checkboxKey");
   const direction = getValue(formData, "direction");
   await requireFocusBoardAccessBySlug(slug, `/board/${slug}`);
 
@@ -48,6 +49,17 @@ export async function updateFocusBoardAction(
     return { error: "The board action is missing some context." };
   }
 
+  const checkboxOption =
+    metric.kind === "checkbox"
+      ? metric.checkboxOptions?.find((option) => option.key === checkboxKey)
+      : null;
+
+  if (metric.kind === "checkbox" && !checkboxOption) {
+    return { error: "That checkbox is no longer available. Please refresh the board and try again." };
+  }
+
+  const eventMetricKey = metric.kind === "checkbox" ? `${metric.key}:${checkboxOption?.key}` : metric.key;
+
   if (task.isActive === false || task.isVisible === false || metric.isActive === false) {
     return { error: "That challenge has changed, so please refresh the board and try again." };
   }
@@ -59,12 +71,33 @@ export async function updateFocusBoardAction(
   const admin = createFocusBoardAdminClient();
 
   if (direction === "add") {
+    if (metric.kind === "checkbox") {
+      const { data: existing, error: existingError } = await admin
+        .from("focus_board_events")
+        .select("id")
+        .eq("board_key", runtime.settings.boardKey)
+        .eq("month_key", monthKey)
+        .eq("week_start", weekKey)
+        .eq("task_key", taskKey)
+        .eq("metric_key", eventMetricKey)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingError) {
+        return { error: existingError.message };
+      }
+
+      if (existing) {
+        return {};
+      }
+    }
+
     const { error } = await admin.from("focus_board_events").insert({
       board_key: runtime.settings.boardKey,
       month_key: monthKey,
       week_start: weekKey,
       task_key: taskKey,
-      metric_key: metricKey,
+      metric_key: eventMetricKey,
       points: task.isBoosted ? metric.points * 2 : metric.points,
     });
 
@@ -72,6 +105,25 @@ export async function updateFocusBoardAction(
       return { error: error.message };
     }
   } else if (direction === "remove") {
+    if (metric.kind === "checkbox") {
+      const { error: deleteError } = await admin
+        .from("focus_board_events")
+        .delete()
+        .eq("board_key", runtime.settings.boardKey)
+        .eq("month_key", monthKey)
+        .eq("week_start", weekKey)
+        .eq("task_key", taskKey)
+        .eq("metric_key", eventMetricKey);
+
+      if (deleteError) {
+        return { error: deleteError.message };
+      }
+
+      revalidatePath(`/board/${runtime.settings.boardSlug}`);
+      revalidatePath(`/focus/${runtime.settings.boardSlug}`);
+      return {};
+    }
+
     const { data: latest, error: fetchError } = await admin
       .from("focus_board_events")
       .select("id")
@@ -79,7 +131,7 @@ export async function updateFocusBoardAction(
       .eq("month_key", monthKey)
       .eq("week_start", weekKey)
       .eq("task_key", taskKey)
-      .eq("metric_key", metricKey)
+      .eq("metric_key", eventMetricKey)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();

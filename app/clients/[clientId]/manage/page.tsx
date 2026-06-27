@@ -474,7 +474,7 @@ export default async function FocusClientManagePage({
                   <span>Kind</span>
                   <select className="select-field" defaultValue="count" name="kind">
                     <option value="count">Count</option>
-                    <option value="toggle">Toggle</option>
+                    <option value="checkbox">Checkboxes</option>
                   </select>
                 </label>
                 <FocusImageSelect
@@ -488,6 +488,16 @@ export default async function FocusClientManagePage({
                   <input name="stickerAlt" placeholder="Custom goal sticker" />
                 </label>
               </div>
+              <label className="field">
+                <span>Checkbox labels</span>
+                <textarea
+                  defaultValue={"MON\nTUE\nWED\nTHUR\nFRI"}
+                  name="checkboxLabels"
+                />
+                <small className="focus-field-help">
+                  Used when Kind is Checkboxes. Put one checkbox label per line.
+                </small>
+              </label>
               <button className="button button-primary" type="submit">
                 Add weekly goal
               </button>

@@ -11,7 +11,13 @@ export const FOCUS_THEME_PRESETS = [
 
 export type FocusThemePreset = (typeof FOCUS_THEME_PRESETS)[number];
 
-export type FocusMetricKind = "count" | "toggle";
+export type FocusMetricKind = "count" | "checkbox";
+
+export type FocusCheckboxOption = {
+  key: string;
+  label: string;
+  checked?: boolean;
+};
 
 export type FocusBoardTaskMetric = {
   id?: string;
@@ -20,6 +26,7 @@ export type FocusBoardTaskMetric = {
   target: number;
   points: number;
   kind: FocusMetricKind;
+  checkboxOptions?: FocusCheckboxOption[];
   sortOrder?: number;
   isActive?: boolean;
   isVisible?: boolean;
@@ -125,6 +132,14 @@ export const DEFAULT_FOCUS_WEEKLY_REWARD: FocusWeeklyReward = {
   stickerAlt: "Weekly reward sticker",
 };
 
+export const DEFAULT_FOCUS_CHECKBOX_OPTIONS: FocusCheckboxOption[] = [
+  { key: "mon", label: "MON" },
+  { key: "tue", label: "TUE" },
+  { key: "wed", label: "WED" },
+  { key: "thu", label: "THUR" },
+  { key: "fri", label: "FRI" },
+];
+
 export const DEFAULT_FOCUS_BOARD_TASKS: FocusBoardTask[] = [
   {
     key: "google_reviews",
@@ -163,7 +178,7 @@ export const DEFAULT_FOCUS_BOARD_TASKS: FocusBoardTask[] = [
       "Publish one 100-word myth-vs-fact or treatment-focus post on Google, Facebook, or Instagram. Bonus if it uses one of the week's photos.",
     accentClass: "focus-task-stone",
     sortOrder: 3,
-    metrics: [{ key: "post", label: "Posted", target: 1, points: 20, kind: "toggle", sortOrder: 1 }],
+    metrics: [{ key: "post", label: "Posted", target: 1, points: 20, kind: "count", sortOrder: 1 }],
   },
 ];
 
@@ -226,4 +241,33 @@ export function normaliseFocusKey(value: string) {
 
 export function getAccentClassForIndex(index: number) {
   return FOCUS_TASK_ACCENT_CLASSES[index % FOCUS_TASK_ACCENT_CLASSES.length];
+}
+
+export function normaliseFocusCheckboxOptions(
+  options: Array<Partial<FocusCheckboxOption>> | null | undefined,
+) {
+  const usedKeys = new Set<string>();
+
+  return (options ?? [])
+    .map((option, index) => {
+      const label = typeof option.label === "string" ? option.label.trim() : "";
+      if (!label) {
+        return null;
+      }
+
+      const baseKey = normaliseFocusKey(
+        typeof option.key === "string" && option.key.trim() ? option.key : label,
+      ) || `box_${index + 1}`;
+      let key = baseKey;
+      let suffix = 2;
+
+      while (usedKeys.has(key)) {
+        key = `${baseKey}_${suffix}`;
+        suffix += 1;
+      }
+
+      usedKeys.add(key);
+      return { key, label };
+    })
+    .filter((option): option is FocusCheckboxOption => Boolean(option));
 }

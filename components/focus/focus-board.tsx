@@ -435,16 +435,22 @@ export function FocusBoard({
 
                 <div className="focus-metric-stack">
                   {task.metrics.map((metric) => {
+                    const isCheckboxMetric = metric.kind === "checkbox";
+                    const checkboxOptions = metric.checkboxOptions ?? [];
                     const metTarget = metric.target > 0 ? metric.count >= metric.target : metric.count > 0;
                     const metricPercent =
                       metric.target > 0 ? clampPercent((metric.count / metric.target) * 100) : metric.count > 0 ? 100 : 0;
 
                     return (
-                      <div className="focus-metric-bubble" key={metric.key}>
+                      <div
+                        className={`focus-metric-bubble ${isCheckboxMetric ? "focus-metric-bubble-checkbox" : ""}`}
+                        key={metric.key}
+                      >
                         <div className="focus-metric-copy">
                           <p className="focus-metric-label">{metric.label}</p>
                           <p className="focus-metric-meta">
-                            {task.isBoosted ? `${metric.points * 2} boosted pts` : `${metric.points} pts`} each
+                            {task.isBoosted ? `${metric.points * 2} boosted pts` : `${metric.points} pts`}{" "}
+                            {isCheckboxMetric ? "per checkbox" : "each"}
                             {metric.target > 0 ? ` - target ${metric.target}` : " - bonus"}
                           </p>
                           <div className="focus-mini-bar">
@@ -455,43 +461,67 @@ export function FocusBoard({
                           </p>
                         </div>
 
-                        <div className="focus-metric-controls focus-metric-controls-sticker">
-                          <form action={formAction}>
-                            <input name="slug" type="hidden" value={board.settings.boardSlug} />
-                            <input name="weekKey" type="hidden" value={currentWeek.weekKey} />
-                            <input name="monthKey" type="hidden" value={board.monthKey} />
-                            <input name="taskKey" type="hidden" value={task.key} />
-                            <input name="metricKey" type="hidden" value={metric.key} />
-                            <input name="direction" type="hidden" value="remove" />
-                            <button
-                              className="focus-icon-button"
-                              disabled={pending || metric.count === 0 || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
-                              type="submit"
-                            >
-                              -
-                            </button>
-                          </form>
+                        {isCheckboxMetric ? (
+                          <div className="focus-checkbox-grid">
+                            {checkboxOptions.map((option) => (
+                              <form action={formAction} key={option.key}>
+                                <input name="slug" type="hidden" value={board.settings.boardSlug} />
+                                <input name="weekKey" type="hidden" value={currentWeek.weekKey} />
+                                <input name="monthKey" type="hidden" value={board.monthKey} />
+                                <input name="taskKey" type="hidden" value={task.key} />
+                                <input name="metricKey" type="hidden" value={metric.key} />
+                                <input name="checkboxKey" type="hidden" value={option.key} />
+                                <input name="direction" type="hidden" value={option.checked ? "remove" : "add"} />
+                                <button
+                                  className={`focus-checkbox-button ${option.checked ? "focus-checkbox-button-checked" : ""}`}
+                                  disabled={pending || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
+                                  type="submit"
+                                >
+                                  <span aria-hidden="true">{option.checked ? "✓" : ""}</span>
+                                  {option.label}
+                                </button>
+                              </form>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="focus-metric-controls focus-metric-controls-sticker">
+                            <form action={formAction}>
+                              <input name="slug" type="hidden" value={board.settings.boardSlug} />
+                              <input name="weekKey" type="hidden" value={currentWeek.weekKey} />
+                              <input name="monthKey" type="hidden" value={board.monthKey} />
+                              <input name="taskKey" type="hidden" value={task.key} />
+                              <input name="metricKey" type="hidden" value={metric.key} />
+                              <input name="direction" type="hidden" value="remove" />
+                              <button
+                                className="focus-icon-button"
+                                disabled={pending || metric.count === 0 || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
+                                type="submit"
+                              >
+                                -
+                              </button>
+                            </form>
 
-                          <span className={`focus-metric-count ${metTarget ? "focus-metric-count-hit" : ""}`}>
-                            {metric.kind === "toggle" ? (metric.count > 0 ? "Done!" : "Tap!") : metric.count}
-                          </span>
+                            <span className={`focus-metric-count ${metTarget ? "focus-metric-count-hit" : ""}`}>
+                              {metric.count}
+                            </span>
 
-                          <form action={formAction}>
-                            <input name="slug" type="hidden" value={board.settings.boardSlug} />
-                            <input name="weekKey" type="hidden" value={currentWeek.weekKey} />
-                            <input name="monthKey" type="hidden" value={board.monthKey} />
-                            <input name="taskKey" type="hidden" value={task.key} />
-                            <input name="metricKey" type="hidden" value={metric.key} />
-                            <input name="direction" type="hidden" value="add" />
-                            <button
-                              className="focus-icon-button focus-icon-button-plus"
-                              disabled={pending || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
-                              type="submit"
-                            >
-                              +
-                            </button>
-                          </form>
-                        </div>
+                            <form action={formAction}>
+                              <input name="slug" type="hidden" value={board.settings.boardSlug} />
+                              <input name="weekKey" type="hidden" value={currentWeek.weekKey} />
+                              <input name="monthKey" type="hidden" value={board.monthKey} />
+                              <input name="taskKey" type="hidden" value={task.key} />
+                              <input name="metricKey" type="hidden" value={metric.key} />
+                              <input name="direction" type="hidden" value="add" />
+                              <button
+                                className="focus-icon-button focus-icon-button-plus"
+                                disabled={pending || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
+                                type="submit"
+                              >
+                                +
+                              </button>
+                            </form>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

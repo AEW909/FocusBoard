@@ -3,15 +3,18 @@ import { getBundledFocusFallback } from "@/lib/focus-board/assets";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import {
   DEFAULT_FOCUS_BOARD_SETTINGS,
+  DEFAULT_FOCUS_CHECKBOX_OPTIONS,
   DEFAULT_FOCUS_BOARD_TASKS,
   DEFAULT_FOCUS_REWARD_TIERS,
   DEFAULT_FOCUS_WEEKLY_REWARD,
   FOCUS_BOARD_ADMIN_SLUG,
   FOCUS_BOARD_SLUG,
   FOCUS_THEME_PRESETS,
+  normaliseFocusCheckboxOptions,
   type FocusBoardSettings,
   type FocusBoardTask,
   type FocusBoardTaskMetric,
+  type FocusCheckboxOption,
   type FocusThemePreset,
   type FocusRewardTier,
   type FocusWeeklyReward,
@@ -59,6 +62,7 @@ type FocusBoardTaskMetricRow = {
   target: number;
   points: number;
   kind: FocusBoardTaskMetric["kind"];
+  checkbox_options: unknown;
   sort_order: number;
   is_active: boolean;
   is_visible: boolean;
@@ -139,13 +143,22 @@ function mapTasks(taskRows: FocusBoardTaskRow[] | null, metricRows: FocusBoardTa
 
   for (const row of metricRows ?? []) {
     const metrics = metricsByTask.get(row.task_id) ?? [];
+    const parsedCheckboxOptions = normaliseFocusCheckboxOptions(
+      Array.isArray(row.checkbox_options) ? (row.checkbox_options as FocusCheckboxOption[]) : [],
+    );
+    const checkboxOptions =
+      row.kind === "checkbox" && parsedCheckboxOptions.length === 0
+        ? DEFAULT_FOCUS_CHECKBOX_OPTIONS
+        : parsedCheckboxOptions;
+
     metrics.push({
       id: row.id,
       key: row.metric_key,
       label: row.label,
-      target: row.target,
+      target: row.kind === "checkbox" ? checkboxOptions.length : row.target,
       points: row.points,
       kind: row.kind,
+      checkboxOptions: row.kind === "checkbox" ? checkboxOptions : [],
       sortOrder: row.sort_order,
       isActive: row.is_active,
       isVisible: row.is_visible,
@@ -256,7 +269,7 @@ async function getFocusBoardRuntimeConfigBy(
   const metricsResult = taskIds.length
     ? await admin
         .from("focus_board_task_metrics")
-        .select("id, task_id, metric_key, label, target, points, kind, sort_order, is_active, is_visible")
+        .select("id, task_id, metric_key, label, target, points, kind, checkbox_options, sort_order, is_active, is_visible")
         .in("task_id", taskIds)
         .order("sort_order", { ascending: true })
     : { data: [], error: null };

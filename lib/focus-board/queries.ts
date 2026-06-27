@@ -164,6 +164,19 @@ export async function getFocusBoardData(
   const weeks = selectedWeekKeys.map((weekKey) => {
     const tasks = runtime.tasks.map((task) => {
       const metrics = task.metrics.map((metric) => {
+        if (metric.kind === "checkbox") {
+          const checkboxOptions = (metric.checkboxOptions ?? []).map((option) => ({
+            ...option,
+            checked: (counts.get(`${weekKey}:${task.key}:${metric.key}:${option.key}`) ?? 0) > 0,
+          }));
+
+          return {
+            ...metric,
+            checkboxOptions,
+            count: checkboxOptions.filter((option) => option.checked).length,
+          };
+        }
+
         const count = counts.get(`${weekKey}:${task.key}:${metric.key}`) ?? 0;
         return {
           ...metric,
