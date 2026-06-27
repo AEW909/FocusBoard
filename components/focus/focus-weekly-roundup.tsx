@@ -111,7 +111,7 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
   ).length;
 
   useEffect(() => {
-    const duration = 900;
+    const duration = 2200;
     const startedAt = performance.now();
     let frame = 0;
 
@@ -119,6 +119,28 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
       const progress = Math.min((now - startedAt) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setDisplayPoints(Math.round(roundup.weekPoints * eased));
+
+      if (progress < 1) {
+        frame = requestAnimationFrame(tick);
+      }
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [roundup.weekPoints]);
+
+  useEffect(() => {
+    if (!rewardsInView.hasEntered) {
+      return;
+    }
+
+    const duration = 3200;
+    const startedAt = performance.now();
+    let frame = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startedAt) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
       setDisplayMonthPoints(Math.round(roundup.monthPoints * eased));
 
       if (progress < 1) {
@@ -128,7 +150,7 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [roundup.monthPoints, roundup.weekPoints]);
+  }, [rewardsInView.hasEntered, roundup.monthPoints]);
 
   return (
     <div className={`focus-roundup ${roundup.hitTarget ? "focus-roundup-hit" : "focus-roundup-near"}`}>
@@ -136,12 +158,12 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
         <div className="focus-roundup-copy">
           <p className="focus-kicker">Weekly roundup</p>
           <h1>{formatWeekRange(roundup.weekKey)}</h1>
+          <div className="focus-roundup-totaliser" aria-label={`${roundup.weekPoints} points last week`}>
+            <span>Last week</span>
+            <strong>{displayPoints}</strong>
+            <small>of {roundup.weeklyTarget} pts</small>
+          </div>
           <p>{getResultLine(roundup)}</p>
-        </div>
-        <div className="focus-roundup-totaliser" aria-label={`${roundup.weekPoints} points last week`}>
-          <span>Last week</span>
-          <strong>{displayPoints}</strong>
-          <small>of {roundup.weeklyTarget} pts</small>
         </div>
       </section>
 
@@ -223,8 +245,25 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
                 <div
                   className={`focus-roundup-reward ${unlocked ? "focus-roundup-reward-unlocked" : "focus-roundup-reward-locked"}`}
                   key={tier.label}
-                  style={{ "--roundup-entry-delay": `${index * 90}ms` } as CSSProperties}
+                  style={{ "--roundup-entry-delay": `${index * 1500}ms` } as CSSProperties}
                 >
+                  {unlocked ? (
+                    <div aria-hidden="true" className="focus-roundup-confetti">
+                      {Array.from({ length: 10 }, (_, confettiIndex) => (
+                        <i
+                          key={confettiIndex}
+                          style={
+                            {
+                              "--confetti-delay": `${460 + confettiIndex * 54}ms`,
+                              "--confetti-hue": `${confettiIndex * 39}deg`,
+                              "--confetti-index": confettiIndex,
+                              "--confetti-y": `${-56 + (confettiIndex % 5) * 22}px`,
+                            } as CSSProperties
+                          }
+                        />
+                      ))}
+                    </div>
+                  ) : null}
                   <div className="focus-roundup-reward-image">
                     <FocusImageWithFallback
                       alt={tier.stickerAlt}

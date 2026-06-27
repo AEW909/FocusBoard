@@ -4288,7 +4288,6 @@ a {
 
 .focus-roundup-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 260px);
   gap: 18px;
   align-items: stretch;
   padding: 24px;
@@ -4301,7 +4300,7 @@ a {
 .focus-roundup-copy {
   display: grid;
   align-content: center;
-  gap: 10px;
+  gap: 14px;
   min-width: 0;
 }
 
@@ -4322,16 +4321,19 @@ a {
 }
 
 .focus-roundup-totaliser {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  min-height: 230px;
-  padding: 18px;
-  border-radius: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 0;
+  padding: 12px 16px;
+  border-radius: 22px;
   background: color-mix(in srgb, var(--focus-panel) 82%, rgba(255, 255, 255, 0.14));
   color: var(--focus-text-strong);
-  text-align: center;
-  animation: focusRoundupPop 720ms ease both;
+  text-align: left;
+  animation: focusRoundupPop 1200ms ease both;
 }
 
 .focus-roundup-totaliser span,
@@ -4344,8 +4346,8 @@ a {
 
 .focus-roundup-totaliser strong {
   color: var(--focus-accent-bright);
-  font-size: clamp(4rem, 14vw, 7.4rem);
-  line-height: 0.95;
+  font-size: clamp(3rem, 12vw, 6.4rem);
+  line-height: 0.82;
 }
 
 .focus-roundup-progress,
@@ -4421,16 +4423,17 @@ a {
 .focus-roundup-reward-track {
   position: relative;
   display: grid;
-  gap: 10px;
+  gap: 14px;
   min-width: 0;
-  padding-left: 14px;
+  padding-left: 30px;
+  --roundup-track-x: 14px;
 }
 
 .focus-roundup-reward-track::before,
 .focus-roundup-reward-track::after {
   content: "";
   position: absolute;
-  left: 0;
+  left: var(--roundup-track-x);
   top: 14px;
   bottom: 14px;
   width: 4px;
@@ -4449,7 +4452,7 @@ a {
 
 .focus-roundup-card-visible .focus-roundup-reward-track::after {
   height: var(--roundup-progress);
-  animation: focusRoundupLadder 980ms ease both;
+  animation: focusRoundupLadder 5200ms ease both;
 }
 
 .focus-roundup-reward {
@@ -4468,19 +4471,20 @@ a {
 }
 
 .focus-roundup-card-visible .focus-roundup-reward {
-  animation: focusRoundupRewardSlam 520ms cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
+  animation: focusRoundupRewardSlam 1800ms cubic-bezier(0.18, 0.89, 0.32, 1.18) both;
   animation-delay: var(--roundup-entry-delay);
 }
 
 .focus-roundup-reward::before {
   content: "";
   position: absolute;
-  left: -19px;
-  width: 14px;
-  height: 14px;
+  left: -24px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
   border: 2px solid var(--focus-text-strong);
   background: var(--focus-panel);
+  z-index: 2;
 }
 
 .focus-roundup-reward-unlocked {
@@ -4500,8 +4504,46 @@ a {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus-accent-bright) 18%, transparent);
 }
 
-.focus-roundup-reward-locked {
+.focus-roundup-card-visible .focus-roundup-reward-locked {
   opacity: 0.66;
+}
+
+.focus-roundup-confetti {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  width: min(360px, 80%);
+  height: 1px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.focus-roundup-confetti i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  background: hsl(var(--confetti-hue), 88%, 66%);
+  opacity: 0;
+  transform: translate(0, 0) rotate(0);
+}
+
+.focus-roundup-card-visible .focus-roundup-confetti i {
+  animation: focusRoundupConfetti 1700ms ease-out both;
+  animation-delay: calc(var(--roundup-entry-delay) + var(--confetti-delay));
+}
+
+.focus-roundup-confetti i:nth-child(2n) {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+}
+
+.focus-roundup-confetti i:nth-child(3n) {
+  width: 10px;
+  height: 5px;
 }
 
 .focus-roundup-reward-image {
@@ -4576,7 +4618,7 @@ a {
 }
 
 .focus-roundup-card-visible .focus-roundup-pie {
-  animation: focusRoundupPieReveal 850ms ease both;
+  animation: focusRoundupPieReveal 2200ms ease both;
 }
 
 .focus-roundup-pie::before {
@@ -4713,12 +4755,12 @@ a {
 @keyframes focusRoundupRewardSlam {
   from {
     opacity: 0;
-    transform: translateY(18px) scale(0.92);
+    transform: translateY(24px) scale(0.9);
   }
 
-  70% {
+  62% {
     opacity: 1;
-    transform: translateY(-3px) scale(1.03);
+    transform: translateY(-5px) scale(1.035);
   }
 
   to {
@@ -4741,6 +4783,27 @@ a {
   }
 }
 
+@keyframes focusRoundupConfetti {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(
+        calc(34px + (var(--confetti-index) * 18px)),
+        var(--confetti-y)
+      )
+      rotate(calc(160deg + (var(--confetti-index) * 31deg)));
+  }
+}
+
 @keyframes focusRoundupLoading {
   0% {
     transform: translateX(-115%);
@@ -4759,6 +4822,7 @@ a {
   .focus-roundup-totaliser,
   .focus-roundup-pie,
   .focus-roundup-reward,
+  .focus-roundup-confetti i,
   .focus-roundup-reward-track::after,
   .focus-roundup-loading-bar span {
     animation: none;
@@ -4776,11 +4840,9 @@ a {
   .focus-roundup-reward-track::after {
     height: var(--roundup-progress);
   }
-}
 
-@media (max-width: 900px) {
-  .focus-roundup-hero {
-    grid-template-columns: 1fr;
+  .focus-roundup-confetti {
+    display: none;
   }
 }
 
@@ -4790,7 +4852,8 @@ a {
   }
 
   .focus-roundup-totaliser {
-    min-height: 190px;
+    width: 100%;
+    justify-content: space-between;
   }
 
   .focus-roundup-breakdown-wrap {
