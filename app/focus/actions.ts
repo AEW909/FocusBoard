@@ -23,13 +23,27 @@ function getCurrentWeekKey() {
   return copy.toISOString().slice(0, 10);
 }
 
+function getWeekMonthKey(weekKey: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(weekKey)) {
+    return null;
+  }
+
+  const weekStart = new Date(`${weekKey}T00:00:00Z`);
+  if (Number.isNaN(weekStart.getTime())) {
+    return null;
+  }
+
+  return new Date(Date.UTC(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), 1))
+    .toISOString()
+    .slice(0, 10);
+}
+
 export async function updateFocusBoardAction(
   _prevState: UpdateFocusBoardState,
   formData: FormData,
 ): Promise<UpdateFocusBoardState> {
   const slug = getValue(formData, "slug");
   const weekKey = getValue(formData, "weekKey");
-  const monthKey = getValue(formData, "monthKey");
   const taskKey = getValue(formData, "taskKey");
   const metricKey = getValue(formData, "metricKey");
   const checkboxKey = getValue(formData, "checkboxKey");
@@ -44,8 +58,9 @@ export async function updateFocusBoardAction(
 
   const task = runtime.allTasks.find((item) => item.key === taskKey);
   const metric = task?.metrics.find((item) => item.key === metricKey);
+  const eventMonthKey = getWeekMonthKey(weekKey);
 
-  if (!task || !metric || !weekKey || !monthKey) {
+  if (!task || !metric || !weekKey || !eventMonthKey) {
     return { error: "The board action is missing some context." };
   }
 
@@ -76,7 +91,7 @@ export async function updateFocusBoardAction(
         .from("focus_board_events")
         .select("id")
         .eq("board_key", runtime.settings.boardKey)
-        .eq("month_key", monthKey)
+        .eq("month_key", eventMonthKey)
         .eq("week_start", weekKey)
         .eq("task_key", taskKey)
         .eq("metric_key", eventMetricKey)
@@ -94,7 +109,7 @@ export async function updateFocusBoardAction(
 
     const { error } = await admin.from("focus_board_events").insert({
       board_key: runtime.settings.boardKey,
-      month_key: monthKey,
+      month_key: eventMonthKey,
       week_start: weekKey,
       task_key: taskKey,
       metric_key: eventMetricKey,
@@ -110,7 +125,7 @@ export async function updateFocusBoardAction(
         .from("focus_board_events")
         .delete()
         .eq("board_key", runtime.settings.boardKey)
-        .eq("month_key", monthKey)
+        .eq("month_key", eventMonthKey)
         .eq("week_start", weekKey)
         .eq("task_key", taskKey)
         .eq("metric_key", eventMetricKey);
@@ -128,7 +143,7 @@ export async function updateFocusBoardAction(
       .from("focus_board_events")
       .select("id")
       .eq("board_key", runtime.settings.boardKey)
-      .eq("month_key", monthKey)
+      .eq("month_key", eventMonthKey)
       .eq("week_start", weekKey)
       .eq("task_key", taskKey)
       .eq("metric_key", eventMetricKey)

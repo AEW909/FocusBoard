@@ -657,6 +657,9 @@ Each implementation slice should run the checks relevant to its scope:
   self-serve sign-up path.
 - 2026-06-14: Keep board theming preset-based and color-focused for the first release rather than
   introducing per-board freeform design controls.
+- 2026-06-27: Treat each scoring week as belonging to the month containing that week's Monday, so
+  weekly totals, monthly reward ladders, and future weekly roundup summaries use the same boundary
+  rule.
 
 ## Change Log
 

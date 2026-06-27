@@ -2692,6 +2692,49 @@ a {
   display: grid;
 }
 
+.focus-control-drag-list,
+.focus-control-hidden-list {
+  display: grid;
+  gap: 14px;
+}
+
+.focus-control-hidden-list {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px dashed rgba(255, 216, 77, 0.22);
+  border-radius: 24px;
+  background: rgba(255, 216, 77, 0.045);
+}
+
+.focus-control-hidden-list-compact {
+  margin-top: 4px;
+  padding: 12px;
+  border-radius: 18px;
+}
+
+.focus-control-hidden-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.focus-control-hidden-list-head .eyebrow {
+  margin: 0;
+}
+
+.focus-control-hidden-list-head span {
+  display: inline-grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 216, 77, 0.16);
+  color: #ffd84d;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
 .focus-control-task-shell[draggable="true"] {
   cursor: grab;
 }
@@ -4213,16 +4256,22 @@ a {
 }
 
 .focus-checkbox-button-checked {
-  border-color: color-mix(in srgb, var(--focus-accent-warm) 44%, transparent);
+  border-color: color-mix(in srgb, var(--focus-accent-bright) 58%, var(--focus-text-strong));
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--focus-accent-warm) 20%, transparent),
-      color-mix(in srgb, var(--focus-accent-secondary) 18%, transparent)
+      color-mix(in srgb, var(--focus-accent-bright) 28%, rgba(255, 255, 255, 0.72)),
+      color-mix(in srgb, var(--focus-accent-secondary) 18%, rgba(255, 255, 255, 0.68))
     ),
     rgba(255, 255, 255, 0.08);
-  color: var(--focus-accent-warm);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-warm) 16%, transparent);
+  color: var(--focus-text-strong);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-bright) 16%, transparent);
+}
+
+.focus-checkbox-button-checked span {
+  border-color: color-mix(in srgb, var(--focus-accent-bright) 58%, var(--focus-text-strong));
+  background: var(--focus-text-strong);
+  color: var(--focus-panel);
 }
 
 .focus-checkbox-button:disabled {

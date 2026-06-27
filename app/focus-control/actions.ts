@@ -221,13 +221,13 @@ export async function addFocusBoardTaskAction(formData: FormData) {
     );
   }
 
-  const currentSort = runtime.tasks.length + 1;
+  const currentSort = runtime.allTasks.filter((task) => task.isActive !== false).length + 1;
   const taskKey = normaliseFocusKey(getValue(formData, "taskKey") || title);
   const metricKey = normaliseFocusKey(getValue(formData, "metricKey") || metricLabel);
   const icon = (getValue(formData, "icon") || title.slice(0, 4)).toUpperCase().slice(0, 6);
   const stickerSrc = getValue(formData, "stickerSrc") || "/focus/mascot-rainbow.svg";
   const stickerAlt = getValue(formData, "stickerAlt") || `${title} sticker`;
-  const accentClass = getAccentClassForIndex(runtime.tasks.length);
+  const accentClass = getAccentClassForIndex(runtime.allTasks.filter((task) => task.isActive !== false).length);
   const kind = getMetricKind(formData);
   const checkboxOptions = kind === "checkbox" ? getCheckboxOptions(formData) : [];
   const target = kind === "checkbox" ? checkboxOptions.length : Math.max(0, getIntValue(formData, "target", 1));
@@ -344,9 +344,10 @@ export async function reorderFocusBoardTasksAction(formData: FormData) {
   const orderedTaskIds = formData
     .getAll("taskIds")
     .filter((value): value is string => typeof value === "string" && value.length > 0);
-  const knownTaskIds = new Set(runtime.tasks.map((task) => task.id).filter(Boolean));
+  const visibleTasks = runtime.allTasks.filter((task) => task.isActive !== false && task.isVisible !== false);
+  const knownTaskIds = new Set(visibleTasks.map((task) => task.id).filter(Boolean));
 
-  if (orderedTaskIds.length !== runtime.tasks.length) {
+  if (orderedTaskIds.length !== visibleTasks.length) {
     throw new Error("The challenge order is out of date. Refresh and try again.");
   }
 
@@ -389,10 +390,12 @@ export async function toggleFocusBoardTaskVisibilityAction(formData: FormData) {
   }
 
   const shouldShow = nextVisible === "true";
+  const visibleTasks = runtime.allTasks.filter((task) => task.isActive !== false && task.isVisible !== false);
   const taskUpdate = shouldShow
     ? {
         is_active: true,
         is_visible: true,
+        sort_order: visibleTasks.length + 1,
       }
     : {
         is_visible: false,
@@ -557,6 +560,10 @@ export async function toggleFocusBoardMetricVisibilityAction(formData: FormData)
   }
 
   const shouldShow = nextVisible === "true";
+  const metricTask = runtime.allTasks.find((task) => task.metrics.some((metric) => metric.id === metricId));
+  const visibleMetrics = metricTask?.metrics.filter(
+    (metric) => metric.isActive !== false && metric.isVisible !== false,
+  ) ?? [];
   const { error } = await admin
     .from("focus_board_task_metrics")
     .update(
@@ -564,6 +571,7 @@ export async function toggleFocusBoardMetricVisibilityAction(formData: FormData)
         ? {
             is_active: true,
             is_visible: true,
+            sort_order: visibleMetrics.length + 1,
           }
         : {
             is_visible: false,

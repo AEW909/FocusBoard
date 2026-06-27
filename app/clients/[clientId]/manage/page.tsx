@@ -533,7 +533,7 @@ export default async function FocusClientManagePage({
               <FocusControlExistingGoals
                 adminSlug={runtime.settings.adminSlug}
                 assets={assets}
-                tasks={runtime.tasks}
+                tasks={runtime.allTasks}
               />
             </div>
           </FocusControlSection>

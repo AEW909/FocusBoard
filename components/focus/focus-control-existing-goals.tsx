@@ -197,7 +197,19 @@ function FocusCheckboxOptionsEditor({ options, onChange }: FocusCheckboxOptionsE
 
 export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusControlExistingGoalsProps) {
   const [dirtyKeys, setDirtyKeys] = useState<Record<string, boolean>>({});
-  const [orderedTasks, setOrderedTasks] = useState(tasks);
+  const activeTasks = useMemo(
+    () => tasks.filter((task) => task.isActive !== false),
+    [tasks],
+  );
+  const visibleTasks = useMemo(
+    () => activeTasks.filter((task) => task.isVisible !== false),
+    [activeTasks],
+  );
+  const hiddenTasks = useMemo(
+    () => activeTasks.filter((task) => task.isVisible === false),
+    [activeTasks],
+  );
+  const [orderedTasks, setOrderedTasks] = useState(visibleTasks);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [isReordering, startReorderTransition] = useTransition();
@@ -210,8 +222,8 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
   useUnsavedChangesWarning(hasUnsavedChanges);
 
   useEffect(() => {
-    setOrderedTasks(tasks);
-  }, [tasks]);
+    setOrderedTasks(visibleTasks);
+  }, [visibleTasks]);
 
   const setDirtyState = (key: string, dirty: boolean) => {
     setDirtyKeys((current) => {
@@ -248,7 +260,7 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
         await reorderFocusBoardTasksAction(formData);
       } catch (error) {
         setOrderError(error instanceof Error ? error.message : "Could not save the challenge order.");
-        setOrderedTasks(tasks);
+        setOrderedTasks(visibleTasks);
       }
     });
   };
@@ -296,25 +308,54 @@ export function FocusControlExistingGoals({ adminSlug, assets, tasks }: FocusCon
       {hasUnsavedChanges ? (
         <p className="focus-control-order-note">Save open challenge edits before changing the order.</p>
       ) : null}
-      {orderedTasks.map((task, index) => (
-        <FocusControlTaskEditor
-          adminSlug={adminSlug}
-          assets={assets}
-          canReorder={!hasUnsavedChanges && !isReordering}
-          isDragging={draggedTaskId === task.id}
-          key={task.id ?? task.key}
-          onDragEnd={() => setDraggedTaskId(null)}
-          onDragOver={(event) => event.preventDefault()}
-          onDragStart={() => setDraggedTaskId(task.id ?? null)}
-          onDrop={() => dropTask(task.id)}
-          onDirtyChange={setDirtyState}
-          onMoveDown={() => moveTask(task.id, 1)}
-          onMoveUp={() => moveTask(task.id, -1)}
-          task={task}
-          taskIndex={index}
-          taskTotal={orderedTasks.length}
-        />
-      ))}
+      <div className="focus-control-drag-list">
+        {orderedTasks.map((task, index) => (
+          <FocusControlTaskEditor
+            adminSlug={adminSlug}
+            assets={assets}
+            canReorder={!hasUnsavedChanges && !isReordering}
+            isDragging={draggedTaskId === task.id}
+            key={task.id ?? task.key}
+            onDragEnd={() => setDraggedTaskId(null)}
+            onDragOver={(event) => event.preventDefault()}
+            onDragStart={() => setDraggedTaskId(task.id ?? null)}
+            onDrop={() => dropTask(task.id)}
+            onDirtyChange={setDirtyState}
+            onMoveDown={() => moveTask(task.id, 1)}
+            onMoveUp={() => moveTask(task.id, -1)}
+            task={task}
+            taskIndex={index}
+            taskTotal={orderedTasks.length}
+          />
+        ))}
+      </div>
+      {hiddenTasks.length ? (
+        <div className="focus-control-hidden-list">
+          <div className="focus-control-hidden-list-head">
+            <p className="eyebrow">Paused challenges</p>
+            <span>{hiddenTasks.length}</span>
+          </div>
+          {hiddenTasks.map((task, index) => (
+            <FocusControlTaskEditor
+              adminSlug={adminSlug}
+              assets={assets}
+              canReorder={false}
+              isDragging={false}
+              key={task.id ?? task.key}
+              onDragEnd={() => undefined}
+              onDragOver={() => undefined}
+              onDragStart={() => undefined}
+              onDrop={() => undefined}
+              onDirtyChange={setDirtyState}
+              onMoveDown={() => undefined}
+              onMoveUp={() => undefined}
+              task={task}
+              taskIndex={index}
+              taskTotal={hiddenTasks.length}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -434,6 +475,9 @@ function FocusControlTaskEditor({
       }
     });
   };
+  const activeMetrics = task.metrics.filter((metric) => metric.isActive !== false);
+  const visibleMetrics = activeMetrics.filter((metric) => metric.isVisible !== false);
+  const hiddenMetrics = activeMetrics.filter((metric) => metric.isVisible === false);
 
   return (
     <section
@@ -492,7 +536,7 @@ function FocusControlTaskEditor({
             <p className="eyebrow">Challenge</p>
             <h3>{taskDraft.title || "Untitled goal"}</h3>
             <p>
-              {task.metrics.length} metric{task.metrics.length === 1 ? "" : "s"}
+              {visibleMetrics.length} visible metric{visibleMetrics.length === 1 ? "" : "s"}
             </p>
           </div>
           <div className="focus-control-task-summary-meta">
@@ -606,12 +650,12 @@ function FocusControlTaskEditor({
           </div>
 
           <div className="focus-control-metric-stack">
-            {task.metrics.map((metric) => (
+            {visibleMetrics.map((metric) => (
               <FocusControlMetricEditor
                 adminSlug={adminSlug}
                 key={metric.id ?? metric.key}
                 metric={metric}
-                metricsCount={task.metrics.length}
+                metricsCount={activeMetrics.length}
                 onDirtyChange={onDirtyChange}
                 task={task}
               />
@@ -672,6 +716,24 @@ function FocusControlTaskEditor({
               </button>
               {addMetricError ? <p className="focus-control-error-tag">{addMetricError}</p> : null}
             </form>
+            {hiddenMetrics.length ? (
+              <div className="focus-control-hidden-list focus-control-hidden-list-compact">
+                <div className="focus-control-hidden-list-head">
+                  <p className="eyebrow">Paused metrics</p>
+                  <span>{hiddenMetrics.length}</span>
+                </div>
+                {hiddenMetrics.map((metric) => (
+                  <FocusControlMetricEditor
+                    adminSlug={adminSlug}
+                    key={metric.id ?? metric.key}
+                    metric={metric}
+                    metricsCount={activeMetrics.length}
+                    onDirtyChange={onDirtyChange}
+                    task={task}
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </details>
