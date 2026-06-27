@@ -4283,6 +4283,7 @@ a {
   display: grid;
   gap: 18px;
   padding-bottom: 32px;
+  min-width: 0;
 }
 
 .focus-roundup-hero {
@@ -4301,13 +4302,15 @@ a {
   display: grid;
   align-content: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .focus-roundup-copy h1 {
   margin: 0;
   color: var(--focus-text-strong);
-  font-size: clamp(2.4rem, 9vw, 5.8rem);
-  line-height: 0.9;
+  font-size: clamp(2rem, 7vw, 5.2rem);
+  line-height: 0.94;
+  overflow-wrap: anywhere;
 }
 
 .focus-roundup-copy p {
@@ -4315,6 +4318,7 @@ a {
   margin: 0;
   color: var(--focus-text);
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .focus-roundup-totaliser {
@@ -4363,6 +4367,7 @@ a {
 .focus-roundup-card h2 {
   margin: 0;
   color: var(--focus-text-strong);
+  overflow-wrap: anywhere;
 }
 
 .focus-roundup-progress-head span {
@@ -4381,29 +4386,158 @@ a {
   display: grid;
   gap: 12px;
   align-content: start;
+  min-width: 0;
 }
 
 .focus-roundup-card p,
 .focus-roundup-card strong {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.focus-roundup-ladder {
+.focus-roundup-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.focus-roundup-card-head span {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--focus-accent-bright) 18%, rgba(255, 255, 255, 0.1));
+  color: var(--focus-text-strong);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.focus-roundup-reward-track {
   position: relative;
-  width: 100%;
-  height: 150px;
-  overflow: hidden;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.11);
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding-left: 14px;
 }
 
-.focus-roundup-ladder-fill {
+.focus-roundup-reward-track::before,
+.focus-roundup-reward-track::after {
+  content: "";
   position: absolute;
-  right: 0;
-  bottom: 0;
   left: 0;
-  background: linear-gradient(0deg, var(--focus-accent-secondary), var(--focus-accent-bright));
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 999px;
+}
+
+.focus-roundup-reward-track::before {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.focus-roundup-reward-track::after {
+  bottom: auto;
+  height: var(--roundup-progress);
+  background: linear-gradient(180deg, var(--focus-accent-bright), var(--focus-accent-secondary));
   animation: focusRoundupLadder 980ms ease both;
+}
+
+.focus-roundup-reward {
+  position: relative;
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  animation: focusRoundupRewardSlam 520ms cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
+  animation-delay: var(--roundup-entry-delay);
+}
+
+.focus-roundup-reward::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid var(--focus-text-strong);
+  background: var(--focus-panel);
+}
+
+.focus-roundup-reward-unlocked {
+  border-color: color-mix(in srgb, var(--focus-accent-bright) 46%, rgba(255, 255, 255, 0.22));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--focus-accent-bright) 15%, transparent),
+      color-mix(in srgb, var(--focus-accent-secondary) 10%, transparent)
+    ),
+    rgba(255, 255, 255, 0.1);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+}
+
+.focus-roundup-reward-unlocked::before {
+  background: var(--focus-accent-bright);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus-accent-bright) 18%, transparent);
+}
+
+.focus-roundup-reward-locked {
+  opacity: 0.66;
+}
+
+.focus-roundup-reward-image {
+  width: 68px;
+  height: 58px;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.focus-roundup-reward-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.focus-roundup-reward-locked .focus-roundup-reward-image img {
+  filter: grayscale(0.72) saturate(0.65);
+}
+
+.focus-roundup-reward-copy {
+  min-width: 0;
+}
+
+.focus-roundup-reward-copy strong,
+.focus-roundup-reward-copy p {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.focus-roundup-reward > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--focus-text-strong);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .focus-roundup-task-list {
@@ -4419,6 +4553,7 @@ a {
   padding: 12px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.09);
+  min-width: 0;
 }
 
 .focus-roundup-task span {
@@ -4435,18 +4570,28 @@ a {
 .focus-roundup-task strong {
   display: block;
   color: var(--focus-text-strong);
+  overflow-wrap: anywhere;
 }
 
 .focus-roundup-task p {
   color: var(--focus-text);
   font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
 
 .focus-roundup-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
   justify-content: center;
+}
+
+.focus-roundup-preview-note {
+  color: var(--focus-text);
+  font-size: 0.86rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .focus-roundup-loading {
@@ -4502,6 +4647,23 @@ a {
   }
 }
 
+@keyframes focusRoundupRewardSlam {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.92);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.03);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes focusRoundupLoading {
   0% {
     transform: translateX(-115%);
@@ -4518,7 +4680,8 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   .focus-roundup-totaliser,
-  .focus-roundup-ladder-fill,
+  .focus-roundup-reward,
+  .focus-roundup-reward-track::after,
   .focus-roundup-loading-bar span {
     animation: none;
   }
@@ -4536,6 +4699,28 @@ a {
 
   .focus-roundup-totaliser {
     min-height: 190px;
+  }
+
+  .focus-roundup-card-head {
+    display: grid;
+  }
+
+  .focus-roundup-card-head span {
+    width: fit-content;
+  }
+
+  .focus-roundup-reward {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .focus-roundup-reward-image {
+    width: 58px;
+    height: 52px;
+  }
+
+  .focus-roundup-reward > span {
+    grid-column: 2;
+    width: fit-content;
   }
 }
 

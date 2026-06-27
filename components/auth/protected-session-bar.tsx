@@ -7,6 +7,8 @@ type ProtectedSessionBarProps = {
   homeLabel?: string;
   backHref?: string;
   backLabel?: string;
+  extraHref?: string;
+  extraLabel?: string;
   switchHref?: string;
   switchLabel?: string;
   title: string;
@@ -17,6 +19,8 @@ export function ProtectedSessionBar({
   homeLabel = "Open board",
   backHref,
   backLabel = "Back",
+  extraHref,
+  extraLabel,
   switchHref,
   switchLabel = "Switch board",
   title,
@@ -43,6 +47,11 @@ export function ProtectedSessionBar({
           {homeHref ? (
             <Link className="button button-small topbar-focus-link" href={homeHref}>
               {homeLabel}
+            </Link>
+          ) : null}
+          {extraHref ? (
+            <Link className="button button-small topbar-focus-link" href={extraHref}>
+              {extraLabel}
             </Link>
           ) : null}
           {switchHref ? (

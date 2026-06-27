@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 type RoundupPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ week?: string }>;
+  searchParams: Promise<{ preview?: string; week?: string }>;
 };
 
 export default async function WeeklyRoundupPage({ params, searchParams }: RoundupPageProps) {
@@ -17,6 +17,7 @@ export default async function WeeklyRoundupPage({ params, searchParams }: Roundu
   const query = await searchParams;
   const { user, access, client } = await requireFocusBoardAccessBySlug(slug, `/board/${slug}/roundup`);
   const weekKey = query.week ?? getPreviousWeekKey();
+  const isPreview = query.preview === "1";
   const roundup = await getFocusWeeklyRoundupData(client.boardKey, user.id, weekKey);
 
   if (!roundup || roundup.settings.boardSlug !== slug) {
@@ -37,7 +38,7 @@ export default async function WeeklyRoundupPage({ params, searchParams }: Roundu
         />
       ) : null}
       <main className={`shell focus-public-page focus-public-page-neon focus-theme-${roundup.settings.themePreset}`}>
-        <FocusWeeklyRoundup roundup={roundup} />
+        <FocusWeeklyRoundup isPreview={isPreview} roundup={roundup} />
       </main>
     </>
   );

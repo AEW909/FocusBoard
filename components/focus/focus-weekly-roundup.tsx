@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { completeFocusWeeklyRoundupAction } from "@/app/board/[slug]/roundup/actions";
+import { FocusImageWithFallback } from "@/components/focus/focus-image-with-fallback";
 import type { FocusWeeklyRoundupData } from "@/lib/focus-board/roundup";
 
 type FocusWeeklyRoundupProps = {
+  isPreview?: boolean;
   roundup: FocusWeeklyRoundupData;
 };
 
@@ -33,7 +36,7 @@ function getResultLine(roundup: FocusWeeklyRoundupData) {
   return "A quiet week. Suspiciously quiet. The new one gets a fresh scoreboard.";
 }
 
-export function FocusWeeklyRoundup({ roundup }: FocusWeeklyRoundupProps) {
+export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRoundupProps) {
   const [displayPoints, setDisplayPoints] = useState(0);
   const [displayMonthPoints, setDisplayMonthPoints] = useState(0);
   const weeklyPercent = clampPercent((roundup.weekPoints / roundup.weeklyTarget) * 100);
@@ -43,6 +46,9 @@ export function FocusWeeklyRoundup({ roundup }: FocusWeeklyRoundupProps) {
     () => [...roundup.taskBreakdown].sort((left, right) => right.points - left.points).slice(0, 4),
     [roundup.taskBreakdown],
   );
+  const unlockedRewardCount = roundup.rewardTiers.filter(
+    (tier) => roundup.monthPoints >= tier.minPoints && roundup.weeksHit >= tier.minWeeksHit,
+  ).length;
 
   useEffect(() => {
     const duration = 900;
@@ -94,11 +100,39 @@ export function FocusWeeklyRoundup({ roundup }: FocusWeeklyRoundupProps) {
 
       <section className="focus-roundup-grid">
         <article className="focus-roundup-card focus-roundup-card-month">
-          <p className="focus-panel-label">{roundup.monthLabel}</p>
-          <h2>{displayMonthPoints} monthly pts</h2>
+          <div className="focus-roundup-card-head">
+            <div>
+              <p className="focus-panel-label">{roundup.monthLabel}</p>
+              <h2>{displayMonthPoints} monthly pts</h2>
+            </div>
+            <span>{unlockedRewardCount}/{roundup.rewardTiers.length} unlocked</span>
+          </div>
           <p>{roundup.weeksHit} weekly target{roundup.weeksHit === 1 ? "" : "s"} hit this month</p>
-          <div className="focus-roundup-ladder">
-            <div className="focus-roundup-ladder-fill" style={{ height: `${monthlyPercent}%` }} />
+          <div className="focus-roundup-reward-track" style={{ "--roundup-progress": `${monthlyPercent}%` } as CSSProperties}>
+            {roundup.rewardTiers.map((tier, index) => {
+              const unlocked = roundup.monthPoints >= tier.minPoints && roundup.weeksHit >= tier.minWeeksHit;
+
+              return (
+                <div
+                  className={`focus-roundup-reward ${unlocked ? "focus-roundup-reward-unlocked" : "focus-roundup-reward-locked"}`}
+                  key={tier.label}
+                  style={{ "--roundup-entry-delay": `${index * 90}ms` } as CSSProperties}
+                >
+                  <div className="focus-roundup-reward-image">
+                    <FocusImageWithFallback
+                      alt={tier.stickerAlt}
+                      fallbackSrc={unlocked ? tier.unlockedStickerFallbackSrc : tier.lockedStickerFallbackSrc}
+                      src={unlocked ? tier.unlockedStickerSrc : tier.lockedStickerSrc}
+                    />
+                  </div>
+                  <div className="focus-roundup-reward-copy">
+                    <strong>{tier.label}</strong>
+                    <p>{tier.minPoints}+ pts / {tier.minWeeksHit} weeks</p>
+                  </div>
+                  <span>{unlocked ? "Unlocked" : "Locked"}</span>
+                </div>
+              );
+            })}
           </div>
           {roundup.currentReward ? (
             <strong>{roundup.currentReward.label} unlocked</strong>
@@ -137,16 +171,25 @@ export function FocusWeeklyRoundup({ roundup }: FocusWeeklyRoundupProps) {
         </article>
       </section>
 
-      <form action={completeFocusWeeklyRoundupAction} className="focus-roundup-actions">
-        <input name="slug" type="hidden" value={roundup.settings.boardSlug} />
-        <input name="weekKey" type="hidden" value={roundup.weekKey} />
-        <button className="button button-primary" type="submit">
-          Start this week
-        </button>
-        <button className="button button-secondary" type="submit">
-          Skip to board
-        </button>
-      </form>
+      {isPreview ? (
+        <div className="focus-roundup-actions">
+          <Link className="button button-primary" href={`/board/${roundup.settings.boardSlug}`}>
+            Back to board
+          </Link>
+          <span className="focus-roundup-preview-note">Preview only - this will not mark the review as seen.</span>
+        </div>
+      ) : (
+        <form action={completeFocusWeeklyRoundupAction} className="focus-roundup-actions">
+          <input name="slug" type="hidden" value={roundup.settings.boardSlug} />
+          <input name="weekKey" type="hidden" value={roundup.weekKey} />
+          <button className="button button-primary" type="submit">
+            Start this week
+          </button>
+          <button className="button button-secondary" type="submit">
+            Skip to board
+          </button>
+        </form>
+      )}
     </div>
   );
 }

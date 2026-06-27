@@ -4,6 +4,7 @@ import { ProtectedSessionBar } from "@/components/auth/protected-session-bar";
 import { FocusPullToRefresh } from "@/components/focus/focus-pull-to-refresh";
 import { getFocusBoardData } from "@/lib/focus-board/queries";
 import { requireFocusBoardAccessBySlug } from "@/lib/focus-board/access";
+import { getPreviousWeekKey } from "@/lib/focus-board/dates";
 import { getPendingFocusWeeklyRoundup } from "@/lib/focus-board/roundup";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,9 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
   const backLabel = "Back to clients";
   const homeHref = access.isPlatformOwner ? `/clients/${client.clientId}/manage` : undefined;
   const homeLabel = "Edit board";
+  const previewRoundupHref = access.isPlatformOwner
+    ? `/board/${client.boardSlug}/roundup?week=${getPreviousWeekKey()}&preview=1`
+    : undefined;
   const switchHref = !access.isPlatformOwner && access.clients.length > 1 ? "/boards" : undefined;
   const showSessionBar = access.isPlatformOwner;
 
@@ -49,6 +53,8 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
           backLabel={backHref ? backLabel : undefined}
           homeHref={homeHref}
           homeLabel={homeLabel}
+          extraHref={previewRoundupHref}
+          extraLabel="Preview weekly review"
           switchHref={switchHref}
           title={client.displayName}
         />
