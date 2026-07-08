@@ -637,6 +637,8 @@ Acceptance:
 Progress:
 
 - Local implementation added on 2026-07-08.
+- Implementation commit: `0ef0a23`
+- Pushed: 2026-07-08
 - Migration file created: `supabase/migrations/20260708072946_focusboard_business_stats_module.sql`.
 - Migration `focusboard_business_stats_module` applied to Supabase project
   `xoafnjhsxxczmfavmwoq` on 2026-07-08.
@@ -647,7 +649,7 @@ Progress:
   passed against project `xoafnjhsxxczmfavmwoq`, including rollback-only feature flag, group,
   category, weekly entry writes, and cross-client group/category rejection.
 - Local checks passed: `npm run typecheck`, `npm run build`, and `git diff --check`.
-- Outstanding deployment work: commit, push, and redeploy.
+- Outstanding deployment work: redeploy and production app smoke verification.
 
 ## Verification Matrix
 
