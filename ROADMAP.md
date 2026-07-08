@@ -644,7 +644,8 @@ Progress:
   `xoafnjhsxxczmfavmwoq` on 2026-07-08.
 - Migration `focusboard_business_stats_monthly_targets` applied to Supabase project
   `xoafnjhsxxczmfavmwoq` on 2026-07-08.
-- Migration file created: `supabase/migrations/20260708092854_focusboard_business_stats_remove_notes.sql`.
+- Migration `focusboard_business_stats_remove_notes` applied to Supabase project
+  `xoafnjhsxxczmfavmwoq` on 2026-07-08.
 - Verification: `business_stats_enabled` exists on `focusboard.clients`; 3 Business Stats tables
   exist; 4 tenant-boundary constraints exist; RLS is enabled on all 3 tables; `service_role` has
   privileges on all 3 tables; migration history records `20260708072946` as applied.
@@ -656,9 +657,11 @@ Progress:
   and migration history records `20260708085320` as applied.
 - Business Stats note collection was removed from the app, and the review UI now uses grouped
   collapsible filters with a larger chart and below-chart legend.
+- Notes-removal verification: `note` no longer exists on `focusboard.business_stat_entries`,
+  migration history records `20260708092854` as applied, and the Business Stats rollback smoke
+  verification passed without note writes.
 - Local checks passed: `npm run typecheck`, `npm run build`, and `git diff --check`.
-- Outstanding deployment work: apply the `focusboard_business_stats_remove_notes` migration to the
-  linked Supabase project, redeploy, and production app smoke verification.
+- Outstanding deployment work: redeploy and production app smoke verification.
 
 ## Verification Matrix
 
@@ -802,6 +805,6 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-07-08: Business Stats goals changed from weekly targets to monthly goals, individual stat
   line colours now use the FocusBoard palette automatically, and stats are nested under collapsible
   groups in the Business Stats settings page.
-- 2026-07-08: Business Stats notes were removed from the app flow, with a follow-up migration
-  prepared to drop the entry `note` column from Supabase; the review screen was simplified around
-  grouped stat filters, a larger chart, and a below-chart legend.
+- 2026-07-08: Business Stats notes were removed from the app flow and Supabase entry schema; the
+  review screen was simplified around grouped stat filters, a larger chart, and a below-chart
+  legend.
