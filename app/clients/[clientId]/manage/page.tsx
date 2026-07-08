@@ -184,6 +184,34 @@ export default async function FocusClientManagePage({
 
         <section className="focus-control-stack">
           <FocusControlSection
+            defaultOpen={Boolean(query.boardSettingsError || query.boardSettingsMessage)}
+            eyebrow="Board copy"
+            summary="Set the board kicker and main headline without digging through admin settings."
+            title="Board headline"
+          >
+            <form action={updateFocusBoardSettingsAction} className="focus-control-form">
+              <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+              {query.boardSettingsMessage ? (
+                <p className="form-success">{query.boardSettingsMessage}</p>
+              ) : null}
+              {query.boardSettingsError ? (
+                <p className="form-error">{query.boardSettingsError}</p>
+              ) : null}
+              <label className="field">
+                <span>Title / kicker</span>
+                <input defaultValue={runtime.settings.title} name="title" />
+              </label>
+              <label className="field">
+                <span>Main headline</span>
+                <textarea defaultValue={runtime.settings.subtitle} name="subtitle" />
+              </label>
+              <button className="button button-primary" type="submit">
+                Save board headline
+              </button>
+            </form>
+          </FocusControlSection>
+
+          <FocusControlSection
             defaultOpen={Boolean(query.challengeError)}
             eyebrow="Add a goal"
             summary="Create a fresh weekly challenge and give it its first scoring metric."
@@ -294,12 +322,6 @@ export default async function FocusClientManagePage({
             </div>
           </FocusControlSection>
 
-          <FocusControlGroup
-            eyebrow="Admin"
-            summary="Client context, access, board copy, and reusable images."
-            title="Settings"
-          >
-            <div className="focus-control-grid">
           <FocusControlSection
             eyebrow="Content profile"
             summary="Store the business context that powers client-specific Content Lab prompts."
@@ -370,185 +392,9 @@ export default async function FocusClientManagePage({
           </FocusControlSection>
 
           <FocusControlSection
-            eyebrow="Client access"
-            summary="Grant or remove board access for existing signed-in users, including Content Lab access."
-            title="User management"
-          >
-            <div className="focus-membership-stack">
-              {query.membershipMessage ? (
-                <p className="form-success">{query.membershipMessage}</p>
-              ) : null}
-              {query.membershipError ? <p className="form-error">{query.membershipError}</p> : null}
-
-              <div className="focus-membership-feature-bar">
-                <div>
-                  <p className="focus-membership-role-note">Client feature</p>
-                  <h3>Content Lab {formatContentLabState(client.contentLabEnabled)}</h3>
-                  <p className="focus-membership-role-note">
-                    Turn the feature on for this client, then assign it to the users who should see it.
-                  </p>
-                </div>
-                <form action={setFocusClientContentLabEnabledAction}>
-                  <input name="clientId" type="hidden" value={client.clientId} />
-                  <input
-                    name="nextEnabled"
-                    type="hidden"
-                    value={client.contentLabEnabled ? "false" : "true"}
-                  />
-                  <button className="button focus-membership-content-button" type="submit">
-                    {client.contentLabEnabled ? "Disable for client" : "Enable for client"}
-                  </button>
-                </form>
-              </div>
-
-              <form action={addFocusClientMembershipAction} className="focus-membership-add-form">
-                <input name="clientId" type="hidden" value={client.clientId} />
-                <label className="field">
-                  <span>Existing user email</span>
-                  <input
-                    name="email"
-                    placeholder="name@example.com"
-                    required
-                    type="email"
-                  />
-                </label>
-                <label className="field">
-                  <span>Role</span>
-                  <select className="select-field" defaultValue="client_user" name="role">
-                    <option value="client_user">Client user</option>
-                    <option value="client_admin">Client admin</option>
-                  </select>
-                </label>
-                <label className="field">
-                  <span>Content Lab</span>
-                  <select
-                    className="select-field"
-                    defaultValue={client.contentLabEnabled ? "true" : "false"}
-                    disabled={!client.contentLabEnabled}
-                    name="contentLabAccess"
-                  >
-                    <option value="false">Disabled</option>
-                    <option value="true">Enabled</option>
-                  </select>
-                </label>
-                <button className="button button-primary" type="submit">
-                  Add user to client
-                </button>
-              </form>
-
-              {memberships.length > 0 ? (
-                <div className="focus-membership-list">
-                  {memberships.map((membership) => (
-                    <article
-                      className={`focus-membership-card ${
-                        membership.isActive ? "" : "focus-membership-card-inactive"
-                      }`}
-                      key={membership.membershipId}
-                    >
-                      <div className="focus-membership-card-head">
-                        <div>
-                          <h3>{membership.fullName ?? membership.email}</h3>
-                          <p>{membership.email}</p>
-                        </div>
-                        <span
-                          className={`focus-client-status ${
-                            membership.isActive
-                              ? "focus-client-status-active"
-                              : "focus-client-status-inactive"
-                          }`}
-                        >
-                          {membership.isActive ? "active" : "inactive"}
-                        </span>
-                      </div>
-
-                      <div className="focus-membership-actions">
-                        <form
-                          action={updateFocusClientMembershipRoleAction}
-                          className="focus-membership-role-form"
-                        >
-                          <input name="clientId" type="hidden" value={client.clientId} />
-                          <input
-                            name="membershipId"
-                            type="hidden"
-                            value={membership.membershipId}
-                          />
-                          <label className="field">
-                            <span>Role</span>
-                            <select
-                              className="select-field"
-                              defaultValue={membership.role}
-                              name="role"
-                            >
-                              <option value="client_user">Client user</option>
-                              <option value="client_admin">Client admin</option>
-                            </select>
-                          </label>
-                          <button className="button button-secondary" type="submit">
-                            Save role
-                          </button>
-                        </form>
-
-                        <form action={setFocusClientMembershipContentLabAccessAction}>
-                          <input name="clientId" type="hidden" value={client.clientId} />
-                          <input
-                            name="membershipId"
-                            type="hidden"
-                            value={membership.membershipId}
-                          />
-                          <input
-                            name="nextContentLabAccess"
-                            type="hidden"
-                            value={membership.contentLabAccess ? "false" : "true"}
-                          />
-                          <button
-                            className="button focus-membership-content-button"
-                            disabled={!client.contentLabEnabled || !membership.isActive}
-                            type="submit"
-                          >
-                            {membership.contentLabAccess ? "Disable Content Lab" : "Enable Content Lab"}
-                          </button>
-                        </form>
-
-                        <form action={setFocusClientMembershipActiveAction}>
-                          <input name="clientId" type="hidden" value={client.clientId} />
-                          <input
-                            name="membershipId"
-                            type="hidden"
-                            value={membership.membershipId}
-                          />
-                          <input
-                            name="nextActive"
-                            type="hidden"
-                            value={membership.isActive ? "false" : "true"}
-                          />
-                          <button className="button button-management" type="submit">
-                            {membership.isActive ? "Remove access" : "Restore access"}
-                          </button>
-                        </form>
-                      </div>
-
-                      <p className="focus-membership-role-note">
-                        Current role: {formatMembershipRole(membership.role)}
-                      </p>
-                      <p className="focus-membership-role-note">
-                        Content Lab: {formatContentLabState(membership.contentLabAccess)}
-                        {!client.contentLabEnabled ? " (client feature disabled)" : ""}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <p className="focus-membership-empty">
-                  No client users are linked yet. Add an existing signed-in account above.
-                </p>
-              )}
-            </div>
-          </FocusControlSection>
-
-          <FocusControlSection
             eyebrow="Business stats"
-            summary="Enable weekly business stat collection, then define groups, stats, targets, and visibility."
-            title="Business module"
+            summary="Define the stat groups, weekly metrics, targets, and visibility used by the Business Stats module."
+            title="Business module settings"
           >
             <div className="focus-membership-stack">
               {query.businessStatsMessage ? (
@@ -557,27 +403,6 @@ export default async function FocusClientManagePage({
               {query.businessStatsError ? (
                 <p className="form-error">{query.businessStatsError}</p>
               ) : null}
-
-              <div className="focus-membership-feature-bar">
-                <div>
-                  <p className="focus-membership-role-note">Client feature</p>
-                  <h3>Business Stats {formatFeatureState(client.businessStatsEnabled)}</h3>
-                  <p className="focus-membership-role-note">
-                    Turn this on to show the board module and allow assigned board users to collect weekly stats.
-                  </p>
-                </div>
-                <form action={setFocusClientBusinessStatsEnabledAction}>
-                  <input name="clientId" type="hidden" value={client.clientId} />
-                  <input
-                    name="nextEnabled"
-                    type="hidden"
-                    value={client.businessStatsEnabled ? "false" : "true"}
-                  />
-                  <button className="button focus-membership-content-button" type="submit">
-                    {client.businessStatsEnabled ? "Disable for client" : "Enable for client"}
-                  </button>
-                </form>
-              </div>
 
               <div className="focus-business-admin-grid">
                 <form action={addBusinessStatGroupAction} className="focus-control-form">
@@ -836,67 +661,252 @@ export default async function FocusClientManagePage({
             </div>
           </FocusControlSection>
 
-          <FocusControlSection
-            eyebrow="Board settings"
-            summary="Board title, hype text, and colour theme."
-            title="Board headline + theme"
+          <FocusControlGroup
+            eyebrow="Admin"
+            summary="Module visibility, board theme, user access, and reusable images."
+            title="Settings"
           >
-            <form action={updateFocusBoardSettingsAction} className="focus-control-form">
-              <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
-              {query.boardSettingsMessage ? (
-                <p className="form-success">{query.boardSettingsMessage}</p>
-              ) : null}
-              {query.boardSettingsError ? (
-                <p className="form-error">{query.boardSettingsError}</p>
-              ) : null}
-              <label className="field">
-                <span>Title / kicker</span>
-                <input defaultValue={runtime.settings.title} name="title" />
-              </label>
-              <label className="field">
-                <span>Main headline</span>
-                <textarea defaultValue={runtime.settings.subtitle} name="subtitle" />
-              </label>
-              <label className="field">
-                <span>Board colour theme</span>
-                <select
-                  className="select-field"
-                  defaultValue={runtime.settings.themePreset}
-                  name="themePreset"
-                >
-                  {FOCUS_THEME_OPTIONS.map((theme) => (
-                    <option key={theme.value} value={theme.value}>
-                      {theme.label}
-                    </option>
-                  ))}
-                </select>
-                <small className="focus-field-help">
-                  Fun preset palettes only for now. Layout and typography stay shared.
-                </small>
-              </label>
-              <button className="button button-primary" type="submit">
-                Save board settings
-              </button>
-            </form>
-          </FocusControlSection>
-
-          <FocusControlSection
-            eyebrow="Images"
-            summary="Upload extra artwork for challenge stickers and reward ladder images."
-            title="Focus image library"
-          >
-            <FocusAssetUploadForm adminSlug={runtime.settings.adminSlug} />
-            <div className="focus-asset-grid">
-              {assets.map((asset) => (
-                <div className="focus-asset-chip" key={`${asset.source}:${asset.value}`}>
-                  <img alt="" src={asset.value} />
-                  <span>{asset.label}</span>
-                  <small>{asset.source === "uploaded" ? "Uploaded" : "Bundled"}</small>
+            <div className="focus-control-stack">
+              <div className="focus-admin-settings-grid">
+                <div className="focus-membership-feature-bar">
+                  <div>
+                    <p className="focus-membership-role-note">Client feature</p>
+                    <h3>Content Lab {formatContentLabState(client.contentLabEnabled)}</h3>
+                    <p className="focus-membership-role-note">
+                      Controls whether Content Lab appears for this board.
+                    </p>
+                  </div>
+                  <form action={setFocusClientContentLabEnabledAction}>
+                    <input name="clientId" type="hidden" value={client.clientId} />
+                    <input
+                      name="nextEnabled"
+                      type="hidden"
+                      value={client.contentLabEnabled ? "false" : "true"}
+                    />
+                    <button className="button focus-membership-content-button" type="submit">
+                      {client.contentLabEnabled ? "Disable" : "Enable"}
+                    </button>
+                  </form>
                 </div>
-              ))}
-            </div>
-          </FocusControlSection>
 
+                <div className="focus-membership-feature-bar">
+                  <div>
+                    <p className="focus-membership-role-note">Client feature</p>
+                    <h3>Business Stats {formatFeatureState(client.businessStatsEnabled)}</h3>
+                    <p className="focus-membership-role-note">
+                      Controls whether the Business Stats module appears for this board.
+                    </p>
+                  </div>
+                  <form action={setFocusClientBusinessStatsEnabledAction}>
+                    <input name="clientId" type="hidden" value={client.clientId} />
+                    <input
+                      name="nextEnabled"
+                      type="hidden"
+                      value={client.businessStatsEnabled ? "false" : "true"}
+                    />
+                    <button className="button focus-membership-content-button" type="submit">
+                      {client.businessStatsEnabled ? "Disable" : "Enable"}
+                    </button>
+                  </form>
+                </div>
+
+                <form action={updateFocusBoardSettingsAction} className="focus-control-form focus-admin-theme-card">
+                  <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+                  <h3>Board theme</h3>
+                  <label className="field">
+                    <span>Colour theme</span>
+                    <select
+                      className="select-field"
+                      defaultValue={runtime.settings.themePreset}
+                      name="themePreset"
+                    >
+                      {FOCUS_THEME_OPTIONS.map((theme) => (
+                        <option key={theme.value} value={theme.value}>
+                          {theme.label}
+                        </option>
+                      ))}
+                    </select>
+                    <small className="focus-field-help">
+                      Fun preset palettes only for now. Layout and typography stay shared.
+                    </small>
+                  </label>
+                  <button className="button button-primary" type="submit">
+                    Save theme
+                  </button>
+                </form>
+              </div>
+
+              <FocusControlSection
+                eyebrow="Client access"
+                summary="Grant or remove board access for existing signed-in users, including Content Lab access."
+                title="User management"
+              >
+                <div className="focus-membership-stack">
+                  {query.membershipMessage ? (
+                    <p className="form-success">{query.membershipMessage}</p>
+                  ) : null}
+                  {query.membershipError ? <p className="form-error">{query.membershipError}</p> : null}
+
+                  <form action={addFocusClientMembershipAction} className="focus-membership-add-form">
+                    <input name="clientId" type="hidden" value={client.clientId} />
+                    <label className="field">
+                      <span>Existing user email</span>
+                      <input
+                        name="email"
+                        placeholder="name@example.com"
+                        required
+                        type="email"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>Role</span>
+                      <select className="select-field" defaultValue="client_user" name="role">
+                        <option value="client_user">Client user</option>
+                        <option value="client_admin">Client admin</option>
+                      </select>
+                    </label>
+                    <label className="field">
+                      <span>Content Lab</span>
+                      <select
+                        className="select-field"
+                        defaultValue={client.contentLabEnabled ? "true" : "false"}
+                        disabled={!client.contentLabEnabled}
+                        name="contentLabAccess"
+                      >
+                        <option value="false">Disabled</option>
+                        <option value="true">Enabled</option>
+                      </select>
+                    </label>
+                    <button className="button button-primary" type="submit">
+                      Add user to client
+                    </button>
+                  </form>
+
+                  {memberships.length > 0 ? (
+                    <div className="focus-membership-list">
+                      {memberships.map((membership) => (
+                        <article
+                          className={`focus-membership-card ${
+                            membership.isActive ? "" : "focus-membership-card-inactive"
+                          }`}
+                          key={membership.membershipId}
+                        >
+                          <div className="focus-membership-card-head">
+                            <div>
+                              <h3>{membership.fullName ?? membership.email}</h3>
+                              <p>{membership.email}</p>
+                            </div>
+                            <span
+                              className={`focus-client-status ${
+                                membership.isActive
+                                  ? "focus-client-status-active"
+                                  : "focus-client-status-inactive"
+                              }`}
+                            >
+                              {membership.isActive ? "active" : "inactive"}
+                            </span>
+                          </div>
+
+                          <div className="focus-membership-actions">
+                            <form
+                              action={updateFocusClientMembershipRoleAction}
+                              className="focus-membership-role-form"
+                            >
+                              <input name="clientId" type="hidden" value={client.clientId} />
+                              <input
+                                name="membershipId"
+                                type="hidden"
+                                value={membership.membershipId}
+                              />
+                              <label className="field">
+                                <span>Role</span>
+                                <select
+                                  className="select-field"
+                                  defaultValue={membership.role}
+                                  name="role"
+                                >
+                                  <option value="client_user">Client user</option>
+                                  <option value="client_admin">Client admin</option>
+                                </select>
+                              </label>
+                              <button className="button button-secondary" type="submit">
+                                Save role
+                              </button>
+                            </form>
+
+                            <form action={setFocusClientMembershipContentLabAccessAction}>
+                              <input name="clientId" type="hidden" value={client.clientId} />
+                              <input
+                                name="membershipId"
+                                type="hidden"
+                                value={membership.membershipId}
+                              />
+                              <input
+                                name="nextContentLabAccess"
+                                type="hidden"
+                                value={membership.contentLabAccess ? "false" : "true"}
+                              />
+                              <button
+                                className="button focus-membership-content-button"
+                                disabled={!client.contentLabEnabled || !membership.isActive}
+                                type="submit"
+                              >
+                                {membership.contentLabAccess ? "Disable Content Lab" : "Enable Content Lab"}
+                              </button>
+                            </form>
+
+                            <form action={setFocusClientMembershipActiveAction}>
+                              <input name="clientId" type="hidden" value={client.clientId} />
+                              <input
+                                name="membershipId"
+                                type="hidden"
+                                value={membership.membershipId}
+                              />
+                              <input
+                                name="nextActive"
+                                type="hidden"
+                                value={membership.isActive ? "false" : "true"}
+                              />
+                              <button className="button button-management" type="submit">
+                                {membership.isActive ? "Remove access" : "Restore access"}
+                              </button>
+                            </form>
+                          </div>
+
+                          <p className="focus-membership-role-note">
+                            Current role: {formatMembershipRole(membership.role)}
+                          </p>
+                          <p className="focus-membership-role-note">
+                            Content Lab: {formatContentLabState(membership.contentLabAccess)}
+                            {!client.contentLabEnabled ? " (client feature disabled)" : ""}
+                          </p>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="focus-membership-empty">
+                      No client users are linked yet. Add an existing signed-in account above.
+                    </p>
+                  )}
+                </div>
+              </FocusControlSection>
+
+              <FocusControlSection
+                eyebrow="Images"
+                summary="Upload extra artwork for challenge stickers and reward ladder images."
+                title="Focus image library"
+              >
+                <FocusAssetUploadForm adminSlug={runtime.settings.adminSlug} />
+                <div className="focus-asset-grid">
+                  {assets.map((asset) => (
+                    <div className="focus-asset-chip" key={`${asset.source}:${asset.value}`}>
+                      <img alt="" src={asset.value} />
+                      <span>{asset.label}</span>
+                      <small>{asset.source === "uploaded" ? "Uploaded" : "Bundled"}</small>
+                    </div>
+                  ))}
+                </div>
+              </FocusControlSection>
             </div>
           </FocusControlGroup>
 

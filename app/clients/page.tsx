@@ -82,22 +82,6 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                     Open board
                   </Link>
                 ) : null}
-                {client.status === "active" && client.contentLabEnabled ? (
-                  <Link
-                    className="button focus-client-content-button"
-                    href={`/clients/${client.clientId}/content`}
-                  >
-                    Content Lab
-                  </Link>
-                ) : null}
-                {client.status === "active" && client.businessStatsEnabled ? (
-                  <Link
-                    className="button focus-client-content-button"
-                    href={`/clients/${client.clientId}/business`}
-                  >
-                    Business Stats
-                  </Link>
-                ) : null}
                 <form action={setFocusClientStatusAction}>
                   <input name="clientId" type="hidden" value={client.clientId} />
                   <input

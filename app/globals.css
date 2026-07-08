@@ -5970,6 +5970,24 @@ a {
   gap: 14px;
 }
 
+.focus-admin-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.focus-admin-theme-card {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.focus-admin-theme-card h3 {
+  margin: 0;
+  color: var(--focus-text-strong);
+}
+
 .focus-business-admin-grid h3 {
   margin: 0;
   color: var(--focus-text-strong);
@@ -6230,6 +6248,7 @@ a {
   .focus-business-header,
   .focus-business-panel-head,
   .focus-business-review-layout,
+  .focus-admin-settings-grid,
   .focus-business-admin-grid {
     grid-template-columns: 1fr;
     display: grid;

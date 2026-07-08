@@ -784,3 +784,6 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-07-08: Slice 11 started locally. Optional Business Stats support was added with a client
   feature flag, group/category configuration, weekly entry collection, and last-three-months review
   graph; Supabase migration and live rollback smoke verification passed.
+- 2026-07-08: Slice 11 admin UX polish moved board headline editing, Content Lab context, and
+  Business Stats configuration into top-level management panels; Admin Settings now keeps module
+  visibility toggles, theme, user access, and image library controls.
