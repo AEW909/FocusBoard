@@ -6003,6 +6003,51 @@ a {
   opacity: 0.64;
 }
 
+.focus-business-group-details {
+  display: block;
+}
+
+.focus-business-group-details summary {
+  list-style: none;
+}
+
+.focus-business-group-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.focus-business-group-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.focus-business-group-toggle {
+  width: 18px;
+  height: 18px;
+  border-right: 2px solid var(--focus-text-muted);
+  border-bottom: 2px solid var(--focus-text-muted);
+  transform: rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+.focus-business-group-details[open] .focus-business-group-toggle {
+  transform: rotate(225deg);
+}
+
+.focus-business-nested-stats {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.focus-business-nested-stats .focus-business-admin-card {
+  background: rgba(255, 255, 255, 0.045);
+}
+
 @media (max-width: 900px) {
   .hero,
   .grid,

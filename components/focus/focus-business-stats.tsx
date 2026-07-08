@@ -111,6 +111,10 @@ function getSeriesValues(
   });
 }
 
+function getWeeklyGoalPace(category: BusinessStatCategory) {
+  return category.monthlyTarget === null ? null : category.monthlyTarget / 4;
+}
+
 function buildLinePath(values: number[], minValue: number, maxValue: number) {
   const chartWidth = SVG_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
   const chartHeight = SVG_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
@@ -173,7 +177,7 @@ export function FocusBusinessStats({
     values: getSeriesValues(category, weeks, entryMap, reviewMode),
   }));
   const valuePool = series.flatMap((item) => item.values);
-  const targets = reviewMode === "raw" ? activeCategories.flatMap((category) => category.weeklyTarget ?? []) : [];
+  const targets = reviewMode === "raw" ? activeCategories.flatMap((category) => getWeeklyGoalPace(category) ?? []) : [];
   const maxValue = Math.max(...valuePool, ...targets, 1);
   const minValue = reviewMode === "change" ? Math.min(...valuePool, 0) : 0;
   const yTicks = Array.from({ length: 4 }, (_, index) => {
@@ -290,9 +294,9 @@ export function FocusBusinessStats({
                                 placeholder="Optional context"
                               />
                             </label>
-                            {category.weeklyTarget !== null ? (
+                            {category.monthlyTarget !== null ? (
                               <p className="focus-business-target">
-                                Target: {formatNumber(category.weeklyTarget, category.unit, category.prefix, category.suffix)}
+                                Monthly goal: {formatNumber(category.monthlyTarget, category.unit, category.prefix, category.suffix)}
                               </p>
                             ) : null}
                           </div>
@@ -334,6 +338,11 @@ export function FocusBusinessStats({
                               placeholder="Optional context"
                             />
                           </label>
+                          {category.monthlyTarget !== null ? (
+                            <p className="focus-business-target">
+                              Monthly goal: {formatNumber(category.monthlyTarget, category.unit, category.prefix, category.suffix)}
+                            </p>
+                          ) : null}
                         </div>
                       );
                     })}
@@ -428,12 +437,14 @@ export function FocusBusinessStats({
 
                   {reviewMode === "raw"
                     ? activeCategories.map((category) => {
-                        if (category.weeklyTarget === null) {
+                        const weeklyGoalPace = getWeeklyGoalPace(category);
+
+                        if (weeklyGoalPace === null) {
                           return null;
                         }
 
                         const linePath = buildLinePath(
-                          weeks.map(() => category.weeklyTarget ?? 0),
+                          weeks.map(() => weeklyGoalPace),
                           minValue,
                           maxValue,
                         );

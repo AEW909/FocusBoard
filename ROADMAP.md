@@ -615,7 +615,7 @@ Deliverables:
 - Keep all business stats scoped to the client/board tenant boundary.
 - Add platform-owner CRUD for stat groups and categories in the client management page.
 - Add group/category visibility toggles that preserve existing historical data.
-- Add optional weekly target lines per stat.
+- Add optional monthly goals per stat, with review charts showing goal-pace lines where useful.
 - Add `/clients/[clientId]/business` with collection and review views.
 - Let board users save weekly numeric entries, including previous-week backfill/editing.
 - Add a review graph defaulting to the last three months, with group/stat toggles and raw,
@@ -630,7 +630,7 @@ Acceptance:
 - Board users can submit and update numeric stats for a selected week.
 - Review defaults to the last three months and raw weekly numbers.
 - Users can toggle groups and individual stats in the graph.
-- Raw review shows admin-configured target lines.
+- Raw review shows admin-configured monthly goal pace lines.
 - Business stats for one client cannot be read or written through another client route.
 - Checks: `npm run typecheck`, `npm run build`, and `git diff --check`.
 
@@ -642,12 +642,17 @@ Progress:
 - Migration file created: `supabase/migrations/20260708072946_focusboard_business_stats_module.sql`.
 - Migration `focusboard_business_stats_module` applied to Supabase project
   `xoafnjhsxxczmfavmwoq` on 2026-07-08.
+- Migration `focusboard_business_stats_monthly_targets` applied to Supabase project
+  `xoafnjhsxxczmfavmwoq` on 2026-07-08.
 - Verification: `business_stats_enabled` exists on `focusboard.clients`; 3 Business Stats tables
   exist; 4 tenant-boundary constraints exist; RLS is enabled on all 3 tables; `service_role` has
   privileges on all 3 tables; migration history records `20260708072946` as applied.
 - Live smoke verification: `supabase/verification/verify_focusboard_business_stats_module.sql`
   passed against project `xoafnjhsxxczmfavmwoq`, including rollback-only feature flag, group,
   category, weekly entry writes, and cross-client group/category rejection.
+- Monthly target verification: `monthly_target` exists on `focusboard.business_stat_categories`,
+  the non-negative constraint exists, existing stat colours were updated to the FocusBoard palette,
+  and migration history records `20260708085320` as applied.
 - Local checks passed: `npm run typecheck`, `npm run build`, and `git diff --check`.
 - Outstanding deployment work: redeploy and production app smoke verification.
 
@@ -790,3 +795,6 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-07-08: Slice 11 admin module settings were split into dedicated management routes launched
   from the client hub card when enabled: `/clients/[clientId]/manage/content-lab` and
   `/clients/[clientId]/manage/business-stats`.
+- 2026-07-08: Business Stats goals changed from weekly targets to monthly goals, individual stat
+  line colours now use the FocusBoard palette automatically, and stats are nested under collapsible
+  groups in the Business Stats settings page.

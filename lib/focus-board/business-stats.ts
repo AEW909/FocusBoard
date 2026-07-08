@@ -9,6 +9,19 @@ import {
 
 export type BusinessStatUnit = "number" | "currency" | "percent";
 
+export const BUSINESS_STAT_LINE_COLORS = [
+  "#00f5d4",
+  "#ff4dca",
+  "#ffd84d",
+  "#8f7cff",
+  "#95ff4a",
+  "#55a7ff",
+  "#ff7a59",
+  "#73e06c",
+  "#ff8fb8",
+  "#7ce6ff",
+];
+
 export type BusinessStatGroup = {
   id: string;
   clientId: string;
@@ -29,6 +42,7 @@ export type BusinessStatCategory = {
   suffix: string;
   color: string;
   weeklyTarget: number | null;
+  monthlyTarget: number | null;
   sortOrder: number;
   isActive: boolean;
   isVisible: boolean;
@@ -63,6 +77,7 @@ type CategoryRow = {
   suffix: string;
   color: string;
   weekly_target: number | null;
+  monthly_target: number | null;
   sort_order: number;
   is_active: boolean;
   is_visible: boolean;
@@ -115,6 +130,12 @@ function mapCategory(row: CategoryRow): BusinessStatCategory {
     suffix: row.suffix,
     color: row.color,
     weeklyTarget: row.weekly_target === null ? null : Number(row.weekly_target),
+    monthlyTarget:
+      row.monthly_target === null
+        ? row.weekly_target === null
+          ? null
+          : Number(row.weekly_target) * 4
+        : Number(row.monthly_target),
     sortOrder: row.sort_order,
     isActive: row.is_active,
     isVisible: row.is_visible,
@@ -159,7 +180,7 @@ export async function getBusinessStatsConfig(clientId: string): Promise<Business
       .order("sort_order", { ascending: true }),
     admin
       .from("business_stat_categories")
-      .select("id, client_id, group_id, name, unit, prefix, suffix, color, weekly_target, sort_order, is_active, is_visible")
+      .select("id, client_id, group_id, name, unit, prefix, suffix, color, weekly_target, monthly_target, sort_order, is_active, is_visible")
       .eq("client_id", clientId)
       .order("sort_order", { ascending: true }),
   ]);

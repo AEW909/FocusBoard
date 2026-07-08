@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireManagedFocusClientById } from "@/lib/focus-board/access";
-import { getBusinessStatsConfig, type BusinessStatUnit } from "@/lib/focus-board/business-stats";
+import {
+  BUSINESS_STAT_LINE_COLORS,
+  getBusinessStatsConfig,
+  type BusinessStatUnit,
+} from "@/lib/focus-board/business-stats";
 import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 
 function getValue(formData: FormData, key: string) {
@@ -224,6 +228,10 @@ export async function addBusinessStatCategoryAction(formData: FormData) {
   }
 
   const admin = createFocusBoardAdminClient();
+  const activeCategoryCount = config.categories.filter(
+    (category) => category.isActive !== false,
+  ).length;
+  const color = BUSINESS_STAT_LINE_COLORS[activeCategoryCount % BUSINESS_STAT_LINE_COLORS.length];
   const { error } = await admin.from("business_stat_categories").insert({
     client_id: clientId,
     group_id: groupId,
@@ -231,9 +239,9 @@ export async function addBusinessStatCategoryAction(formData: FormData) {
     unit: getUnit(getValue(formData, "unit")),
     prefix: getValue(formData, "prefix"),
     suffix: getValue(formData, "suffix"),
-    color: getValue(formData, "color") || "#ff4dca",
-    weekly_target: getNumberValue(formData, "weeklyTarget"),
-    sort_order: config.categories.filter((category) => category.isActive !== false).length + 1,
+    color,
+    monthly_target: getNumberValue(formData, "monthlyTarget"),
+    sort_order: activeCategoryCount + 1,
   });
 
   if (error) {
@@ -270,8 +278,7 @@ export async function updateBusinessStatCategoryAction(formData: FormData) {
       unit: getUnit(getValue(formData, "unit")),
       prefix: getValue(formData, "prefix"),
       suffix: getValue(formData, "suffix"),
-      color: getValue(formData, "color") || category.color,
-      weekly_target: getNumberValue(formData, "weeklyTarget"),
+      monthly_target: getNumberValue(formData, "monthlyTarget"),
     })
     .eq("id", categoryId)
     .eq("client_id", clientId);

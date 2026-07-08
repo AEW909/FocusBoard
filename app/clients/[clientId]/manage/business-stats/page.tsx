@@ -12,7 +12,11 @@ import {
 import { ProtectedSessionBar } from "@/components/auth/protected-session-bar";
 import { FocusPullToRefresh } from "@/components/focus/focus-pull-to-refresh";
 import { requireManagedFocusClientById } from "@/lib/focus-board/access";
-import { getBusinessStatsConfig } from "@/lib/focus-board/business-stats";
+import {
+  getBusinessStatsConfig,
+  type BusinessStatCategory,
+  type BusinessStatGroup,
+} from "@/lib/focus-board/business-stats";
 import { getFocusBoardRuntimeConfigByClientId } from "@/lib/focus-board/runtime";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +28,121 @@ type BusinessStatsSettingsPageProps = {
     businessStatsError?: string;
   }>;
 };
+
+type BusinessStatCategoryEditorProps = {
+  category: BusinessStatCategory;
+  clientId: string;
+  groups: BusinessStatGroup[];
+  returnPath: string;
+};
+
+function BusinessStatCategoryEditor({
+  category,
+  clientId,
+  groups,
+  returnPath,
+}: BusinessStatCategoryEditorProps) {
+  return (
+    <article
+      className={`focus-business-admin-card ${
+        category.isVisible ? "" : "focus-business-admin-card-hidden"
+      }`}
+    >
+      <div className="focus-business-admin-head">
+        <span style={{ background: category.color }} />
+        <div>
+          <h3>{category.name}</h3>
+          <p>
+            {category.isVisible ? "visible" : "hidden"}
+            {category.monthlyTarget !== null
+              ? ` - monthly goal ${category.prefix}${category.monthlyTarget}${category.suffix}`
+              : ""}
+          </p>
+        </div>
+      </div>
+
+      <form action={updateBusinessStatCategoryAction} className="focus-control-form">
+        <input name="clientId" type="hidden" value={clientId} />
+        <input name="returnPath" type="hidden" value={returnPath} />
+        <input name="categoryId" type="hidden" value={category.id} />
+        <div className="focus-control-two-up">
+          <label className="field">
+            <span>Group</span>
+            <select className="select-field" defaultValue={category.groupId ?? ""} name="groupId">
+              <option value="">Ungrouped</option>
+              {groups
+                .filter((group) => group.isActive !== false)
+                .map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Name</span>
+            <input defaultValue={category.name} name="name" />
+          </label>
+        </div>
+        <div className="focus-control-three-up">
+          <label className="field">
+            <span>Unit</span>
+            <select className="select-field" defaultValue={category.unit} name="unit">
+              <option value="number">Number</option>
+              <option value="currency">Currency</option>
+              <option value="percent">Percent</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Prefix</span>
+            <input defaultValue={category.prefix} name="prefix" />
+          </label>
+          <label className="field">
+            <span>Suffix</span>
+            <input defaultValue={category.suffix} name="suffix" />
+          </label>
+        </div>
+        <label className="field">
+          <span>Monthly goal</span>
+          <input
+            defaultValue={category.monthlyTarget ?? ""}
+            min={0}
+            name="monthlyTarget"
+            step="any"
+            type="number"
+          />
+        </label>
+        <button className="button button-secondary" type="submit">
+          Save stat
+        </button>
+      </form>
+
+      <div className="focus-membership-actions">
+        <form action={toggleBusinessStatCategoryVisibilityAction}>
+          <input name="clientId" type="hidden" value={clientId} />
+          <input name="returnPath" type="hidden" value={returnPath} />
+          <input name="categoryId" type="hidden" value={category.id} />
+          <input
+            name="nextVisible"
+            type="hidden"
+            value={category.isVisible ? "false" : "true"}
+          />
+          <button className="button focus-membership-content-button" type="submit">
+            {category.isVisible ? "Hide stat" : "Show stat"}
+          </button>
+        </form>
+        <form action={deleteBusinessStatCategoryAction}>
+          <input name="clientId" type="hidden" value={clientId} />
+          <input name="returnPath" type="hidden" value={returnPath} />
+          <input name="categoryId" type="hidden" value={category.id} />
+          <button className="button button-management" type="submit">
+            Retire stat
+          </button>
+        </form>
+      </div>
+    </article>
+  );
+}
 
 export default async function BusinessStatsSettingsPage({
   params,
@@ -135,16 +254,10 @@ export default async function BusinessStatsSettingsPage({
                       <input name="suffix" placeholder="%" />
                     </label>
                   </div>
-                  <div className="focus-control-two-up">
-                    <label className="field">
-                      <span>Weekly target</span>
-                      <input min={0} name="weeklyTarget" step="any" type="number" />
-                    </label>
-                    <label className="field">
-                      <span>Line colour</span>
-                      <input defaultValue="#ff4dca" name="color" type="color" />
-                    </label>
-                  </div>
+                  <label className="field">
+                    <span>Monthly goal</span>
+                    <input min={0} name="monthlyTarget" step="any" type="number" />
+                  </label>
                   <button className="button button-primary" type="submit">
                     Add stat
                   </button>
@@ -159,23 +272,27 @@ export default async function BusinessStatsSettingsPage({
                     );
 
                     return (
-                      <article
-                        className={`focus-business-admin-card ${
+                      <details
+                        className={`focus-business-admin-card focus-business-group-details ${
                           group.isVisible ? "" : "focus-business-admin-card-hidden"
                         }`}
                         key={group.id}
+                        open
                       >
-                        <div className="focus-business-admin-head">
-                          <span style={{ background: group.color }} />
-                          <div>
-                            <h3>{group.name}</h3>
-                            <p>
-                              {groupCategories.length} stat{groupCategories.length === 1 ? "" : "s"} -
-                              {" "}
-                              {group.isVisible ? "visible" : "hidden"}
-                            </p>
+                        <summary className="focus-business-group-summary">
+                          <div className="focus-business-admin-head">
+                            <span style={{ background: group.color }} />
+                            <div>
+                              <h3>{group.name}</h3>
+                              <p>
+                                {groupCategories.length} stat{groupCategories.length === 1 ? "" : "s"} -
+                                {" "}
+                                {group.isVisible ? "visible" : "hidden"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
+                          <span className="focus-business-group-toggle" aria-hidden="true" />
+                        </summary>
 
                         <form action={updateBusinessStatGroupAction} className="focus-control-two-up">
                           <input name="clientId" type="hidden" value={client.clientId} />
@@ -217,7 +334,25 @@ export default async function BusinessStatsSettingsPage({
                             </button>
                           </form>
                         </div>
-                      </article>
+
+                        <div className="focus-business-nested-stats">
+                          {groupCategories.length > 0 ? (
+                            groupCategories.map((category) => (
+                              <BusinessStatCategoryEditor
+                                category={category}
+                                clientId={client.clientId}
+                                groups={businessStats.groups}
+                                key={category.id}
+                                returnPath={returnPath}
+                              />
+                            ))
+                          ) : (
+                            <p className="focus-membership-empty">
+                              No stats in this group yet. Add a stat above and choose this group.
+                            </p>
+                          )}
+                        </div>
+                      </details>
                     );
                   })
                 ) : (
@@ -226,119 +361,42 @@ export default async function BusinessStatsSettingsPage({
                   </p>
                 )}
 
-                {businessStats.categories.length > 0 ? (
-                  businessStats.categories.map((category) => (
-                    <article
-                      className={`focus-business-admin-card ${
-                        category.isVisible ? "" : "focus-business-admin-card-hidden"
-                      }`}
-                      key={category.id}
-                    >
+                {businessStats.categories.filter((category) => !category.groupId).length > 0 ? (
+                  <details className="focus-business-admin-card focus-business-group-details" open>
+                    <summary className="focus-business-group-summary">
                       <div className="focus-business-admin-head">
-                        <span style={{ background: category.color }} />
+                        <span />
                         <div>
-                          <h3>{category.name}</h3>
+                          <h3>Ungrouped</h3>
                           <p>
-                            {category.isVisible ? "visible" : "hidden"}
-                            {category.weeklyTarget !== null
-                              ? ` - target ${category.prefix}${category.weeklyTarget}${category.suffix}`
-                              : ""}
+                            {businessStats.categories.filter((category) => !category.groupId).length} stat
+                            {businessStats.categories.filter((category) => !category.groupId).length === 1 ? "" : "s"}
                           </p>
                         </div>
                       </div>
-
-                      <form action={updateBusinessStatCategoryAction} className="focus-control-form">
-                        <input name="clientId" type="hidden" value={client.clientId} />
-                        <input name="returnPath" type="hidden" value={returnPath} />
-                        <input name="categoryId" type="hidden" value={category.id} />
-                        <div className="focus-control-two-up">
-                          <label className="field">
-                            <span>Group</span>
-                            <select className="select-field" defaultValue={category.groupId ?? ""} name="groupId">
-                              <option value="">Ungrouped</option>
-                              {businessStats.groups
-                                .filter((group) => group.isActive !== false)
-                                .map((group) => (
-                                  <option key={group.id} value={group.id}>
-                                    {group.name}
-                                  </option>
-                                ))}
-                            </select>
-                          </label>
-                          <label className="field">
-                            <span>Name</span>
-                            <input defaultValue={category.name} name="name" />
-                          </label>
-                        </div>
-                        <div className="focus-control-three-up">
-                          <label className="field">
-                            <span>Unit</span>
-                            <select className="select-field" defaultValue={category.unit} name="unit">
-                              <option value="number">Number</option>
-                              <option value="currency">Currency</option>
-                              <option value="percent">Percent</option>
-                            </select>
-                          </label>
-                          <label className="field">
-                            <span>Prefix</span>
-                            <input defaultValue={category.prefix} name="prefix" />
-                          </label>
-                          <label className="field">
-                            <span>Suffix</span>
-                            <input defaultValue={category.suffix} name="suffix" />
-                          </label>
-                        </div>
-                        <div className="focus-control-two-up">
-                          <label className="field">
-                            <span>Weekly target</span>
-                            <input
-                              defaultValue={category.weeklyTarget ?? ""}
-                              min={0}
-                              name="weeklyTarget"
-                              step="any"
-                              type="number"
-                            />
-                          </label>
-                          <label className="field">
-                            <span>Line colour</span>
-                            <input defaultValue={category.color} name="color" type="color" />
-                          </label>
-                        </div>
-                        <button className="button button-secondary" type="submit">
-                          Save stat
-                        </button>
-                      </form>
-
-                      <div className="focus-membership-actions">
-                        <form action={toggleBusinessStatCategoryVisibilityAction}>
-                          <input name="clientId" type="hidden" value={client.clientId} />
-                          <input name="returnPath" type="hidden" value={returnPath} />
-                          <input name="categoryId" type="hidden" value={category.id} />
-                          <input
-                            name="nextVisible"
-                            type="hidden"
-                            value={category.isVisible ? "false" : "true"}
+                      <span className="focus-business-group-toggle" aria-hidden="true" />
+                    </summary>
+                    <div className="focus-business-nested-stats">
+                      {businessStats.categories
+                        .filter((category) => !category.groupId)
+                        .map((category) => (
+                          <BusinessStatCategoryEditor
+                            category={category}
+                            clientId={client.clientId}
+                            groups={businessStats.groups}
+                            key={category.id}
+                            returnPath={returnPath}
                           />
-                          <button className="button focus-membership-content-button" type="submit">
-                            {category.isVisible ? "Hide stat" : "Show stat"}
-                          </button>
-                        </form>
-                        <form action={deleteBusinessStatCategoryAction}>
-                          <input name="clientId" type="hidden" value={client.clientId} />
-                          <input name="returnPath" type="hidden" value={returnPath} />
-                          <input name="categoryId" type="hidden" value={category.id} />
-                          <button className="button button-management" type="submit">
-                            Retire stat
-                          </button>
-                        </form>
-                      </div>
-                    </article>
-                  ))
-                ) : (
+                        ))}
+                    </div>
+                  </details>
+                ) : null}
+
+                {businessStats.categories.length === 0 ? (
                   <p className="focus-membership-empty">
                     No stats yet. Add one above, then the weekly collection page will appear for users.
                   </p>
-                )}
+                ) : null}
               </div>
             </div>
           </article>
