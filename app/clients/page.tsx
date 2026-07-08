@@ -31,8 +31,8 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
           <p className="focus-kicker">Platform workspace</p>
           <h1>Pick a client board.</h1>
           <p>
-            Open the live board, tune its goals and rewards, or launch Content Lab when that
-            feature is assigned.
+            Open the live board, tune its goals and rewards, or jump into module settings when
+            optional features are assigned.
           </p>
           <div className="focus-client-actions">
             <Link className="button focus-client-open-button" href="/users">
@@ -80,6 +80,22 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                     href={`/board/${client.boardSlug}`}
                   >
                     Open board
+                  </Link>
+                ) : null}
+                {client.status === "active" && client.contentLabEnabled ? (
+                  <Link
+                    className="button focus-client-content-button"
+                    href={`/clients/${client.clientId}/manage/content-lab`}
+                  >
+                    Content Lab settings
+                  </Link>
+                ) : null}
+                {client.status === "active" && client.businessStatsEnabled ? (
+                  <Link
+                    className="button focus-client-content-button"
+                    href={`/clients/${client.clientId}/manage/business-stats`}
+                  >
+                    Business Stats settings
                   </Link>
                 ) : null}
                 <form action={setFocusClientStatusAction}>

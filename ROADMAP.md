@@ -787,3 +787,6 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-07-08: Slice 11 admin UX polish moved board headline editing, Content Lab context, and
   Business Stats configuration into top-level management panels; Admin Settings now keeps module
   visibility toggles, theme, user access, and image library controls.
+- 2026-07-08: Slice 11 admin module settings were split into dedicated management routes launched
+  from the client hub card when enabled: `/clients/[clientId]/manage/content-lab` and
+  `/clients/[clientId]/manage/business-stats`.

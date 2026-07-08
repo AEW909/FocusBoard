@@ -36,9 +36,33 @@ function getManagePath(clientId: string, message?: string, error?: string) {
   return query ? `/clients/${clientId}/manage?${query}` : `/clients/${clientId}/manage`;
 }
 
+function getBusinessStatsPath(
+  clientId: string,
+  message?: string,
+  error?: string,
+  returnPath?: string,
+) {
+  const params = new URLSearchParams();
+  const basePath = returnPath?.startsWith(`/clients/${clientId}/manage`)
+    ? returnPath
+    : `/clients/${clientId}/manage/business-stats`;
+
+  if (message) {
+    params.set("businessStatsMessage", message);
+  }
+
+  if (error) {
+    params.set("businessStatsError", error);
+  }
+
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
+}
+
 function revalidateBusinessStatsPaths(clientId: string) {
   revalidatePath("/clients");
   revalidatePath(`/clients/${clientId}/manage`);
+  revalidatePath(`/clients/${clientId}/manage/business-stats`);
   revalidatePath(`/clients/${clientId}/business`);
 }
 
@@ -76,13 +100,14 @@ export async function setFocusClientBusinessStatsEnabledAction(formData: FormDat
 
 export async function addBusinessStatGroupAction(formData: FormData) {
   const clientId = getValue(formData, "clientId");
+  const returnPath = getValue(formData, "returnPath");
   const { client } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
   const config = await getBusinessStatsConfig(client.clientId);
   const name = getValue(formData, "name");
   const color = getValue(formData, "color") || "#00f5d4";
 
   if (!name) {
-    redirect(getManagePath(clientId, undefined, "Group name is required."));
+    redirect(getBusinessStatsPath(clientId, undefined, "Group name is required.", returnPath));
   }
 
   const admin = createFocusBoardAdminClient();
@@ -94,22 +119,23 @@ export async function addBusinessStatGroupAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(getManagePath(clientId, undefined, `Could not add group: ${error.message}`));
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not add group: ${error.message}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
-  redirect(getManagePath(clientId, `Group "${name}" added.`));
+  redirect(getBusinessStatsPath(clientId, `Group "${name}" added.`, undefined, returnPath));
 }
 
 export async function updateBusinessStatGroupAction(formData: FormData) {
   const clientId = getValue(formData, "clientId");
+  const returnPath = getValue(formData, "returnPath");
   const groupId = getValue(formData, "groupId");
   const { client } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
   const config = await getBusinessStatsConfig(client.clientId);
   const group = config.groups.find((item) => item.id === groupId);
 
   if (!group) {
-    redirect(getManagePath(clientId, undefined, "Group not found."));
+    redirect(getBusinessStatsPath(clientId, undefined, "Group not found.", returnPath));
   }
 
   const admin = createFocusBoardAdminClient();
@@ -123,15 +149,16 @@ export async function updateBusinessStatGroupAction(formData: FormData) {
     .eq("client_id", clientId);
 
   if (error) {
-    redirect(getManagePath(clientId, undefined, `Could not save group: ${error.message}`));
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not save group: ${error.message}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
-  redirect(getManagePath(clientId, "Group saved."));
+  redirect(getBusinessStatsPath(clientId, "Group saved.", undefined, returnPath));
 }
 
 export async function toggleBusinessStatGroupVisibilityAction(formData: FormData) {
   const clientId = getValue(formData, "clientId");
+  const returnPath = getValue(formData, "returnPath");
   const groupId = getValue(formData, "groupId");
   const shouldShow = getValue(formData, "nextVisible") === "true";
   await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
@@ -152,15 +179,16 @@ export async function toggleBusinessStatGroupVisibilityAction(formData: FormData
     .eq("client_id", clientId);
 
   if (error) {
-    redirect(getManagePath(clientId, undefined, `Could not update group visibility: ${error.message}`));
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not update group visibility: ${error.message}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
-  redirect(getManagePath(clientId, shouldShow ? "Group shown." : "Group hidden."));
+  redirect(getBusinessStatsPath(clientId, shouldShow ? "Group shown." : "Group hidden.", undefined, returnPath));
 }
 
 export async function deleteBusinessStatGroupAction(formData: FormData) {
   const clientId = getValue(formData, "clientId");
+  const returnPath = getValue(formData, "returnPath");
   const groupId = getValue(formData, "groupId");
   await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
   const admin = createFocusBoardAdminClient();
@@ -172,26 +200,27 @@ export async function deleteBusinessStatGroupAction(formData: FormData) {
     .eq("client_id", clientId);
 
   if (error) {
-    redirect(getManagePath(clientId, undefined, `Could not retire group: ${error.message}`));
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not retire group: ${error.message}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
-  redirect(getManagePath(clientId, "Group retired."));
+  redirect(getBusinessStatsPath(clientId, "Group retired.", undefined, returnPath));
 }
 
 export async function addBusinessStatCategoryAction(formData: FormData) {
   const clientId = getValue(formData, "clientId");
+  const returnPath = getValue(formData, "returnPath");
   const { client } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
   const config = await getBusinessStatsConfig(client.clientId);
   const name = getValue(formData, "name");
   const groupId = getValue(formData, "groupId") || null;
 
   if (!name) {
-    redirect(getManagePath(clientId, undefined, "Stat name is required."));
+    redirect(getBusinessStatsPath(clientId, undefined, "Stat name is required.", returnPath));
   }
 
   if (groupId && !config.groups.some((group) => group.id === groupId && group.isActive !== false)) {
-    redirect(getManagePath(clientId, undefined, "Pick a valid stat group."));
+    redirect(getBusinessStatsPath(clientId, undefined, "Pick a valid stat group.", returnPath));
   }
 
   const admin = createFocusBoardAdminClient();
@@ -208,15 +237,16 @@ export async function addBusinessStatCategoryAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(getManagePath(clientId, undefined, `Could not add stat: ${error.message}`));
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not add stat: ${error.message}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
-  redirect(getManagePath(clientId, `Stat "${name}" added.`));
+  redirect(getBusinessStatsPath(clientId, `Stat "${name}" added.`, undefined, returnPath));
 }
 
 export async function updateBusinessStatCategoryAction(formData: FormData) {
   const clientId = getValue(formData, "clientId");
+  const returnPath = getValue(formData, "returnPath");
   const categoryId = getValue(formData, "categoryId");
   const { client } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
   const config = await getBusinessStatsConfig(client.clientId);
@@ -224,11 +254,11 @@ export async function updateBusinessStatCategoryAction(formData: FormData) {
   const groupId = getValue(formData, "groupId") || null;
 
   if (!category) {
-    redirect(getManagePath(clientId, undefined, "Stat not found."));
+    redirect(getBusinessStatsPath(clientId, undefined, "Stat not found.", returnPath));
   }
 
   if (groupId && !config.groups.some((group) => group.id === groupId && group.isActive !== false)) {
-    redirect(getManagePath(clientId, undefined, "Pick a valid stat group."));
+    redirect(getBusinessStatsPath(clientId, undefined, "Pick a valid stat group.", returnPath));
   }
 
   const admin = createFocusBoardAdminClient();
@@ -247,15 +277,16 @@ export async function updateBusinessStatCategoryAction(formData: FormData) {
     .eq("client_id", clientId);
 
   if (error) {
-    redirect(getManagePath(clientId, undefined, `Could not save stat: ${error.message}`));
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not save stat: ${error.message}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
-  redirect(getManagePath(clientId, "Stat saved."));
+  redirect(getBusinessStatsPath(clientId, "Stat saved.", undefined, returnPath));
 }
 
 export async function toggleBusinessStatCategoryVisibilityAction(formData: FormData) {
   const clientId = getValue(formData, "clientId");
+  const returnPath = getValue(formData, "returnPath");
   const categoryId = getValue(formData, "categoryId");
   const shouldShow = getValue(formData, "nextVisible") === "true";
   await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
@@ -276,15 +307,16 @@ export async function toggleBusinessStatCategoryVisibilityAction(formData: FormD
     .eq("client_id", clientId);
 
   if (error) {
-    redirect(getManagePath(clientId, undefined, `Could not update stat visibility: ${error.message}`));
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not update stat visibility: ${error.message}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
-  redirect(getManagePath(clientId, shouldShow ? "Stat shown." : "Stat hidden."));
+  redirect(getBusinessStatsPath(clientId, shouldShow ? "Stat shown." : "Stat hidden.", undefined, returnPath));
 }
 
 export async function deleteBusinessStatCategoryAction(formData: FormData) {
   const clientId = getValue(formData, "clientId");
+  const returnPath = getValue(formData, "returnPath");
   const categoryId = getValue(formData, "categoryId");
   await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
   const admin = createFocusBoardAdminClient();
@@ -296,9 +328,9 @@ export async function deleteBusinessStatCategoryAction(formData: FormData) {
     .eq("client_id", clientId);
 
   if (error) {
-    redirect(getManagePath(clientId, undefined, `Could not retire stat: ${error.message}`));
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not retire stat: ${error.message}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
-  redirect(getManagePath(clientId, "Stat retired."));
+  redirect(getBusinessStatsPath(clientId, "Stat retired.", undefined, returnPath));
 }
