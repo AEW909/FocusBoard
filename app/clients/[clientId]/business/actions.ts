@@ -58,7 +58,6 @@ export async function saveBusinessStatsEntriesAction(formData: FormData) {
   const updates = await Promise.all(
     Array.from(visibleCategoryIds).map((categoryId) => {
       const value = getNumberValue(formData.get(`value:${categoryId}`));
-      const note = getValue(formData, `note:${categoryId}`);
 
       if (value === null) {
         return Promise.resolve({ error: null });
@@ -72,7 +71,6 @@ export async function saveBusinessStatsEntriesAction(formData: FormData) {
             category_id: categoryId,
             week_start: weekStart,
             value,
-            note,
             updated_by: user.id,
             created_by: user.id,
           },

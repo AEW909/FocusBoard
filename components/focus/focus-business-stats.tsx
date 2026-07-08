@@ -28,8 +28,8 @@ type FocusBusinessStatsProps = {
 type ReviewMode = "raw" | "rolling" | "change";
 type ViewMode = "collect" | "review";
 
-const SVG_WIDTH = 760;
-const SVG_HEIGHT = 320;
+const SVG_WIDTH = 920;
+const SVG_HEIGHT = 380;
 const CHART_PADDING = {
   top: 24,
   right: 24,
@@ -47,6 +47,7 @@ function formatNumber(value: number, unit: BusinessStatUnit, prefix: string, suf
   const formatted = new Intl.NumberFormat("en-GB", {
     maximumFractionDigits,
   }).format(value);
+  const readableSuffix = suffix && unit === "number" ? ` ${suffix.trim()}` : suffix;
 
   if (unit === "currency") {
     return `${prefix || "£"}${formatted}${suffix}`;
@@ -56,7 +57,7 @@ function formatNumber(value: number, unit: BusinessStatUnit, prefix: string, suf
     return `${prefix}${formatted}${suffix || "%"}`;
   }
 
-  return `${prefix}${formatted}${suffix}`;
+  return `${prefix}${formatted}${readableSuffix}`;
 }
 
 function addDays(weekKey: string, days: number) {
@@ -161,6 +162,10 @@ export function FocusBusinessStats({
     [categories, groups],
   );
   const ungroupedCategories = categories.filter((category) => !category.groupId);
+  const groupNameById = useMemo(
+    () => new Map(groups.map((group) => [group.id, group.name])),
+    [groups],
+  );
   const activeCategories = categories.filter((category) => {
     if (!enabledCategoryIds.has(category.id)) {
       return false;
@@ -286,14 +291,6 @@ export function FocusBusinessStats({
                                 type="number"
                               />
                             </label>
-                            <label className="field">
-                              <span>Note</span>
-                              <input
-                                defaultValue={entry?.note ?? ""}
-                                name={`note:${category.id}`}
-                                placeholder="Optional context"
-                              />
-                            </label>
                             {category.monthlyTarget !== null ? (
                               <p className="focus-business-target">
                                 Monthly goal: {formatNumber(category.monthlyTarget, category.unit, category.prefix, category.suffix)}
@@ -328,14 +325,6 @@ export function FocusBusinessStats({
                               placeholder="0"
                               step="any"
                               type="number"
-                            />
-                          </label>
-                          <label className="field">
-                            <span>Note</span>
-                            <input
-                              defaultValue={entry?.note ?? ""}
-                              name={`note:${category.id}`}
-                              placeholder="Optional context"
                             />
                           </label>
                           {category.monthlyTarget !== null ? (
@@ -379,34 +368,66 @@ export function FocusBusinessStats({
 
             <div className="focus-business-review-layout">
               <aside className="focus-business-toggle-panel">
-                <p className="focus-panel-label">Groups</p>
-                <div className="focus-business-toggle-list">
-                  {groups.map((group) => (
-                    <button
-                      className={enabledGroupIds.has(group.id) ? "is-active" : ""}
-                      key={group.id}
-                      onClick={() => handleGroupToggle(group.id)}
-                      type="button"
-                    >
-                      <span style={{ background: group.color }} />
-                      {group.name}
-                    </button>
-                  ))}
+                <div>
+                  <p className="focus-panel-label">Show and hide stats</p>
+                  <p className="focus-business-filter-help">Groups collapse to keep the chart controls tidy.</p>
                 </div>
+                <div className="focus-business-filter-groups">
+                  {groupedCategories.map(({ group, categories: groupCategories }) =>
+                    groupCategories.length > 0 ? (
+                      <details className="focus-business-filter-group" key={group.id} open>
+                        <summary>
+                          <span style={{ background: group.color }} />
+                          <strong>{group.name}</strong>
+                          <button
+                            className={enabledGroupIds.has(group.id) ? "is-active" : ""}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              handleGroupToggle(group.id);
+                            }}
+                            type="button"
+                          >
+                            {enabledGroupIds.has(group.id) ? "Shown" : "Hidden"}
+                          </button>
+                        </summary>
+                        <div className="focus-business-toggle-list">
+                          {groupCategories.map((category) => (
+                            <button
+                              className={enabledCategoryIds.has(category.id) ? "is-active" : ""}
+                              key={category.id}
+                              onClick={() => handleCategoryToggle(category.id)}
+                              type="button"
+                            >
+                              <span style={{ background: category.color }} />
+                              {category.name}
+                            </button>
+                          ))}
+                        </div>
+                      </details>
+                    ) : null,
+                  )}
 
-                <p className="focus-panel-label">Stats</p>
-                <div className="focus-business-toggle-list">
-                  {categories.map((category) => (
-                    <button
-                      className={enabledCategoryIds.has(category.id) ? "is-active" : ""}
-                      key={category.id}
-                      onClick={() => handleCategoryToggle(category.id)}
-                      type="button"
-                    >
-                      <span style={{ background: category.color }} />
-                      {category.name}
-                    </button>
-                  ))}
+                  {ungroupedCategories.length > 0 ? (
+                    <details className="focus-business-filter-group" open>
+                      <summary>
+                        <span />
+                        <strong>Ungrouped</strong>
+                      </summary>
+                      <div className="focus-business-toggle-list">
+                        {ungroupedCategories.map((category) => (
+                          <button
+                            className={enabledCategoryIds.has(category.id) ? "is-active" : ""}
+                            key={category.id}
+                            onClick={() => handleCategoryToggle(category.id)}
+                            type="button"
+                          >
+                            <span style={{ background: category.color }} />
+                            {category.name}
+                          </button>
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
                 </div>
               </aside>
 
@@ -503,11 +524,15 @@ export function FocusBusinessStats({
                 <div className="focus-business-legend">
                   {activeCategories.map((category) => {
                     const latest = getSeriesValues(category, weeks, entryMap, reviewMode).at(-1) ?? 0;
+                    const groupName = category.groupId ? groupNameById.get(category.groupId) : "Ungrouped";
 
                     return (
                       <div className="focus-business-legend-item" key={category.id}>
                         <span style={{ background: category.color }} />
-                        <strong>{category.name}</strong>
+                        <strong>
+                          {category.name}
+                          <small>{groupName}</small>
+                        </strong>
                         <em>
                           {reviewMode === "change"
                             ? `${latest.toFixed(1)}%`

@@ -54,7 +54,6 @@ export type BusinessStatEntry = {
   categoryId: string;
   weekStart: string;
   value: number;
-  note: string;
 };
 
 type GroupRow = {
@@ -89,7 +88,6 @@ type EntryRow = {
   category_id: string;
   week_start: string;
   value: number;
-  note: string;
 };
 
 export type BusinessStatsConfig = {
@@ -149,7 +147,6 @@ function mapEntry(row: EntryRow): BusinessStatEntry {
     categoryId: row.category_id,
     weekStart: row.week_start,
     value: Number(row.value),
-    note: row.note,
   };
 }
 
@@ -220,7 +217,7 @@ export async function getBusinessStatsData(
 
   const { data, error } = await admin
     .from("business_stat_entries")
-    .select("id, client_id, category_id, week_start, value, note")
+    .select("id, client_id, category_id, week_start, value")
     .eq("client_id", clientId)
     .gte("week_start", rangeStart)
     .lt("week_start", rangeEnd)

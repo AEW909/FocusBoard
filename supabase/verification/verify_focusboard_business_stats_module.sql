@@ -114,10 +114,9 @@ new_entry as (
     client_id,
     category_id,
     week_start,
-    value,
-    note
+    value
   )
-  select client_id, id, date '2026-07-06', 12, 'rollback smoke'
+  select client_id, id, date '2026-07-06', 12
   from new_category
   returning id, client_id, category_id, week_start, value
 )
