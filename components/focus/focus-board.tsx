@@ -47,6 +47,7 @@ const FOCUS_THEME_PALETTES: Record<
 
 type FocusBoardProps = {
   board: FocusBoardData;
+  businessStatsEnabled: boolean;
   contentLabEnabled: boolean;
   initialView: "week" | "month";
   showInlineSignOut?: boolean;
@@ -149,6 +150,7 @@ function buildDonutSegments(values: { color: string; value: number }[], circumfe
 
 export function FocusBoard({
   board,
+  businessStatsEnabled,
   contentLabEnabled,
   initialView,
   showInlineSignOut = false,
@@ -233,6 +235,9 @@ export function FocusBoard({
   const contentLabHref = board.settings.clientId
     ? `/clients/${board.settings.clientId}/content`
     : `/focus-content/${board.settings.boardSlug}`;
+  const businessStatsHref = board.settings.clientId
+    ? `/clients/${board.settings.clientId}/business`
+    : null;
 
   return (
     <div className="focus-board-shell focus-board-shell-neon">
@@ -255,14 +260,24 @@ export function FocusBoard({
             <span>{board.weeksHit} weeks hit this month</span>
             <span>{board.monthPoints} points banked</span>
           </div>
-          {contentLabEnabled ? (
-            <a
-              className="focus-content-launch-link"
-              href={contentLabHref}
-            >
-              Open Content Lab
-            </a>
-          ) : null}
+          <div className="focus-module-launch-row">
+            {contentLabEnabled ? (
+              <a
+                className="focus-content-launch-link"
+                href={contentLabHref}
+              >
+                Open Content Lab
+              </a>
+            ) : null}
+            {businessStatsEnabled && businessStatsHref ? (
+              <a
+                className="focus-content-launch-link"
+                href={businessStatsHref}
+              >
+                Open Business Stats
+              </a>
+            ) : null}
+          </div>
         </div>
 
         <div className="focus-hero-stickers">

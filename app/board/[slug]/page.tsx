@@ -65,6 +65,7 @@ export default async function BoardPage({ params, searchParams }: BoardPageProps
         <FocusPullToRefresh label="Release to refresh board" />
         <FocusBoard
           board={board}
+          businessStatsEnabled={client.businessStatsEnabled}
           contentLabEnabled={client.contentLabEnabled && client.canUseContentLab}
           initialView={initialView}
           showInlineSignOut={!showSessionBar}

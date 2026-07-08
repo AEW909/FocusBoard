@@ -9,6 +9,7 @@ export type FocusClientAccess = {
   displayName: string;
   status: "active" | "inactive";
   contentLabEnabled: boolean;
+  businessStatsEnabled: boolean;
   canUseContentLab: boolean;
   membershipRole: "client_admin" | "client_user";
   boardKey: string;
@@ -36,6 +37,7 @@ type ClientRow = {
   display_name: string;
   status: FocusClientAccess["status"];
   content_lab_enabled: boolean;
+  business_stats_enabled: boolean;
 };
 
 type BoardRow = {
@@ -89,7 +91,7 @@ export async function getFocusBoardAccessForUser(userId: string): Promise<FocusB
   const [clientResult, boardResult] = await Promise.all([
     admin
       .from("clients")
-      .select("id, client_key, display_name, status, content_lab_enabled")
+      .select("id, client_key, display_name, status, content_lab_enabled, business_stats_enabled")
       .in("id", clientIds),
     admin
       .from("focus_board_settings")
@@ -128,6 +130,7 @@ export async function getFocusBoardAccessForUser(userId: string): Promise<FocusB
         displayName: client.display_name,
         status: client.status,
         contentLabEnabled: client.content_lab_enabled,
+        businessStatsEnabled: client.business_stats_enabled,
         canUseContentLab: membership.content_lab_access,
         membershipRole: membership.role,
         boardKey: board.board_key,
@@ -184,7 +187,7 @@ export async function getManagedFocusClients(): Promise<FocusManagedClient[]> {
   const [clientResult, boardResult] = await Promise.all([
     admin
       .from("clients")
-      .select("id, client_key, display_name, status, content_lab_enabled")
+      .select("id, client_key, display_name, status, content_lab_enabled, business_stats_enabled")
       .order("display_name", { ascending: true }),
     admin
       .from("focus_board_settings")
@@ -216,6 +219,7 @@ export async function getManagedFocusClients(): Promise<FocusManagedClient[]> {
       displayName: client.display_name,
       status: client.status,
       contentLabEnabled: client.content_lab_enabled,
+      businessStatsEnabled: client.business_stats_enabled,
       canUseContentLab: client.content_lab_enabled,
       boardKey: board.board_key,
       boardSlug: board.board_slug,
@@ -233,7 +237,7 @@ async function findManagedClientBy(
   const query = admin
     .from("focus_board_settings")
     .select(
-      "client_id, board_key, board_slug, admin_slug, theme_preset, clients!inner(id, client_key, display_name, status, content_lab_enabled)",
+      "client_id, board_key, board_slug, admin_slug, theme_preset, clients!inner(id, client_key, display_name, status, content_lab_enabled, business_stats_enabled)",
     )
     .eq(selector, value)
     .maybeSingle();
@@ -256,6 +260,7 @@ async function findManagedClientBy(
     displayName: client.display_name,
     status: client.status,
     contentLabEnabled: client.content_lab_enabled,
+    businessStatsEnabled: client.business_stats_enabled,
     canUseContentLab: client.content_lab_enabled,
     boardKey: data.board_key,
     boardSlug: data.board_slug,
@@ -340,6 +345,25 @@ export async function requireFocusContentLabAccessByClientId(clientId: string, n
   }
 
   if (!lookup.client.contentLabEnabled) {
+    notFound();
+  }
+
+  return {
+    user,
+    access: lookup.access,
+    client: lookup.client,
+  };
+}
+
+export async function requireFocusBusinessStatsAccessByClientId(clientId: string, nextPath?: string) {
+  const user = await requireUser(nextPath ?? `/clients/${clientId}/business`);
+  const lookup = await getClientLookupForUser(user.id, "clientId", clientId);
+
+  if (!lookup.client || lookup.client.status !== "active") {
+    notFound();
+  }
+
+  if (!lookup.client.businessStatsEnabled) {
     notFound();
   }
 

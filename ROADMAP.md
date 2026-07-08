@@ -598,6 +598,57 @@ Completion:
   from `focusboard.focus_board_settings`.
 - Outstanding deployment work: push and redeploy this repository
 
+### Slice 11 - Optional Board Business Stats Module
+
+Status: `IN PROGRESS`
+
+Goal:
+
+Add a board-level optional business module where the platform owner configures stat groups,
+weekly stat categories, visibility, and targets, and assigned board users collect/review weekly
+business numbers over time.
+
+Deliverables:
+
+- Add and enforce a per-client `business_stats_enabled` feature flag.
+- Add `business_stat_groups`, `business_stat_categories`, and `business_stat_entries`.
+- Keep all business stats scoped to the client/board tenant boundary.
+- Add platform-owner CRUD for stat groups and categories in the client management page.
+- Add group/category visibility toggles that preserve existing historical data.
+- Add optional weekly target lines per stat.
+- Add `/clients/[clientId]/business` with collection and review views.
+- Let board users save weekly numeric entries, including previous-week backfill/editing.
+- Add a review graph defaulting to the last three months, with group/stat toggles and raw,
+  rolling-average, and percent-change views.
+- Hide board entry points while disabled and deny direct access server-side.
+
+Acceptance:
+
+- Disabled clients see no Business Stats entry point and direct route access is denied.
+- Enabled clients show Business Stats from the board and platform client cards.
+- Platform owner can create, edit, hide/show, and retire stat groups and categories without SQL.
+- Board users can submit and update numeric stats for a selected week.
+- Review defaults to the last three months and raw weekly numbers.
+- Users can toggle groups and individual stats in the graph.
+- Raw review shows admin-configured target lines.
+- Business stats for one client cannot be read or written through another client route.
+- Checks: `npm run typecheck`, `npm run build`, and `git diff --check`.
+
+Progress:
+
+- Local implementation added on 2026-07-08.
+- Migration file created: `supabase/migrations/20260708072946_focusboard_business_stats_module.sql`.
+- Migration `focusboard_business_stats_module` applied to Supabase project
+  `xoafnjhsxxczmfavmwoq` on 2026-07-08.
+- Verification: `business_stats_enabled` exists on `focusboard.clients`; 3 Business Stats tables
+  exist; 4 tenant-boundary constraints exist; RLS is enabled on all 3 tables; `service_role` has
+  privileges on all 3 tables; migration history records `20260708072946` as applied.
+- Live smoke verification: `supabase/verification/verify_focusboard_business_stats_module.sql`
+  passed against project `xoafnjhsxxczmfavmwoq`, including rollback-only feature flag, group,
+  category, weekly entry writes, and cross-client group/category rejection.
+- Local checks passed: `npm run typecheck`, `npm run build`, and `git diff --check`.
+- Outstanding deployment work: commit, push, and redeploy.
+
 ## Verification Matrix
 
 Each implementation slice should run the checks relevant to its scope:
@@ -615,6 +666,9 @@ Each implementation slice should run the checks relevant to its scope:
 - PhysioNote no longer resolves FocusBoard routes
 - Platform owner can create a new FocusBoard user and see the expected board assignment
 - Platform owner can switch a board between theme presets and see the selected colors render
+- Platform owner can enable Business Stats, configure groups/stats/targets, and see the board
+  module entry point
+- Client user can save weekly Business Stats entries and review the last three months of trends
 
 ## Migration Safety
 
@@ -662,6 +716,9 @@ Each implementation slice should run the checks relevant to its scope:
   rule.
 - 2026-06-27: Weekly roundups are user-scoped per board/week and store only seen-state; scores,
   reward progress, and challenge breakdowns remain derived from `focusboard.focus_board_events`.
+- 2026-07-08: Model Business Stats as a board-level optional module with admin-configured groups,
+  numeric stat categories, visibility toggles, and weekly entries rather than per-user private
+  metrics.
 
 ## Change Log
 
@@ -722,3 +779,6 @@ Each implementation slice should run the checks relevant to its scope:
   assign their first board without leaving the app.
 - 2026-06-14: Slice 10 completed locally. Board theme presets were added with a persisted
   `theme_preset` setting and the live Supabase schema was updated accordingly.
+- 2026-07-08: Slice 11 started locally. Optional Business Stats support was added with a client
+  feature flag, group/category configuration, weekly entry collection, and last-three-months review
+  graph; Supabase migration and live rollback smoke verification passed.

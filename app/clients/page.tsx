@@ -62,6 +62,9 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                 <span className={client.contentLabEnabled ? "is-enabled" : "is-disabled"}>
                   Content Lab {client.contentLabEnabled ? "enabled" : "not assigned"}
                 </span>
+                <span className={client.businessStatsEnabled ? "is-enabled" : "is-disabled"}>
+                  Business Stats {client.businessStatsEnabled ? "enabled" : "not assigned"}
+                </span>
               </div>
 
               <div className="focus-client-actions">
@@ -85,6 +88,14 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                     href={`/clients/${client.clientId}/content`}
                   >
                     Content Lab
+                  </Link>
+                ) : null}
+                {client.status === "active" && client.businessStatsEnabled ? (
+                  <Link
+                    className="button focus-client-content-button"
+                    href={`/clients/${client.clientId}/business`}
+                  >
+                    Business Stats
                   </Link>
                 ) : null}
                 <form action={setFocusClientStatusAction}>

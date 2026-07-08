@@ -5703,6 +5703,288 @@ a {
   margin-top: 0;
 }
 
+.focus-module-launch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.focus-business-shell {
+  min-height: 100vh;
+  color: var(--focus-text);
+}
+
+.focus-business-container {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+  display: grid;
+  gap: 18px;
+}
+
+.focus-business-header,
+.focus-business-panel,
+.focus-business-empty {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--focus-accent-bright) 16%, transparent), transparent 28%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--focus-accent-secondary) 14%, transparent), transparent 26%),
+    var(--focus-surface-strong);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 22px 54px rgba(0, 0, 0, 0.34);
+}
+
+.focus-business-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 28px;
+  border-radius: 30px;
+}
+
+.focus-business-header h1 {
+  margin: 0 0 10px;
+  color: var(--focus-text-strong);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.focus-business-header p:last-child,
+.focus-business-panel-head p,
+.focus-business-empty {
+  color: var(--focus-text-muted);
+  line-height: 1.65;
+}
+
+.focus-business-panel {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 28px;
+}
+
+.focus-business-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.focus-business-panel-head h2 {
+  margin: 0 0 8px;
+  color: var(--focus-text-strong);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+  letter-spacing: -0.04em;
+}
+
+.focus-business-week-field {
+  width: min(280px, 100%);
+}
+
+.focus-business-collection-stack,
+.focus-business-admin-list {
+  display: grid;
+  gap: 14px;
+}
+
+.focus-business-group-card,
+.focus-business-input-card,
+.focus-business-toggle-panel,
+.focus-business-chart-card,
+.focus-business-admin-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.focus-business-group-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.focus-business-group-head,
+.focus-business-admin-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.focus-business-group-head > span,
+.focus-business-admin-head > span,
+.focus-business-toggle-list span,
+.focus-business-legend-item span {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  background: var(--focus-accent);
+}
+
+.focus-business-group-head h3,
+.focus-business-admin-head h3 {
+  margin: 0;
+  color: var(--focus-text-strong);
+}
+
+.focus-business-admin-head p {
+  margin: 3px 0 0;
+  color: var(--focus-text-muted);
+  font-size: 0.82rem;
+}
+
+.focus-business-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.focus-business-input-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.focus-business-target {
+  margin: 0;
+  color: var(--focus-accent);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.focus-business-save {
+  justify-self: start;
+}
+
+.focus-business-mode-switch,
+.focus-business-toggle-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.focus-business-mode-switch button,
+.focus-business-toggle-list button {
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--focus-text-muted);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.focus-business-mode-switch button {
+  padding: 0 13px;
+}
+
+.focus-business-mode-switch button.is-active,
+.focus-business-toggle-list button.is-active {
+  border-color: color-mix(in srgb, var(--focus-accent-bright) 54%, transparent);
+  background: color-mix(in srgb, var(--focus-accent-bright) 18%, transparent);
+  color: var(--focus-text-strong);
+}
+
+.focus-business-review-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.35fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.focus-business-toggle-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 14px;
+}
+
+.focus-business-toggle-list {
+  display: grid;
+}
+
+.focus-business-toggle-list button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 11px;
+  text-align: left;
+}
+
+.focus-business-chart-card {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.focus-business-chart {
+  width: 100%;
+  height: auto;
+  min-height: 260px;
+}
+
+.focus-business-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.focus-business-legend-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.focus-business-legend-item strong {
+  min-width: 0;
+  color: var(--focus-text-strong);
+  font-size: 0.86rem;
+}
+
+.focus-business-legend-item em {
+  color: var(--focus-accent);
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.focus-business-empty {
+  padding: 22px;
+  border-radius: 24px;
+}
+
+.focus-business-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.focus-business-admin-grid h3 {
+  margin: 0;
+  color: var(--focus-text-strong);
+}
+
+.focus-business-admin-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.focus-business-admin-card-hidden {
+  opacity: 0.64;
+}
+
 @media (max-width: 900px) {
   .hero,
   .grid,
@@ -5943,6 +6225,14 @@ a {
   .focus-membership-feature-bar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .focus-business-header,
+  .focus-business-panel-head,
+  .focus-business-review-layout,
+  .focus-business-admin-grid {
+    grid-template-columns: 1fr;
+    display: grid;
   }
 
   .focus-user-membership-item {
