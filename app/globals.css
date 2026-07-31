@@ -6045,6 +6045,43 @@ a {
   gap: 14px;
 }
 
+.focus-business-setup-form,
+.focus-business-edit-form {
+  gap: 12px;
+}
+
+.focus-business-setup-form .field,
+.focus-business-edit-form .field {
+  gap: 6px;
+}
+
+.focus-business-setup-form .field span,
+.focus-business-edit-form .field span {
+  font-size: 0.86rem;
+}
+
+.focus-business-setup-form .field input,
+.focus-business-setup-form .select-field,
+.focus-business-edit-form .field input,
+.focus-business-edit-form .select-field {
+  min-height: 42px;
+  border-radius: 14px;
+  padding: 10px 14px;
+}
+
+.focus-business-setup-form input[type="color"],
+.focus-business-edit-form input[type="color"] {
+  height: 34px;
+  min-height: 34px;
+  padding: 3px;
+  border-radius: 999px;
+}
+
+.focus-business-submit-button {
+  justify-self: start;
+  min-width: 150px;
+}
+
 .focus-admin-settings-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -6070,8 +6107,23 @@ a {
 
 .focus-business-admin-card {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 12px;
+  padding: 14px;
+}
+
+.focus-business-card-actions {
+  grid-template-columns: repeat(2, max-content);
+  justify-content: start;
+  gap: 10px;
+  align-items: center;
+}
+
+.focus-business-card-actions .button {
+  min-height: 34px;
+}
+
+.focus-business-card-actions .button-management {
+  padding: 8px 12px;
 }
 
 .focus-business-admin-card-hidden {
@@ -6113,9 +6165,9 @@ a {
 
 .focus-business-nested-stats {
   display: grid;
-  gap: 12px;
-  margin-top: 14px;
-  padding-top: 14px;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 

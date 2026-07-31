@@ -61,7 +61,7 @@ function BusinessStatCategoryEditor({
         </div>
       </div>
 
-      <form action={updateBusinessStatCategoryAction} className="focus-control-form">
+      <form action={updateBusinessStatCategoryAction} className="focus-control-form focus-business-edit-form">
         <input name="clientId" type="hidden" value={clientId} />
         <input name="returnPath" type="hidden" value={returnPath} />
         <input name="categoryId" type="hidden" value={category.id} />
@@ -112,12 +112,12 @@ function BusinessStatCategoryEditor({
             type="number"
           />
         </label>
-        <button className="button button-secondary" type="submit">
+        <button className="button button-secondary button-small" type="submit">
           Save stat
         </button>
       </form>
 
-      <div className="focus-membership-actions">
+      <div className="focus-membership-actions focus-business-card-actions">
         <form action={toggleBusinessStatCategoryVisibilityAction}>
           <input name="clientId" type="hidden" value={clientId} />
           <input name="returnPath" type="hidden" value={returnPath} />
@@ -127,7 +127,7 @@ function BusinessStatCategoryEditor({
             type="hidden"
             value={category.isVisible ? "false" : "true"}
           />
-          <button className="button focus-membership-content-button" type="submit">
+          <button className="button button-small focus-membership-content-button" type="submit">
             {category.isVisible ? "Hide stat" : "Show stat"}
           </button>
         </form>
@@ -135,7 +135,7 @@ function BusinessStatCategoryEditor({
           <input name="clientId" type="hidden" value={clientId} />
           <input name="returnPath" type="hidden" value={returnPath} />
           <input name="categoryId" type="hidden" value={category.id} />
-          <button className="button button-management" type="submit">
+          <button className="button button-small button-management" type="submit">
             Retire stat
           </button>
         </form>
@@ -198,7 +198,7 @@ export default async function BusinessStatsSettingsPage({
               ) : null}
 
               <div className="focus-business-admin-grid">
-                <form action={addBusinessStatGroupAction} className="focus-control-form">
+                <form action={addBusinessStatGroupAction} className="focus-control-form focus-business-setup-form">
                   <input name="clientId" type="hidden" value={client.clientId} />
                   <input name="returnPath" type="hidden" value={returnPath} />
                   <h3>Add stat group</h3>
@@ -210,12 +210,12 @@ export default async function BusinessStatsSettingsPage({
                     <span>Group colour</span>
                     <input defaultValue="#00f5d4" name="color" type="color" />
                   </label>
-                  <button className="button button-primary" type="submit">
+                  <button className="button button-primary button-small focus-business-submit-button" type="submit">
                     Add group
                   </button>
                 </form>
 
-                <form action={addBusinessStatCategoryAction} className="focus-control-form">
+                <form action={addBusinessStatCategoryAction} className="focus-control-form focus-business-setup-form">
                   <input name="clientId" type="hidden" value={client.clientId} />
                   <input name="returnPath" type="hidden" value={returnPath} />
                   <h3>Add stat</h3>
@@ -258,7 +258,7 @@ export default async function BusinessStatsSettingsPage({
                     <span>Monthly goal</span>
                     <input min={0} name="monthlyTarget" step="any" type="number" />
                   </label>
-                  <button className="button button-primary" type="submit">
+                  <button className="button button-primary button-small focus-business-submit-button" type="submit">
                     Add stat
                   </button>
                 </form>
@@ -294,7 +294,7 @@ export default async function BusinessStatsSettingsPage({
                           <span className="focus-business-group-toggle" aria-hidden="true" />
                         </summary>
 
-                        <form action={updateBusinessStatGroupAction} className="focus-control-two-up">
+                        <form action={updateBusinessStatGroupAction} className="focus-control-two-up focus-business-edit-form">
                           <input name="clientId" type="hidden" value={client.clientId} />
                           <input name="returnPath" type="hidden" value={returnPath} />
                           <input name="groupId" type="hidden" value={group.id} />
@@ -306,12 +306,12 @@ export default async function BusinessStatsSettingsPage({
                             <span>Colour</span>
                             <input defaultValue={group.color} name="color" type="color" />
                           </label>
-                          <button className="button button-secondary" type="submit">
+                          <button className="button button-secondary button-small" type="submit">
                             Save group
                           </button>
                         </form>
 
-                        <div className="focus-membership-actions">
+                        <div className="focus-membership-actions focus-business-card-actions">
                           <form action={toggleBusinessStatGroupVisibilityAction}>
                             <input name="clientId" type="hidden" value={client.clientId} />
                             <input name="returnPath" type="hidden" value={returnPath} />
@@ -321,7 +321,7 @@ export default async function BusinessStatsSettingsPage({
                               type="hidden"
                               value={group.isVisible ? "false" : "true"}
                             />
-                            <button className="button focus-membership-content-button" type="submit">
+                            <button className="button button-small focus-membership-content-button" type="submit">
                               {group.isVisible ? "Hide group" : "Show group"}
                             </button>
                           </form>
@@ -329,7 +329,7 @@ export default async function BusinessStatsSettingsPage({
                             <input name="clientId" type="hidden" value={client.clientId} />
                             <input name="returnPath" type="hidden" value={returnPath} />
                             <input name="groupId" type="hidden" value={group.id} />
-                            <button className="button button-management" type="submit">
+                            <button className="button button-small button-management" type="submit">
                               Retire group
                             </button>
                           </form>
