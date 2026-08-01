@@ -882,6 +882,40 @@ details > summary::-webkit-details-marker {
   gap: 16px;
 }
 
+.focus-user-management .focus-client-create-card {
+  gap: 20px;
+  padding: 24px;
+  overflow: visible;
+  background:
+    linear-gradient(135deg, rgba(11, 26, 37, 0.98), rgba(32, 18, 42, 0.98)),
+    rgba(8, 8, 18, 0.96);
+}
+
+.focus-user-management .focus-client-create-copy h2 {
+  margin-top: 0;
+  color: var(--focus-text-strong);
+}
+
+.focus-user-management .focus-client-create-copy p:last-child {
+  color: rgba(244, 240, 255, 0.84);
+}
+
+.focus-user-management .focus-client-create-form .field span {
+  color: var(--focus-text-strong);
+  font-weight: 900;
+}
+
+.focus-user-management .focus-client-create-form input,
+.focus-user-management .focus-client-create-form select {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(246, 250, 255, 0.96);
+  color: #0a1322;
+}
+
+.focus-user-management .focus-client-create-form input::placeholder {
+  color: rgba(10, 19, 34, 0.58);
+}
+
 .focus-client-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -992,6 +1026,28 @@ details > summary::-webkit-details-marker {
   color: rgba(244, 240, 255, 0.72);
 }
 
+.focus-user-management .focus-client-card {
+  background:
+    linear-gradient(145deg, rgba(14, 21, 38, 0.96), rgba(32, 22, 52, 0.94)),
+    rgba(8, 8, 18, 0.94);
+  color: var(--focus-text);
+}
+
+.focus-user-management .focus-client-card h2 {
+  color: var(--focus-text-strong);
+  text-shadow: none;
+}
+
+.focus-user-management .focus-user-card-email,
+.focus-user-management .focus-membership-empty {
+  color: rgba(244, 240, 255, 0.78);
+}
+
+.focus-user-management .focus-client-features span {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(244, 240, 255, 0.84);
+}
+
 .focus-user-membership-list {
   display: grid;
   gap: 12px;
@@ -1019,6 +1075,14 @@ details > summary::-webkit-details-marker {
 
 .focus-user-membership-item p {
   color: rgba(244, 240, 255, 0.72);
+}
+
+.focus-user-management .focus-user-membership-item {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.focus-user-management .focus-user-membership-item p {
+  color: rgba(244, 240, 255, 0.76);
 }
 
 .focus-client-actions .button {

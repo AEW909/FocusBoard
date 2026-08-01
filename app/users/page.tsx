@@ -43,7 +43,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   return (
     <>
       <ProtectedSessionBar backHref="/clients" backLabel="Back to clients" title="User Management" />
-      <main className="shell focus-client-hub">
+      <main className="shell focus-client-hub focus-user-management">
         <section className="focus-client-hub-hero">
           <p className="focus-kicker">Platform workspace</p>
           <h1>Create and assign users.</h1>
