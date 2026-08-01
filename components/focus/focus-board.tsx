@@ -782,8 +782,10 @@ export function FocusBoard({
                                   }
                                   type="button"
                                 >
-                                  <span aria-hidden="true">{option.checked ? "✓" : ""}</span>
-                                  {option.label}
+                                  <span className="focus-checkbox-indicator" aria-hidden="true">
+                                    {option.checked ? "✓" : ""}
+                                  </span>
+                                  <span className="focus-checkbox-label">{option.label}</span>
                                 </button>
                               );
                             })}
