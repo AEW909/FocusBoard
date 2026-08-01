@@ -40,6 +40,19 @@ a {
   text-decoration: none;
 }
 
+details > summary {
+  list-style: none;
+}
+
+details > summary::marker {
+  content: "";
+  font-size: 0;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
 .shell {
   width: min(1240px, calc(100% - 32px));
   margin: 0 auto;
