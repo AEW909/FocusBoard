@@ -333,9 +333,6 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
           <button className="button button-primary" type="submit">
             Start this week
           </button>
-          <button className="button button-secondary" type="submit">
-            Skip to board
-          </button>
         </form>
       )}
     </div>

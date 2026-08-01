@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { signOutAction } from "@/app/login/actions";
 import { updateFocusBoardAction, type UpdateFocusBoardState } from "@/app/focus/actions";
 import { FocusImageWithFallback } from "@/components/focus/focus-image-with-fallback";
@@ -54,6 +55,21 @@ type FocusBoardProps = {
 };
 
 type FocusView = "week" | "month";
+type FocusMetricDirection = "add" | "remove";
+
+type OptimisticMetricOperation = {
+  id: string;
+  slug: string;
+  monthKey: string;
+  weekKey: string;
+  sectionKey: string;
+  taskKey: string;
+  metricKey: string;
+  checkboxKey?: string;
+  direction: FocusMetricDirection;
+  points: number;
+  status: "pending" | "confirmed";
+};
 
 function formatWeekLabel(weekKey: string) {
   const date = new Date(`${weekKey}T00:00:00Z`);
@@ -148,15 +164,174 @@ function buildDonutSegments(values: { color: string; value: number }[], circumfe
   });
 }
 
+function getOptimisticOperationId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function applyOptimisticMetricOperations(
+  board: FocusBoardData,
+  operations: OptimisticMetricOperation[],
+): FocusBoardData {
+  if (operations.length === 0) {
+    return board;
+  }
+
+  const pointDeltasByMonth = new Map<string, number>();
+  const pointDeltasByTask = new Map<string, number>();
+  const pointDeltasBySection = new Map<string, number>();
+
+  const recordPointDelta = (operation: OptimisticMetricOperation, delta: number) => {
+    if (delta === 0) {
+      return;
+    }
+
+    pointDeltasByMonth.set(operation.monthKey, (pointDeltasByMonth.get(operation.monthKey) ?? 0) + delta);
+
+    if (operation.monthKey === board.monthKey) {
+      pointDeltasByTask.set(operation.taskKey, (pointDeltasByTask.get(operation.taskKey) ?? 0) + delta);
+      pointDeltasBySection.set(
+        operation.sectionKey,
+        (pointDeltasBySection.get(operation.sectionKey) ?? 0) + delta,
+      );
+    }
+  };
+
+  const nextWeeks = board.weeks.map((week) => {
+    let weekPointDelta = 0;
+    const nextSections = week.sections.map((section) => ({
+      ...section,
+      tasks: section.tasks.map((task) => ({
+        ...task,
+        metrics: task.metrics.map((metric) => {
+          const metricOperations = operations.filter(
+            (operation) =>
+              operation.weekKey === week.weekKey &&
+              operation.taskKey === task.key &&
+              operation.metricKey === metric.key,
+          );
+
+          if (metricOperations.length === 0) {
+            return metric;
+          }
+
+          if (metric.kind === "checkbox") {
+            const nextCheckboxOptions = (metric.checkboxOptions ?? []).map((option) => ({ ...option }));
+
+            metricOperations.forEach((operation) => {
+              const option = nextCheckboxOptions.find((item) => item.key === operation.checkboxKey);
+
+              if (!option) {
+                return;
+              }
+
+              if (operation.direction === "add" && !option.checked) {
+                option.checked = true;
+                weekPointDelta += operation.points;
+                recordPointDelta(operation, operation.points);
+              } else if (operation.direction === "remove" && option.checked) {
+                option.checked = false;
+                weekPointDelta -= operation.points;
+                recordPointDelta(operation, -operation.points);
+              }
+            });
+
+            return {
+              ...metric,
+              checkboxOptions: nextCheckboxOptions,
+              count: nextCheckboxOptions.filter((option) => option.checked).length,
+            };
+          }
+
+          let nextCount = metric.count;
+
+          metricOperations.forEach((operation) => {
+            if (operation.direction === "add") {
+              nextCount += 1;
+              weekPointDelta += operation.points;
+              recordPointDelta(operation, operation.points);
+            } else if (nextCount > 0) {
+              nextCount -= 1;
+              weekPointDelta -= operation.points;
+              recordPointDelta(operation, -operation.points);
+            }
+          });
+
+          return {
+            ...metric,
+            count: nextCount,
+          };
+        }),
+      })),
+    }));
+
+    const weekPoints = Math.max(0, week.weekPoints + weekPointDelta);
+
+    return {
+      ...week,
+      weekPoints,
+      hitTarget: weekPoints >= board.weeklyTarget,
+      sections: nextSections,
+      tasks: nextSections.flatMap((section) => section.tasks),
+    };
+  });
+
+  const monthPoints = Math.max(0, board.monthPoints + (pointDeltasByMonth.get(board.monthKey) ?? 0));
+  const weeksHit = nextWeeks.filter((week) => week.hitTarget).length;
+  const currentWeek = nextWeeks.find((week) => week.weekKey === board.currentWeek?.weekKey) ?? board.currentWeek;
+  const currentReward =
+    [...board.rewardTiers]
+      .reverse()
+      .find((tier) => monthPoints >= tier.minPoints && weeksHit >= tier.minWeeksHit) ?? null;
+  const nextReward =
+    board.rewardTiers.find((tier) => monthPoints < tier.minPoints || weeksHit < tier.minWeeksHit) ?? null;
+
+  return {
+    ...board,
+    monthPoints,
+    weeksHit,
+    currentWeek,
+    weeks: nextWeeks,
+    currentReward,
+    nextReward,
+    monthlyBreakdown: board.monthlyBreakdown.map((item) => ({
+      ...item,
+      points: Math.max(0, item.points + (pointDeltasByTask.get(item.key) ?? 0)),
+    })),
+    sectionBreakdown: board.sectionBreakdown.map((item) => ({
+      ...item,
+      points: Math.max(0, item.points + (pointDeltasBySection.get(item.key) ?? 0)),
+    })),
+    monthHistory: board.monthHistory.map((month) => ({
+      ...month,
+      points: Math.max(0, month.points + (pointDeltasByMonth.get(month.monthKey) ?? 0)),
+    })),
+  };
+}
+
 export function FocusBoard({
-  board,
+  board: sourceBoard,
   businessStatsEnabled,
   contentLabEnabled,
   initialView,
   showInlineSignOut = false,
 }: FocusBoardProps) {
-  const [state, formAction, pending] = useActionState(updateFocusBoardAction, initialState);
+  const router = useRouter();
+  const [state, setState] = useState<UpdateFocusBoardState>(initialState);
   const [view, setView] = useState<FocusView>(initialView);
+  const [, startTransition] = useTransition();
+  const [optimisticOperations, setOptimisticOperations] = useState<OptimisticMetricOperation[]>([]);
+  const [pendingCheckboxKeys, setPendingCheckboxKeys] = useState<Set<string>>(() => new Set());
+  const pendingCheckboxLocksRef = useRef<Set<string>>(new Set());
+  const board = useMemo(
+    () => applyOptimisticMetricOperations(sourceBoard, optimisticOperations),
+    [sourceBoard, optimisticOperations],
+  );
+
+  useEffect(() => {
+    setOptimisticOperations((current) => current.filter((operation) => operation.status === "pending"));
+    setPendingCheckboxKeys(new Set(pendingCheckboxLocksRef.current));
+  }, [sourceBoard]);
+
   const themePalette =
     FOCUS_THEME_PALETTES[board.settings.themePreset] ?? FOCUS_THEME_PALETTES.neon;
 
@@ -238,6 +413,80 @@ export function FocusBoard({
   const businessStatsHref = board.settings.clientId
     ? `/clients/${board.settings.clientId}/business`
     : null;
+
+  function handleMetricUpdate(operation: Omit<OptimisticMetricOperation, "id" | "slug" | "monthKey" | "status">) {
+    const checkboxLockKey = operation.checkboxKey
+      ? `${operation.weekKey}:${operation.taskKey}:${operation.metricKey}:${operation.checkboxKey}`
+      : null;
+
+    if (checkboxLockKey && pendingCheckboxLocksRef.current.has(checkboxLockKey)) {
+      return;
+    }
+
+    const optimisticOperation: OptimisticMetricOperation = {
+      ...operation,
+      id: getOptimisticOperationId(),
+      slug: board.settings.boardSlug,
+      monthKey: board.monthKey,
+      status: "pending",
+    };
+    const formData = new FormData();
+
+    formData.set("slug", optimisticOperation.slug);
+    formData.set("weekKey", optimisticOperation.weekKey);
+    formData.set("monthKey", optimisticOperation.monthKey);
+    formData.set("taskKey", optimisticOperation.taskKey);
+    formData.set("metricKey", optimisticOperation.metricKey);
+    formData.set("direction", optimisticOperation.direction);
+
+    if (optimisticOperation.checkboxKey) {
+      formData.set("checkboxKey", optimisticOperation.checkboxKey);
+    }
+
+    setState(initialState);
+    setOptimisticOperations((current) => [...current, optimisticOperation]);
+
+    if (checkboxLockKey) {
+      pendingCheckboxLocksRef.current.add(checkboxLockKey);
+      setPendingCheckboxKeys((current) => new Set(current).add(checkboxLockKey));
+    }
+
+    startTransition(() => {
+      void updateFocusBoardAction(initialState, formData)
+        .then((result) => {
+          if (result.error) {
+            setState(result);
+            setOptimisticOperations((current) =>
+              current.filter((item) => item.id !== optimisticOperation.id),
+            );
+            return;
+          }
+
+          setOptimisticOperations((current) =>
+            current.map((item) =>
+              item.id === optimisticOperation.id ? { ...item, status: "confirmed" } : item,
+            ),
+          );
+          router.refresh();
+        })
+        .catch(() => {
+          setState({ error: "That update could not be saved. Please try again." });
+          setOptimisticOperations((current) =>
+            current.filter((item) => item.id !== optimisticOperation.id),
+          );
+        })
+        .finally(() => {
+          if (checkboxLockKey) {
+            pendingCheckboxLocksRef.current.delete(checkboxLockKey);
+            setPendingCheckboxKeys((current) => {
+              const next = new Set(current);
+              next.delete(checkboxLockKey);
+              return next;
+            });
+          }
+        });
+    });
+  }
 
   return (
     <div className="focus-board-shell focus-board-shell-neon">
@@ -504,63 +753,82 @@ export function FocusBoard({
 
                         {isCheckboxMetric ? (
                           <div className="focus-checkbox-grid">
-                            {checkboxOptions.map((option) => (
-                              <form action={formAction} key={option.key}>
-                                <input name="slug" type="hidden" value={board.settings.boardSlug} />
-                                <input name="weekKey" type="hidden" value={currentWeek.weekKey} />
-                                <input name="monthKey" type="hidden" value={board.monthKey} />
-                                <input name="taskKey" type="hidden" value={task.key} />
-                                <input name="metricKey" type="hidden" value={metric.key} />
-                                <input name="checkboxKey" type="hidden" value={option.key} />
-                                <input name="direction" type="hidden" value={option.checked ? "remove" : "add"} />
+                            {checkboxOptions.map((option) => {
+                              const checkboxLockKey = `${currentWeek.weekKey}:${task.key}:${metric.key}:${option.key}`;
+                              const checkboxPending = pendingCheckboxKeys.has(checkboxLockKey);
+
+                              return (
                                 <button
-                                  className={`focus-checkbox-button ${option.checked ? "focus-checkbox-button-checked" : ""}`}
-                                  disabled={pending || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
-                                  type="submit"
+                                  className={`focus-checkbox-button ${option.checked ? "focus-checkbox-button-checked" : ""} ${
+                                    checkboxPending ? "focus-checkbox-button-pending" : ""
+                                  }`}
+                                  disabled={
+                                    checkboxPending ||
+                                    !board.canEditSelectedWeek ||
+                                    !task.isActive ||
+                                    !metric.isActive
+                                  }
+                                  key={option.key}
+                                  onClick={() =>
+                                    handleMetricUpdate({
+                                      weekKey: currentWeek.weekKey,
+                                      sectionKey: section.key,
+                                      taskKey: task.key,
+                                      metricKey: metric.key,
+                                      checkboxKey: option.key,
+                                      direction: option.checked ? "remove" : "add",
+                                      points: task.isBoosted ? metric.points * 2 : metric.points,
+                                    })
+                                  }
+                                  type="button"
                                 >
                                   <span aria-hidden="true">{option.checked ? "✓" : ""}</span>
                                   {option.label}
                                 </button>
-                              </form>
-                            ))}
+                              );
+                            })}
                           </div>
                         ) : (
                           <div className="focus-metric-controls focus-metric-controls-sticker">
-                            <form action={formAction}>
-                              <input name="slug" type="hidden" value={board.settings.boardSlug} />
-                              <input name="weekKey" type="hidden" value={currentWeek.weekKey} />
-                              <input name="monthKey" type="hidden" value={board.monthKey} />
-                              <input name="taskKey" type="hidden" value={task.key} />
-                              <input name="metricKey" type="hidden" value={metric.key} />
-                              <input name="direction" type="hidden" value="remove" />
-                              <button
-                                className="focus-icon-button"
-                                disabled={pending || metric.count === 0 || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
-                                type="submit"
-                              >
-                                -
-                              </button>
-                            </form>
+                            <button
+                              className="focus-icon-button"
+                              disabled={metric.count === 0 || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
+                              onClick={() =>
+                                handleMetricUpdate({
+                                  weekKey: currentWeek.weekKey,
+                                  sectionKey: section.key,
+                                  taskKey: task.key,
+                                  metricKey: metric.key,
+                                  direction: "remove",
+                                  points: task.isBoosted ? metric.points * 2 : metric.points,
+                                })
+                              }
+                              type="button"
+                            >
+                              -
+                            </button>
 
                             <span className={`focus-metric-count ${metTarget ? "focus-metric-count-hit" : ""}`}>
                               {metric.count}
                             </span>
 
-                            <form action={formAction}>
-                              <input name="slug" type="hidden" value={board.settings.boardSlug} />
-                              <input name="weekKey" type="hidden" value={currentWeek.weekKey} />
-                              <input name="monthKey" type="hidden" value={board.monthKey} />
-                              <input name="taskKey" type="hidden" value={task.key} />
-                              <input name="metricKey" type="hidden" value={metric.key} />
-                              <input name="direction" type="hidden" value="add" />
-                              <button
-                                className="focus-icon-button focus-icon-button-plus"
-                                disabled={pending || !board.canEditSelectedWeek || !task.isActive || !metric.isActive}
-                                type="submit"
-                              >
-                                +
-                              </button>
-                            </form>
+                            <button
+                              className="focus-icon-button focus-icon-button-plus"
+                              disabled={!board.canEditSelectedWeek || !task.isActive || !metric.isActive}
+                              onClick={() =>
+                                handleMetricUpdate({
+                                  weekKey: currentWeek.weekKey,
+                                  sectionKey: section.key,
+                                  taskKey: task.key,
+                                  metricKey: metric.key,
+                                  direction: "add",
+                                  points: task.isBoosted ? metric.points * 2 : metric.points,
+                                })
+                              }
+                              type="button"
+                            >
+                              +
+                            </button>
                           </div>
                         )}
                       </div>

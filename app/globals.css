@@ -4423,10 +4423,6 @@ details > summary::-webkit-details-marker {
   gap: 8px;
 }
 
-.focus-checkbox-grid form {
-  min-width: 0;
-}
-
 .focus-checkbox-button {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr);
@@ -4475,6 +4471,10 @@ details > summary::-webkit-details-marker {
   border-color: color-mix(in srgb, var(--focus-accent-bright) 58%, var(--focus-text-strong));
   background: var(--focus-text-strong);
   color: var(--focus-panel);
+}
+
+.focus-checkbox-button-pending {
+  opacity: 0.72;
 }
 
 .focus-checkbox-button:disabled {
@@ -5725,6 +5725,8 @@ details > summary::-webkit-details-marker {
 
 .focus-business-shell {
   min-height: 100vh;
+  margin-right: auto;
+  margin-left: auto;
   color: var(--focus-text);
 }
 
