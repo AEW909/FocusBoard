@@ -2834,8 +2834,7 @@ details > summary::-webkit-details-marker {
   font-weight: 950;
 }
 
-.focus-control-section-list,
-.focus-control-section-card {
+.focus-control-section-list {
   display: grid;
   gap: 16px;
 }
@@ -2855,42 +2854,6 @@ details > summary::-webkit-details-marker {
 
 .focus-control-section-shell {
   display: grid;
-}
-
-.focus-control-section-card {
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at top left, rgba(0, 245, 212, 0.08), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(255, 77, 202, 0.08), transparent 28%),
-    rgba(10, 9, 20, 0.82);
-}
-
-.focus-control-section-card-head {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 16px;
-  align-items: center;
-}
-
-.focus-control-section-title {
-  min-width: 0;
-}
-
-.focus-control-section-title h3,
-.focus-control-section-title p {
-  margin: 0;
-}
-
-.focus-control-section-title h3 {
-  color: #fff;
-  font-size: 1.3rem;
-}
-
-.focus-control-section-title p:last-child {
-  color: rgba(244, 240, 255, 0.68);
-  line-height: 1.45;
 }
 
 .focus-control-section-fields {
@@ -6401,14 +6364,6 @@ details > summary::-webkit-details-marker {
   .focus-control-task-summary-meta {
     grid-column: 1 / -1;
     justify-content: flex-start;
-  }
-
-  .focus-control-section-card-head {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .focus-control-section-card-head .focus-control-task-summary-meta {
-    grid-column: 1 / -1;
   }
 
   .focus-board-section-head {
