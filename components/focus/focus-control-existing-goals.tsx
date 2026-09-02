@@ -400,11 +400,14 @@ export function FocusControlExistingGoals({ adminSlug, assets, sections, tasks }
         ))}
       </div>
       {hiddenSections.length ? (
-        <div className="focus-control-hidden-list">
-          <div className="focus-control-hidden-list-head">
+        <details className="focus-control-hidden-list">
+          <summary className="focus-control-hidden-list-head">
             <p className="eyebrow">Paused sections</p>
             <span>{hiddenSections.length}</span>
-          </div>
+            <span className="focus-control-collapse-icon" aria-hidden="true">
+              +
+            </span>
+          </summary>
           {hiddenSections.map((section, index) => (
             <FocusControlSectionEditor
               adminSlug={adminSlug}
@@ -426,7 +429,7 @@ export function FocusControlExistingGoals({ adminSlug, assets, sections, tasks }
               sectionTotal={hiddenSections.length}
             />
           ))}
-        </div>
+        </details>
       ) : null}
     </div>
   );
@@ -718,11 +721,14 @@ function FocusControlSectionEditor({
             ))}
           </div>
           {hiddenTasks.length ? (
-            <div className="focus-control-hidden-list focus-control-hidden-list-compact">
-              <div className="focus-control-hidden-list-head">
+            <details className="focus-control-hidden-list focus-control-hidden-list-compact">
+              <summary className="focus-control-hidden-list-head">
                 <p className="eyebrow">Paused challenges</p>
                 <span>{hiddenTasks.length}</span>
-              </div>
+                <span className="focus-control-collapse-icon" aria-hidden="true">
+                  +
+                </span>
+              </summary>
               {hiddenTasks.map((task, index) => (
                 <FocusControlTaskEditor
                   adminSlug={adminSlug}
@@ -743,7 +749,7 @@ function FocusControlSectionEditor({
                   taskTotal={hiddenTasks.length}
                 />
               ))}
-            </div>
+            </details>
           ) : null}
         </div>
       </details>
@@ -1140,11 +1146,14 @@ function FocusControlTaskEditor({
               {addMetricError ? <p className="focus-control-error-tag">{addMetricError}</p> : null}
             </form>
             {hiddenMetrics.length ? (
-              <div className="focus-control-hidden-list focus-control-hidden-list-compact">
-                <div className="focus-control-hidden-list-head">
+              <details className="focus-control-hidden-list focus-control-hidden-list-compact">
+                <summary className="focus-control-hidden-list-head">
                   <p className="eyebrow">Paused metrics</p>
                   <span>{hiddenMetrics.length}</span>
-                </div>
+                  <span className="focus-control-collapse-icon" aria-hidden="true">
+                    +
+                  </span>
+                </summary>
                 {hiddenMetrics.map((metric) => (
                   <FocusControlMetricEditor
                     adminSlug={adminSlug}
@@ -1155,7 +1164,7 @@ function FocusControlTaskEditor({
                     task={task}
                   />
                 ))}
-              </div>
+              </details>
             ) : null}
           </div>
         </div>

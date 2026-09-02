@@ -2738,25 +2738,30 @@ details > summary::-webkit-details-marker {
   color: rgba(244, 240, 255, 0.72);
 }
 
-.focus-control-section[open] .focus-control-collapse-icon {
+.focus-control-section[open] .focus-control-collapse-icon,
+.focus-control-hidden-list[open] .focus-control-collapse-icon {
   background: rgba(89, 244, 214, 0.1);
   color: #59f4d6;
 }
 
-.focus-control-section[open] .focus-control-collapse-icon::before {
+.focus-control-section[open] .focus-control-collapse-icon::before,
+.focus-control-hidden-list[open] .focus-control-collapse-icon::before {
   content: "-";
 }
 
-.focus-control-section:not([open]) .focus-control-collapse-icon::before {
+.focus-control-section:not([open]) .focus-control-collapse-icon::before,
+.focus-control-hidden-list:not([open]) .focus-control-collapse-icon::before {
   content: "+";
 }
 
-.focus-control-section .focus-control-collapse-icon {
+.focus-control-section .focus-control-collapse-icon,
+.focus-control-hidden-list .focus-control-collapse-icon {
   color: transparent;
   position: relative;
 }
 
-.focus-control-section .focus-control-collapse-icon::before {
+.focus-control-section .focus-control-collapse-icon::before,
+.focus-control-hidden-list .focus-control-collapse-icon::before {
   position: absolute;
   inset: 0;
   display: grid;
@@ -2811,11 +2816,20 @@ details > summary::-webkit-details-marker {
   border-radius: 18px;
 }
 
+.focus-control-hidden-list summary {
+  list-style: none;
+}
+
+.focus-control-hidden-list summary::-webkit-details-marker {
+  display: none;
+}
+
 .focus-control-hidden-list-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  cursor: pointer;
 }
 
 .focus-control-hidden-list-head .eyebrow {

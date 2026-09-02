@@ -43,23 +43,26 @@ function BusinessStatCategoryEditor({
   returnPath,
 }: BusinessStatCategoryEditorProps) {
   return (
-    <article
-      className={`focus-business-admin-card ${
+    <details
+      className={`focus-business-admin-card focus-business-group-details ${
         category.isVisible ? "" : "focus-business-admin-card-hidden"
       }`}
     >
-      <div className="focus-business-admin-head">
-        <span style={{ background: category.color }} />
-        <div>
-          <h3>{category.name}</h3>
-          <p>
-            {category.isVisible ? "visible" : "hidden"}
-            {category.monthlyTarget !== null
-              ? ` - monthly goal ${category.prefix}${category.monthlyTarget}${category.suffix}`
-              : ""}
-          </p>
+      <summary className="focus-business-group-summary">
+        <div className="focus-business-admin-head">
+          <span style={{ background: category.color }} />
+          <div>
+            <h3>{category.name}</h3>
+            <p>
+              {category.isVisible ? "visible" : "hidden"}
+              {category.monthlyTarget !== null
+                ? ` - monthly goal ${category.prefix}${category.monthlyTarget}${category.suffix}`
+                : ""}
+            </p>
+          </div>
         </div>
-      </div>
+        <span className="focus-business-group-toggle" aria-hidden="true" />
+      </summary>
 
       <form action={updateBusinessStatCategoryAction} className="focus-control-form focus-business-edit-form">
         <input name="clientId" type="hidden" value={clientId} />
@@ -140,7 +143,7 @@ function BusinessStatCategoryEditor({
           </button>
         </form>
       </div>
-    </article>
+    </details>
   );
 }
 
@@ -277,7 +280,6 @@ export default async function BusinessStatsSettingsPage({
                           group.isVisible ? "" : "focus-business-admin-card-hidden"
                         }`}
                         key={group.id}
-                        open
                       >
                         <summary className="focus-business-group-summary">
                           <div className="focus-business-admin-head">
@@ -362,7 +364,7 @@ export default async function BusinessStatsSettingsPage({
                 )}
 
                 {businessStats.categories.filter((category) => !category.groupId).length > 0 ? (
-                  <details className="focus-business-admin-card focus-business-group-details" open>
+                  <details className="focus-business-admin-card focus-business-group-details">
                     <summary className="focus-business-group-summary">
                       <div className="focus-business-admin-head">
                         <span />
