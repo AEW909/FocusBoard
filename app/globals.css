@@ -1048,6 +1048,44 @@ details > summary::-webkit-details-marker {
   color: rgba(244, 240, 255, 0.84);
 }
 
+.focus-user-management .focus-client-card summary {
+  list-style: none;
+}
+
+.focus-user-management .focus-client-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.focus-user-management .focus-client-card-head {
+  cursor: pointer;
+}
+
+.focus-user-management .focus-client-card[open] .focus-control-collapse-icon {
+  background: rgba(89, 244, 214, 0.1);
+  color: #59f4d6;
+}
+
+.focus-user-management .focus-client-card[open] .focus-control-collapse-icon::before {
+  content: "-";
+}
+
+.focus-user-management .focus-client-card:not([open]) .focus-control-collapse-icon::before {
+  content: "+";
+}
+
+.focus-user-management .focus-client-card .focus-control-collapse-icon {
+  color: transparent;
+  position: relative;
+}
+
+.focus-user-management .focus-client-card .focus-control-collapse-icon::before {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
 .focus-user-membership-list {
   display: grid;
   gap: 12px;
@@ -1178,11 +1216,20 @@ details > summary::-webkit-details-marker {
   opacity: 0.82;
 }
 
+.focus-membership-card summary {
+  list-style: none;
+}
+
+.focus-membership-card summary::-webkit-details-marker {
+  display: none;
+}
+
 .focus-membership-card-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+  cursor: pointer;
 }
 
 .focus-membership-card-head h3,
@@ -2739,29 +2786,42 @@ details > summary::-webkit-details-marker {
 }
 
 .focus-control-section[open] .focus-control-collapse-icon,
-.focus-control-hidden-list[open] .focus-control-collapse-icon {
+.focus-control-hidden-list[open] .focus-control-collapse-icon,
+.focus-membership-card[open] .focus-control-collapse-icon {
   background: rgba(89, 244, 214, 0.1);
   color: #59f4d6;
 }
 
 .focus-control-section[open] .focus-control-collapse-icon::before,
-.focus-control-hidden-list[open] .focus-control-collapse-icon::before {
+.focus-control-hidden-list[open] .focus-control-collapse-icon::before,
+.focus-membership-card[open] .focus-control-collapse-icon::before,
+.focus-control-task-collapsible-static[open] .focus-control-collapse-icon::before {
   content: "-";
 }
 
 .focus-control-section:not([open]) .focus-control-collapse-icon::before,
-.focus-control-hidden-list:not([open]) .focus-control-collapse-icon::before {
+.focus-control-hidden-list:not([open]) .focus-control-collapse-icon::before,
+.focus-membership-card:not([open]) .focus-control-collapse-icon::before,
+.focus-control-task-collapsible-static:not([open]) .focus-control-collapse-icon::before {
   content: "+";
 }
 
 .focus-control-section .focus-control-collapse-icon,
-.focus-control-hidden-list .focus-control-collapse-icon {
+.focus-control-hidden-list .focus-control-collapse-icon,
+.focus-membership-card .focus-control-collapse-icon,
+.focus-control-task-collapsible-static .focus-control-collapse-icon {
   color: transparent;
   position: relative;
 }
 
+.focus-control-task-collapsible-static .focus-control-task-summary {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .focus-control-section .focus-control-collapse-icon::before,
-.focus-control-hidden-list .focus-control-collapse-icon::before {
+.focus-control-hidden-list .focus-control-collapse-icon::before,
+.focus-membership-card .focus-control-collapse-icon::before,
+.focus-control-task-collapsible-static .focus-control-collapse-icon::before {
   position: absolute;
   inset: 0;
   display: grid;

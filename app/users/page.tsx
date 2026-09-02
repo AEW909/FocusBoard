@@ -127,8 +127,8 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
         <section className="focus-client-grid">
           {users.map((managedUser) => (
-            <article className="focus-client-card" key={managedUser.userId}>
-              <div className="focus-client-card-head">
+            <details className="focus-client-card" key={managedUser.userId}>
+              <summary className="focus-client-card-head">
                 <div>
                   <p className="focus-client-label">User</p>
                   <h2>{managedUser.fullName ?? managedUser.email}</h2>
@@ -143,7 +143,10 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 >
                   {managedUser.isPlatformOwner ? "platform owner" : "shared auth"}
                 </span>
-              </div>
+                <span className="focus-control-collapse-icon" aria-hidden="true">
+                  +
+                </span>
+              </summary>
 
               <div className="focus-client-features">
                 <span>
@@ -183,7 +186,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                   needed.
                 </p>
               )}
-            </article>
+            </details>
           ))}
         </section>
       </main>

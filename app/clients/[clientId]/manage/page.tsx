@@ -443,13 +443,13 @@ export default async function FocusClientManagePage({
                   {memberships.length > 0 ? (
                     <div className="focus-membership-list">
                       {memberships.map((membership) => (
-                        <article
+                        <details
                           className={`focus-membership-card ${
                             membership.isActive ? "" : "focus-membership-card-inactive"
                           }`}
                           key={membership.membershipId}
                         >
-                          <div className="focus-membership-card-head">
+                          <summary className="focus-membership-card-head">
                             <div>
                               <h3>{membership.fullName ?? membership.email}</h3>
                               <p>{membership.email}</p>
@@ -463,7 +463,10 @@ export default async function FocusClientManagePage({
                             >
                               {membership.isActive ? "active" : "inactive"}
                             </span>
-                          </div>
+                            <span className="focus-control-collapse-icon" aria-hidden="true">
+                              +
+                            </span>
+                          </summary>
 
                           <div className="focus-membership-actions">
                             <form
@@ -538,7 +541,7 @@ export default async function FocusClientManagePage({
                             Content Lab: {formatContentLabState(membership.contentLabAccess)}
                             {!client.contentLabEnabled ? " (client feature disabled)" : ""}
                           </p>
-                        </article>
+                        </details>
                       ))}
                     </div>
                   ) : (
@@ -638,51 +641,73 @@ export default async function FocusClientManagePage({
           >
             <div className="focus-control-stack">
               {runtime.rewards.map((reward) => (
-                <form action={updateFocusRewardTierAction} className="focus-control-reward-row" key={reward.id ?? reward.label}>
-                  <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
-                  <input name="rewardId" type="hidden" value={reward.id} />
-                  <div className="focus-control-two-up">
+                <details
+                  className="focus-control-task-collapsible focus-control-task-collapsible-static"
+                  key={reward.id ?? reward.label}
+                >
+                  <summary className="focus-control-task-summary">
+                    <div className="focus-control-task-summary-copy">
+                      <p className="eyebrow">Prize tier</p>
+                      <h3>{reward.label || "Untitled tier"}</h3>
+                      <p>
+                        {reward.minPoints} pts &middot; {reward.minWeeksHit} week{reward.minWeeksHit === 1 ? "" : "s"} hit
+                      </p>
+                    </div>
+                    <div className="focus-control-task-summary-meta">
+                      <span className="focus-control-collapse-icon" aria-hidden="true">
+                        +
+                      </span>
+                    </div>
+                  </summary>
+                  <form
+                    action={updateFocusRewardTierAction}
+                    className="focus-control-form focus-control-task-panel focus-control-task-panel-rich"
+                  >
+                    <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+                    <input name="rewardId" type="hidden" value={reward.id} />
+                    <div className="focus-control-two-up">
+                      <label className="field">
+                        <span>Reward label</span>
+                        <input defaultValue={reward.label} name="label" />
+                      </label>
+                      <label className="field">
+                        <span>Sticker alt</span>
+                        <input defaultValue={reward.stickerAlt} name="stickerAlt" />
+                      </label>
+                    </div>
                     <label className="field">
-                      <span>Reward label</span>
-                      <input defaultValue={reward.label} name="label" />
+                      <span>Description</span>
+                      <textarea defaultValue={reward.description} name="description" />
                     </label>
-                    <label className="field">
-                      <span>Sticker alt</span>
-                      <input defaultValue={reward.stickerAlt} name="stickerAlt" />
-                    </label>
-                  </div>
-                  <label className="field">
-                    <span>Description</span>
-                    <textarea defaultValue={reward.description} name="description" />
-                  </label>
-                  <div className="focus-control-three-up">
-                    <label className="field">
-                      <span>Min points</span>
-                      <input defaultValue={reward.minPoints} min={0} name="minPoints" type="number" />
-                    </label>
-                    <label className="field">
-                      <span>Min weeks hit</span>
-                      <input defaultValue={reward.minWeeksHit} min={0} name="minWeeksHit" type="number" />
-                    </label>
-                  </div>
-                  <div className="focus-control-two-up">
-                    <FocusImageSelect
-                      assets={assets}
-                      label="Locked image"
-                      name="lockedStickerSrc"
-                      value={reward.lockedStickerSrc}
-                    />
-                    <FocusImageSelect
-                      assets={assets}
-                      label="Unlocked image"
-                      name="unlockedStickerSrc"
-                      value={reward.unlockedStickerSrc}
-                    />
-                  </div>
-                  <button className="button button-secondary" type="submit">
-                    Save prize
-                  </button>
-                </form>
+                    <div className="focus-control-three-up">
+                      <label className="field">
+                        <span>Min points</span>
+                        <input defaultValue={reward.minPoints} min={0} name="minPoints" type="number" />
+                      </label>
+                      <label className="field">
+                        <span>Min weeks hit</span>
+                        <input defaultValue={reward.minWeeksHit} min={0} name="minWeeksHit" type="number" />
+                      </label>
+                    </div>
+                    <div className="focus-control-two-up">
+                      <FocusImageSelect
+                        assets={assets}
+                        label="Locked image"
+                        name="lockedStickerSrc"
+                        value={reward.lockedStickerSrc}
+                      />
+                      <FocusImageSelect
+                        assets={assets}
+                        label="Unlocked image"
+                        name="unlockedStickerSrc"
+                        value={reward.unlockedStickerSrc}
+                      />
+                    </div>
+                    <button className="button button-secondary" type="submit">
+                      Save prize
+                    </button>
+                  </form>
+                </details>
               ))}
             </div>
           </FocusControlSection>
