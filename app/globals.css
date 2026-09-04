@@ -2792,42 +2792,23 @@ details > summary::-webkit-details-marker {
   color: #59f4d6;
 }
 
-.focus-control-section[open] .focus-control-collapse-icon::before,
-.focus-control-hidden-list[open] .focus-control-collapse-icon::before,
-.focus-membership-card[open] .focus-control-collapse-icon::before,
-.focus-control-task-collapsible-static[open] .focus-control-collapse-icon::before {
-  content: "-";
+.focus-control-collapse-icon svg {
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
-.focus-control-section:not([open]) .focus-control-collapse-icon::before,
-.focus-control-hidden-list:not([open]) .focus-control-collapse-icon::before,
-.focus-membership-card:not([open]) .focus-control-collapse-icon::before,
-.focus-control-task-collapsible-static:not([open]) .focus-control-collapse-icon::before {
-  content: "+";
-}
-
-.focus-control-section .focus-control-collapse-icon,
-.focus-control-hidden-list .focus-control-collapse-icon,
-.focus-membership-card .focus-control-collapse-icon,
-.focus-control-task-collapsible-static .focus-control-collapse-icon {
-  color: transparent;
-  position: relative;
+.focus-control-section[open] .focus-control-collapse-icon svg,
+.focus-control-hidden-list[open] .focus-control-collapse-icon svg,
+.focus-membership-card[open] .focus-control-collapse-icon svg,
+.focus-control-task-collapsible[open] .focus-control-collapse-icon svg,
+.focus-control-task-collapsible-static[open] .focus-control-collapse-icon svg {
+  transform: rotate(180deg);
 }
 
 .focus-control-task-collapsible-static .focus-control-task-summary {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
-.focus-control-section .focus-control-collapse-icon::before,
-.focus-control-hidden-list .focus-control-collapse-icon::before,
-.focus-membership-card .focus-control-collapse-icon::before,
-.focus-control-task-collapsible-static .focus-control-collapse-icon::before {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
 
 .focus-control-section-body {
   margin-top: -10px;
@@ -2948,6 +2929,71 @@ details > summary::-webkit-details-marker {
 .focus-control-task-collapsible {
   border-radius: 28px;
   overflow: hidden;
+}
+
+/* Visual depth — section panel gets a teal left rail, task level gets yellow */
+.focus-control-section-shell > .focus-control-task-panel {
+  border-left: 3px solid rgba(89, 244, 214, 0.35);
+  border-radius: 0 28px 28px 0;
+}
+
+/* Section tab strip */
+.focus-control-section-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.focus-control-section-tabs::-webkit-scrollbar { display: none; }
+
+.focus-control-section-tab {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.focus-control-section-tab:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.focus-control-section-tab-active {
+  border-color: rgba(89, 244, 214, 0.5);
+  color: #59f4d6;
+  background: rgba(89, 244, 214, 0.08);
+}
+
+/* Section panel header (drag cluster + status row) */
+.focus-control-section-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.focus-control-task-shell > .focus-control-task-collapsible {
+  border-left: 3px solid rgba(255, 216, 77, 0.35);
+  border-radius: 0 28px 28px 0;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.focus-control-drag-list {
+  padding-left: 8px;
+}
+
+/* Eyebrow colors — section vs task level */
+.focus-control-section-shell .focus-control-task-summary-copy .eyebrow {
+  color: rgba(89, 244, 214, 0.85);
+}
+
+.focus-control-task-shell .focus-control-task-summary-copy .eyebrow {
+  color: rgba(255, 216, 77, 0.85);
 }
 
 .focus-control-task-collapsible summary {
@@ -3106,11 +3152,7 @@ details > summary::-webkit-details-marker {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.06);
   color: rgba(244, 240, 255, 0.74);
-  font-size: 1.05rem;
-  font-weight: 950;
-  letter-spacing: -0.08em;
   cursor: grab;
-  writing-mode: vertical-rl;
 }
 
 .focus-control-order-buttons {
@@ -3170,8 +3212,7 @@ details > summary::-webkit-details-marker {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
-  font-size: 1.3rem;
-  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .focus-control-task-panel-rich {
@@ -3698,7 +3739,15 @@ details > summary::-webkit-details-marker {
 }
 
 .focus-view-switch-arcade {
-  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  width: fit-content;
+  margin: 0 auto;
+  align-items: center;
 }
 
 .focus-view-chip {
@@ -4073,6 +4122,17 @@ details > summary::-webkit-details-marker {
   color: #fff;
   font-weight: 800;
   cursor: pointer;
+}
+
+.focus-reward-section {
+  display: grid;
+  gap: 16px;
+  padding: 20px 18px 18px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, var(--focus-page-glow-a), transparent 30%),
+    radial-gradient(circle at 85% 25%, var(--focus-page-glow-b), transparent 30%),
+    var(--focus-surface-strong);
 }
 
 .focus-task-section-stack {
@@ -6413,7 +6473,7 @@ details > summary::-webkit-details-marker {
     text-align: left;
   }
 
-  .focus-view-switch {
+  .focus-view-switch:not(.focus-view-switch-arcade) {
     justify-content: stretch;
   }
 
@@ -6427,7 +6487,7 @@ details > summary::-webkit-details-marker {
     grid-template-columns: 1fr;
   }
 
-  .focus-view-chip {
+  .focus-view-switch:not(.focus-view-switch-arcade) .focus-view-chip {
     width: 100%;
   }
 
@@ -6438,6 +6498,10 @@ details > summary::-webkit-details-marker {
   .focus-control-task-summary-meta {
     grid-column: 1 / -1;
     justify-content: flex-start;
+  }
+
+  .focus-membership-actions {
+    grid-template-columns: 1fr;
   }
 
   .focus-board-section-head {

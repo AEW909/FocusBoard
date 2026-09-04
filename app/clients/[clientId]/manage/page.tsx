@@ -68,7 +68,7 @@ function FocusControlSection({
           {summary ? <p>{summary}</p> : null}
         </div>
         <span className="focus-control-collapse-icon" aria-hidden="true">
-          +
+          <svg fill="none" height="14" viewBox="0 0 14 9" width="14"><path d="M1 1.5L7 7.5L13 1.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"/></svg>
         </span>
       </summary>
       <article className="focus-control-card focus-control-section-body">{children}</article>
@@ -98,7 +98,7 @@ function FocusControlGroup({
           {summary ? <p>{summary}</p> : null}
         </div>
         <span className="focus-control-collapse-icon" aria-hidden="true">
-          +
+          <svg fill="none" height="14" viewBox="0 0 14 9" width="14"><path d="M1 1.5L7 7.5L13 1.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"/></svg>
         </span>
       </summary>
       <div className="focus-control-section-body focus-control-section-group-body">{children}</div>

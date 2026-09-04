@@ -625,55 +625,6 @@ export function FocusBoard({
                 </div>
               </div>
             </div>
-
-            <div className={`focus-reward-bubble ${getRewardTone(currentWeek.weekPoints, board.weeklyTarget)}`}>
-              <div className="focus-reward-bubble-layout">
-                <div className="focus-reward-bubble-copy">
-                  <p className="focus-panel-label">Immediate weekly reward</p>
-                  <h3>{board.weeklyReward.label}</h3>
-                  <p className="focus-reward-bubble-topline">{getWeeklyHype(currentWeek.weekPoints, board.weeklyTarget)}</p>
-                  <p
-                    className={`focus-reward-state ${
-                      currentWeek.hitTarget ? "focus-reward-state-unlocked" : "focus-reward-state-locked"
-                    }`}
-                  >
-                    {currentWeek.hitTarget
-                      ? "Now unlocked"
-                      : `${Math.max(board.weeklyTarget - currentWeek.weekPoints, 0)} points to go`}
-                  </p>
-                  <p className="focus-reward-bubble-main">
-                    {currentWeek.hitTarget
-                      ? board.weeklyReward.unlockedDescription
-                      : board.weeklyReward.lockedDescription}
-                  </p>
-                  <div className="focus-progress-track focus-progress-track-fat">
-                    <div className="focus-progress-fill" style={{ width: `${weeklyPercent}%` }} />
-                  </div>
-                </div>
-
-                <div
-                  className={`focus-reward-bubble-art ${
-                    currentWeek.hitTarget ? "focus-reward-bubble-art-unlocked" : "focus-reward-bubble-art-locked"
-                  }`}
-                >
-                  <FocusImageWithFallback
-                    alt={board.weeklyReward.stickerAlt}
-                    className="focus-reward-bubble-photo"
-                    expandable
-                    fallbackSrc={
-                      currentWeek.hitTarget
-                        ? board.weeklyReward.unlockedStickerFallbackSrc
-                        : board.weeklyReward.lockedStickerFallbackSrc
-                    }
-                    src={weeklyPrizeImageSrc}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <button className="focus-scene-link" onClick={() => setView("month")} type="button">
-              Jump to the monthly reward ladder
-            </button>
           </section>
 
           <section className="focus-task-section-stack">
@@ -843,6 +794,57 @@ export function FocusBoard({
                 </div>
               </details>
             ))}
+          </section>
+
+          <section className="focus-reward-section">
+            <div className={`focus-reward-bubble ${getRewardTone(currentWeek.weekPoints, board.weeklyTarget)}`}>
+              <div className="focus-reward-bubble-layout">
+                <div className="focus-reward-bubble-copy">
+                  <p className="focus-panel-label">Immediate weekly reward</p>
+                  <h3>{board.weeklyReward.label}</h3>
+                  <p className="focus-reward-bubble-topline">{getWeeklyHype(currentWeek.weekPoints, board.weeklyTarget)}</p>
+                  <p
+                    className={`focus-reward-state ${
+                      currentWeek.hitTarget ? "focus-reward-state-unlocked" : "focus-reward-state-locked"
+                    }`}
+                  >
+                    {currentWeek.hitTarget
+                      ? "Now unlocked"
+                      : `${Math.max(board.weeklyTarget - currentWeek.weekPoints, 0)} points to go`}
+                  </p>
+                  <p className="focus-reward-bubble-main">
+                    {currentWeek.hitTarget
+                      ? board.weeklyReward.unlockedDescription
+                      : board.weeklyReward.lockedDescription}
+                  </p>
+                  <div className="focus-progress-track focus-progress-track-fat">
+                    <div className="focus-progress-fill" style={{ width: `${weeklyPercent}%` }} />
+                  </div>
+                </div>
+
+                <div
+                  className={`focus-reward-bubble-art ${
+                    currentWeek.hitTarget ? "focus-reward-bubble-art-unlocked" : "focus-reward-bubble-art-locked"
+                  }`}
+                >
+                  <FocusImageWithFallback
+                    alt={board.weeklyReward.stickerAlt}
+                    className="focus-reward-bubble-photo"
+                    expandable
+                    fallbackSrc={
+                      currentWeek.hitTarget
+                        ? board.weeklyReward.unlockedStickerFallbackSrc
+                        : board.weeklyReward.lockedStickerFallbackSrc
+                    }
+                    src={weeklyPrizeImageSrc}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button className="focus-scene-link" onClick={() => setView("month")} type="button">
+              Jump to the monthly reward ladder
+            </button>
           </section>
 
           <section className="focus-month-peek">

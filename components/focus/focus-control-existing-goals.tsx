@@ -238,6 +238,9 @@ export function FocusControlExistingGoals({ adminSlug, assets, sections, tasks }
   const [newSectionDescription, setNewSectionDescription] = useState("");
   const [isAddingSection, startAddSectionTransition] = useTransition();
   const [isReorderingSections, startReorderSectionsTransition] = useTransition();
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(
+    () => visibleSections[0]?.id ?? null,
+  );
 
   const hasUnsavedChanges = useMemo(
     () => Object.values(dirtyKeys).some(Boolean),
@@ -249,6 +252,14 @@ export function FocusControlExistingGoals({ adminSlug, assets, sections, tasks }
   useEffect(() => {
     setOrderedSections(visibleSections);
   }, [visibleSections]);
+
+  useEffect(() => {
+    if (activeSectionId && !orderedSections.find((s) => s.id === activeSectionId)) {
+      setActiveSectionId(orderedSections[0]?.id ?? null);
+    }
+  }, [orderedSections, activeSectionId]);
+
+  const activeSectionObj = orderedSections.find((s) => s.id === activeSectionId) ?? orderedSections[0] ?? null;
 
   const setDirtyState = (key: string, dirty: boolean) => {
     setDirtyKeys((current) => {
@@ -376,36 +387,52 @@ export function FocusControlExistingGoals({ adminSlug, assets, sections, tasks }
           {isAddingSection ? "Adding..." : "Add section"}
         </button>
       </form>
-      <div className="focus-control-section-list">
-        {orderedSections.map((section, index) => (
-          <FocusControlSectionEditor
-            adminSlug={adminSlug}
-            assets={assets}
-            availableSections={activeSections}
-            canReorder={!hasUnsavedChanges && !isReorderingSections}
-            isDragging={draggedSectionId === section.id}
-            key={section.id ?? section.key}
-            onDragEnd={() => setDraggedSectionId(null)}
-            onDragOver={(event) => event.preventDefault()}
-            onDragStart={() => setDraggedSectionId(section.id ?? null)}
-            onDrop={() => dropSection(section.id)}
-            onDirtyChange={setDirtyState}
-            onMoveDown={() => moveSection(section.id, 1)}
-            onMoveUp={() => moveSection(section.id, -1)}
-            section={section}
-            sectionIndex={index}
-            sectionTotal={orderedSections.length}
-            hasUnsavedChanges={hasUnsavedChanges}
-          />
-        ))}
-      </div>
+      {orderedSections.length > 0 && (
+        <div className="focus-control-section-tabs">
+          {orderedSections.map((section) => {
+            const tabKey = section.id ?? section.key;
+            const isActive = tabKey === (activeSectionObj?.id ?? activeSectionObj?.key);
+            return (
+              <button
+                className={`focus-control-section-tab${isActive ? " focus-control-section-tab-active" : ""}`}
+                key={tabKey}
+                onClick={() => setActiveSectionId(section.id ?? null)}
+                type="button"
+              >
+                {section.title || "Untitled"}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {activeSectionObj && (
+        <FocusControlSectionEditor
+          adminSlug={adminSlug}
+          assets={assets}
+          availableSections={activeSections}
+          canReorder={!hasUnsavedChanges && !isReorderingSections}
+          isDragging={draggedSectionId === activeSectionObj.id}
+          key={activeSectionObj.id ?? activeSectionObj.key}
+          onDragEnd={() => setDraggedSectionId(null)}
+          onDragOver={(event) => event.preventDefault()}
+          onDragStart={() => setDraggedSectionId(activeSectionObj.id ?? null)}
+          onDrop={() => dropSection(activeSectionObj.id)}
+          onDirtyChange={setDirtyState}
+          onMoveDown={() => moveSection(activeSectionObj.id, 1)}
+          onMoveUp={() => moveSection(activeSectionObj.id, -1)}
+          section={activeSectionObj}
+          sectionIndex={orderedSections.findIndex((s) => s.id === activeSectionObj.id)}
+          sectionTotal={orderedSections.length}
+          hasUnsavedChanges={hasUnsavedChanges}
+        />
+      )}
       {hiddenSections.length ? (
         <details className="focus-control-hidden-list">
           <summary className="focus-control-hidden-list-head">
             <p className="eyebrow">Paused sections</p>
             <span>{hiddenSections.length}</span>
             <span className="focus-control-collapse-icon" aria-hidden="true">
-              +
+              <svg fill="none" height="14" viewBox="0 0 14 9" width="14"><path d="M1 1.5L7 7.5L13 1.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"/></svg>
             </span>
           </summary>
           {hiddenSections.map((section, index) => (
@@ -473,12 +500,10 @@ function FocusControlSectionEditor({
   onDirtyChange,
 }: FocusControlSectionEditorProps) {
   const router = useRouter();
-  const titleInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<SectionDraft>(() => sectionToDraft(section));
   const [baseline, setBaseline] = useState<SectionDraft>(() => sectionToDraft(section));
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(section.isActive !== false && section.isVisible !== false);
   const [orderedTasks, setOrderedTasks] = useState(section.tasks.filter((task) => task.isActive !== false && task.isVisible !== false));
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -605,64 +630,26 @@ function FocusControlSectionEditor({
       }}
       onDrop={onDrop}
     >
-      <details
-        className={`focus-control-task-collapsible ${isOpen ? "focus-control-task-collapsible-open" : ""}`}
-        onToggle={(event) => setIsOpen(event.currentTarget.open)}
-        open={isOpen}
-      >
-        <summary className="focus-control-task-summary">
-          <div
-            className="focus-control-drag-cluster"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-            }}
-          >
+      <div className="focus-control-task-panel focus-control-task-panel-rich">
+        <div className="focus-control-section-panel-header">
+          <div className="focus-control-drag-cluster">
             <span className="focus-control-drag-handle" role="button" tabIndex={canReorder ? 0 : -1}>
-              ::
+              <svg fill="currentColor" height="16" viewBox="0 0 10 16" width="10"><circle cx="3" cy="4" r="1.5"/><circle cx="7" cy="4" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg>
             </span>
             <div className="focus-control-order-buttons">
               <button disabled={!canReorder || sectionIndex === 0} onClick={onMoveUp} type="button">
-                ^
+                <svg fill="none" height="7" viewBox="0 0 10 7" width="10"><path d="M1 6L5 1L9 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/></svg>
               </button>
               <button disabled={!canReorder || sectionIndex === sectionTotal - 1} onClick={onMoveDown} type="button">
-                v
+                <svg fill="none" height="7" viewBox="0 0 10 7" width="10"><path d="M1 1L5 6L9 1" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/></svg>
               </button>
             </div>
-          </div>
-          <div className="focus-control-task-summary-copy">
-            <p className="eyebrow">Section</p>
-            <h3
-              onDoubleClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setIsOpen(true);
-                window.setTimeout(() => {
-                  titleInputRef.current?.focus();
-                  titleInputRef.current?.select();
-                }, 0);
-              }}
-              title="Double-click to edit"
-            >
-              {draft.title || "Untitled section"}
-            </h3>
-            <p>
-              {orderedTasks.length} goal{orderedTasks.length === 1 ? "" : "s"}
-            </p>
           </div>
           <div className="focus-control-task-summary-meta">
             <span className={`focus-control-task-status ${isVisible ? "focus-control-task-status-live" : "focus-control-task-status-hidden"}`}>
               {isVisible ? "Visible" : "Paused"}
             </span>
             {dirty ? <span className="focus-control-dirty-pill">Unsaved</span> : null}
-            <span className="focus-control-collapse-icon" aria-hidden="true">
-              {isOpen ? "−" : "+"}
-            </span>
-          </div>
-        </summary>
-
-        <div className="focus-control-task-panel focus-control-task-panel-rich">
-          <div className="focus-control-corner-actions">
             <button
               aria-label={isVisible ? `Hide section ${section.title}` : `Show section ${section.title}`}
               className={`focus-visibility-icon ${isVisible ? "focus-visibility-icon-live" : "focus-visibility-icon-hidden"}`}
@@ -673,86 +660,85 @@ function FocusControlSectionEditor({
               {isVisible ? "◉" : "○"}
             </button>
           </div>
-          <div className="focus-control-section-fields">
-            <label className="field">
-              <span>Section name</span>
-              <input
-                onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
-                ref={titleInputRef}
-                value={draft.title}
-              />
-            </label>
-            <label className="field">
-              <span>Description</span>
-              <input onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} value={draft.description} />
-            </label>
-            <button
-              className={`button ${dirty ? "button-primary focus-control-save-button-active" : "button-secondary"} button-small`}
-              disabled={isPending}
-              onClick={saveSection}
-              type="button"
-            >
-              {isPending ? "Saving..." : "Save section"}
-            </button>
-            {saved ? <span className="focus-control-saved-tag">SAVED!</span> : null}
-            {error ? <span className="focus-control-error-tag">{error}</span> : null}
-          </div>
-          {taskOrderError ? <p className="focus-control-error-tag">{taskOrderError}</p> : null}
-          <div className="focus-control-drag-list">
-            {orderedTasks.map((task, index) => (
+        </div>
+        <div className="focus-control-section-fields">
+          <label className="field">
+            <span>Section name</span>
+            <input
+              onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
+              value={draft.title}
+            />
+          </label>
+          <label className="field">
+            <span>Description</span>
+            <input onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} value={draft.description} />
+          </label>
+          <button
+            className={`button ${dirty ? "button-primary focus-control-save-button-active" : "button-secondary"} button-small`}
+            disabled={isPending}
+            onClick={saveSection}
+            type="button"
+          >
+            {isPending ? "Saving..." : "Save section"}
+          </button>
+          {saved ? <span className="focus-control-saved-tag">SAVED!</span> : null}
+          {error ? <span className="focus-control-error-tag">{error}</span> : null}
+        </div>
+        {taskOrderError ? <p className="focus-control-error-tag">{taskOrderError}</p> : null}
+        <div className="focus-control-drag-list">
+          {orderedTasks.map((task, index) => (
+            <FocusControlTaskEditor
+              adminSlug={adminSlug}
+              assets={assets}
+              availableSections={availableSections}
+              canReorder={!hasUnsavedChanges && !isReorderingTasks}
+              isDragging={draggedTaskId === task.id}
+              key={task.id ?? task.key}
+              onDragEnd={() => setDraggedTaskId(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDragStart={() => setDraggedTaskId(task.id ?? null)}
+              onDrop={() => dropTask(task.id)}
+              onDirtyChange={onDirtyChange}
+              onMoveDown={() => moveTask(task.id, 1)}
+              onMoveUp={() => moveTask(task.id, -1)}
+              task={task}
+              taskIndex={index}
+              taskTotal={orderedTasks.length}
+            />
+          ))}
+        </div>
+        {hiddenTasks.length ? (
+          <details className="focus-control-hidden-list focus-control-hidden-list-compact">
+            <summary className="focus-control-hidden-list-head">
+              <p className="eyebrow">Paused challenges</p>
+              <span>{hiddenTasks.length}</span>
+              <span className="focus-control-collapse-icon" aria-hidden="true">
+                <svg fill="none" height="14" viewBox="0 0 14 9" width="14"><path d="M1 1.5L7 7.5L13 1.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"/></svg>
+              </span>
+            </summary>
+            {hiddenTasks.map((task, index) => (
               <FocusControlTaskEditor
                 adminSlug={adminSlug}
                 assets={assets}
                 availableSections={availableSections}
-                canReorder={!hasUnsavedChanges && !isReorderingTasks}
-                isDragging={draggedTaskId === task.id}
+                canReorder={false}
+                isDragging={false}
                 key={task.id ?? task.key}
-                onDragEnd={() => setDraggedTaskId(null)}
-                onDragOver={(event) => event.preventDefault()}
-                onDragStart={() => setDraggedTaskId(task.id ?? null)}
-                onDrop={() => dropTask(task.id)}
+                onDragEnd={() => undefined}
+                onDragOver={() => undefined}
+                onDragStart={() => undefined}
+                onDrop={() => undefined}
                 onDirtyChange={onDirtyChange}
-                onMoveDown={() => moveTask(task.id, 1)}
-                onMoveUp={() => moveTask(task.id, -1)}
+                onMoveDown={() => undefined}
+                onMoveUp={() => undefined}
                 task={task}
                 taskIndex={index}
-                taskTotal={orderedTasks.length}
+                taskTotal={hiddenTasks.length}
               />
             ))}
-          </div>
-          {hiddenTasks.length ? (
-            <details className="focus-control-hidden-list focus-control-hidden-list-compact">
-              <summary className="focus-control-hidden-list-head">
-                <p className="eyebrow">Paused challenges</p>
-                <span>{hiddenTasks.length}</span>
-                <span className="focus-control-collapse-icon" aria-hidden="true">
-                  +
-                </span>
-              </summary>
-              {hiddenTasks.map((task, index) => (
-                <FocusControlTaskEditor
-                  adminSlug={adminSlug}
-                  assets={assets}
-                  availableSections={availableSections}
-                  canReorder={false}
-                  isDragging={false}
-                  key={task.id ?? task.key}
-                  onDragEnd={() => undefined}
-                  onDragOver={() => undefined}
-                  onDragStart={() => undefined}
-                  onDrop={() => undefined}
-                  onDirtyChange={onDirtyChange}
-                  onMoveDown={() => undefined}
-                  onMoveUp={() => undefined}
-                  task={task}
-                  taskIndex={index}
-                  taskTotal={hiddenTasks.length}
-                />
-              ))}
-            </details>
-          ) : null}
-        </div>
-      </details>
+          </details>
+        ) : null}
+      </div>
     </section>
   );
 }
@@ -912,7 +898,7 @@ function FocusControlTaskEditor({
               tabIndex={canReorder ? 0 : -1}
               title="Drag to reorder"
             >
-              ::
+              <svg fill="currentColor" height="16" viewBox="0 0 10 16" width="10"><circle cx="3" cy="4" r="1.5"/><circle cx="7" cy="4" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg>
             </span>
             <div className="focus-control-order-buttons">
               <button
@@ -921,7 +907,7 @@ function FocusControlTaskEditor({
                 onClick={onMoveUp}
                 type="button"
               >
-                ^
+                <svg fill="none" height="7" viewBox="0 0 10 7" width="10"><path d="M1 6L5 1L9 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/></svg>
               </button>
               <button
                 aria-label={`Move ${task.title} down`}
@@ -929,7 +915,7 @@ function FocusControlTaskEditor({
                 onClick={onMoveDown}
                 type="button"
               >
-                v
+                <svg fill="none" height="7" viewBox="0 0 10 7" width="10"><path d="M1 1L5 6L9 1" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/></svg>
               </button>
             </div>
           </div>
@@ -964,7 +950,7 @@ function FocusControlTaskEditor({
             {taskDraft.isBoosted === "true" ? <span className="focus-control-boost-pill">Boost x2</span> : null}
             {taskDirty ? <span className="focus-control-dirty-pill">Unsaved</span> : null}
             <span className="focus-control-collapse-icon" aria-hidden="true">
-              {isOpen ? "−" : "+"}
+              <svg fill="none" height="14" viewBox="0 0 14 9" width="14"><path d="M1 1.5L7 7.5L13 1.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"/></svg>
             </span>
           </div>
         </summary>

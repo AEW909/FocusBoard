@@ -23,6 +23,7 @@
     "@types/react-dom": "^19.1.5",
     "eslint": "^9.26.0",
     "eslint-config-next": "^15.3.1",
+    "playwright": "^1.62.1",
     "supabase": "^2.98.0",
     "typescript": "^5.8.3"
   }
