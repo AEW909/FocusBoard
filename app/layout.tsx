@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Sora } from "next/font/google";
+import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -15,6 +16,15 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: "FocusBoard",
   description: "Tiny weekly wins, loud colours, and silly rewards for the business-building jobs.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "FocusBoard",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FF4DCA",
 };
 
 export default function RootLayout({
@@ -24,7 +34,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} ${sora.variable}`}>{children}</body>
+      <body className={`${manrope.variable} ${sora.variable}`}>
+        <ServiceWorkerRegistration />
+        {children}
+      </body>
     </html>
   );
 }
