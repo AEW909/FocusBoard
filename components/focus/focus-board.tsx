@@ -8,6 +8,7 @@ import { updateFocusBoardAction, type UpdateFocusBoardState } from "@/app/focus/
 import { FocusImageWithFallback } from "@/components/focus/focus-image-with-fallback";
 import type { FocusThemePreset } from "@/lib/focus-board/config";
 import type { FocusBoardData } from "@/lib/focus-board/queries";
+import { PushNotificationToggle } from "@/components/pwa/push-notification-toggle";
 
 const initialState: UpdateFocusBoardState = {};
 
@@ -493,11 +494,14 @@ export function FocusBoard({
       <section className="focus-arcade-hero focus-arcade-hero-rebuilt">
         <div className="focus-hero-copy-wrap">
           {showInlineSignOut ? (
-            <form action={signOutAction} className="focus-inline-signout-form">
-              <button className="focus-inline-signout" type="submit">
-                Sign out
-              </button>
-            </form>
+            <div className="focus-inline-topbar">
+              <PushNotificationToggle />
+              <form action={signOutAction} className="focus-inline-signout-form">
+                <button className="focus-inline-signout" type="submit">
+                  Sign out
+                </button>
+              </form>
+            </div>
           ) : null}
           <p className="focus-kicker">{board.settings.title}</p>
           <h1>{board.settings.subtitle}</h1>

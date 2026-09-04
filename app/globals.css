@@ -3663,10 +3663,37 @@ details > summary::-webkit-details-marker {
   z-index: 1;
 }
 
+.focus-inline-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
 .focus-inline-signout-form {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 4px;
+}
+
+.push-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--focus-text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.push-toggle:hover,
+.push-toggle:focus-visible {
+  color: var(--focus-text-strong);
+}
+
+.push-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .focus-inline-signout {
