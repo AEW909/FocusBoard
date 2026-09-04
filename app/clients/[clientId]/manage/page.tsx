@@ -16,7 +16,6 @@ import {
   setFocusClientBusinessStatsEnabledAction,
 } from "@/app/clients/[clientId]/manage/business-stats-actions";
 import { ProtectedSessionBar } from "@/components/auth/protected-session-bar";
-import { FocusAssetUploadForm } from "@/components/focus/focus-asset-upload-form";
 import { FocusControlExistingGoals } from "@/components/focus/focus-control-existing-goals";
 import { FocusImageSelect } from "@/components/focus/focus-image-select";
 import { FocusPullToRefresh } from "@/components/focus/focus-pull-to-refresh";
@@ -136,7 +135,7 @@ export default async function FocusClientManagePage({
   }
 
   const defaultChallengeSticker =
-    assets.find((asset) => asset.fallbackValue === "/focus/mascot-rainbow.svg")?.value ??
+    assets.find((asset) => asset.value === "/focus/mascot-rainbow.svg")?.value ??
     "/focus/mascot-rainbow.svg";
 
   return (
@@ -554,16 +553,14 @@ export default async function FocusClientManagePage({
 
               <FocusControlSection
                 eyebrow="Images"
-                summary="Upload extra artwork for challenge stickers and reward ladder images."
+                summary="Artwork available for challenge stickers and reward ladder images. Add new images to the public/focus folder and redeploy."
                 title="Focus image library"
               >
-                <FocusAssetUploadForm adminSlug={runtime.settings.adminSlug} />
                 <div className="focus-asset-grid">
                   {assets.map((asset) => (
-                    <div className="focus-asset-chip" key={`${asset.source}:${asset.value}`}>
+                    <div className="focus-asset-chip" key={asset.value}>
                       <img alt="" src={asset.value} />
                       <span>{asset.label}</span>
-                      <small>{asset.source === "uploaded" ? "Uploaded" : "Bundled"}</small>
                     </div>
                   ))}
                 </div>

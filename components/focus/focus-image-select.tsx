@@ -7,12 +7,11 @@ type FocusImageSelectProps = {
   assets: FocusAssetOption[];
   label: string;
   name?: string;
-  fallbackName?: string;
   value: string;
   onChange?: (value: string) => void;
 };
 
-export function FocusImageSelect({ assets, label, name, fallbackName, value, onChange }: FocusImageSelectProps) {
+export function FocusImageSelect({ assets, label, name, value, onChange }: FocusImageSelectProps) {
   const [internalValue, setInternalValue] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -24,7 +23,6 @@ export function FocusImageSelect({ assets, label, name, fallbackName, value, onC
     (currentValue
       ? {
           label: "Current image",
-          source: "uploaded" as const,
           value: currentValue,
         }
       : null);
@@ -66,7 +64,6 @@ export function FocusImageSelect({ assets, label, name, fallbackName, value, onC
     >
       <span>{label}</span>
       {name ? <input name={name} type="hidden" value={currentValue} /> : null}
-      {fallbackName ? <input name={fallbackName} type="hidden" value={selectedAsset?.fallbackValue ?? ""} /> : null}
       <button
         aria-controls={listboxId}
         aria-expanded={isOpen}
@@ -82,7 +79,6 @@ export function FocusImageSelect({ assets, label, name, fallbackName, value, onC
             </span>
             <span className="focus-image-select-trigger-copy">
               <strong>{displayAsset.label}</strong>
-              <small>{displayAsset.source === "uploaded" ? "Focus library" : "Built-in fallback"}</small>
             </span>
           </>
         ) : (
@@ -108,7 +104,7 @@ export function FocusImageSelect({ assets, label, name, fallbackName, value, onC
                 <button
                   aria-selected={isSelected}
                   className={`focus-image-select-option ${isSelected ? "focus-image-select-option-selected" : ""}`}
-                  key={`${asset.source}:${asset.value}`}
+                  key={asset.value}
                   onClick={() => selectAsset(asset)}
                   role="option"
                   type="button"
@@ -118,7 +114,6 @@ export function FocusImageSelect({ assets, label, name, fallbackName, value, onC
                   </span>
                   <span className="focus-image-select-option-copy">
                     <strong>{asset.label}</strong>
-                    <small>{asset.source === "uploaded" ? "Focus library" : "Built-in fallback"}</small>
                   </span>
                   <span aria-hidden="true" className="focus-image-select-option-check">
                     {isSelected ? "✓" : ""}
