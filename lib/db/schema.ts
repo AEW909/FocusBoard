@@ -60,6 +60,15 @@ export const neonAuthVerification = neonAuthSchema.table("verification", {
 
 // ── focusboard tables ─────────────────────────────────────────────────────────
 
+export const pushSubscriptions = focusboardSchema.table("push_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => neonAuthUser.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const clients = focusboardSchema.table("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
   clientKey: text("client_key").notNull().unique(),
