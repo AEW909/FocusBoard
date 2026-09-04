@@ -1,5 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
+import { and, asc, eq, gte, lt } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { focusBoardEvents } from "@/lib/db/schema";
 import { getFocusBoardRuntimeConfigByBoardKey } from "@/lib/focus-board/runtime";
 import {
   addDays,
@@ -9,17 +11,6 @@ import {
   parseIsoDate,
   toIsoDate,
 } from "@/lib/focus-board/dates";
-
-type FocusBoardEventRow = {
-  id: string;
-  board_key: string;
-  month_key: string;
-  week_start: string;
-  task_key: string;
-  metric_key: string;
-  points: number;
-  created_at: string;
-};
 
 type FocusBoardParams = {
   history?: string;
@@ -77,7 +68,6 @@ export async function getFocusBoardData(
   params: FocusBoardParams = {},
 ) {
   noStore();
-  const admin = createFocusBoardAdminClient();
   const runtime = await getFocusBoardRuntimeConfigByBoardKey(boardKey);
 
   if (!runtime) {
@@ -110,19 +100,27 @@ export async function getFocusBoardData(
   const selectedMonthEnd = addMonths(selectedMonthStart, 1);
   const queryEnd = monthHistoryEnd > selectedMonthEnd ? monthHistoryEnd : selectedMonthEnd;
 
-  const { data, error } = await admin
-    .from("focus_board_events")
-    .select("id, board_key, month_key, week_start, task_key, metric_key, points, created_at")
-    .eq("board_key", runtime.settings.boardKey)
-    .gte("month_key", toIsoDate(queryStart))
-    .lt("month_key", toIsoDate(queryEnd))
-    .order("created_at", { ascending: true });
+  const events = await db
+    .select({
+      id: focusBoardEvents.id,
+      boardKey: focusBoardEvents.boardKey,
+      monthKey: focusBoardEvents.monthKey,
+      weekStart: focusBoardEvents.weekStart,
+      taskKey: focusBoardEvents.taskKey,
+      metricKey: focusBoardEvents.metricKey,
+      points: focusBoardEvents.points,
+      createdAt: focusBoardEvents.createdAt,
+    })
+    .from(focusBoardEvents)
+    .where(
+      and(
+        eq(focusBoardEvents.boardKey, runtime.settings.boardKey),
+        gte(focusBoardEvents.monthKey, toIsoDate(queryStart)),
+        lt(focusBoardEvents.monthKey, toIsoDate(queryEnd)),
+      ),
+    )
+    .orderBy(asc(focusBoardEvents.createdAt));
 
-  if (error) {
-    throw new Error(`Failed to load focus board: ${error.message}`);
-  }
-
-  const events = (data ?? []) as FocusBoardEventRow[];
   const counts = new Map<string, number>();
   const monthPointMap = new Map<string, number>();
   const selectedTaskPointMap = new Map<string, number>();
@@ -139,14 +137,14 @@ export async function getFocusBoardData(
   );
 
   events.forEach((event) => {
-    const key = `${event.week_start}:${event.task_key}:${event.metric_key}`;
+    const key = `${event.weekStart}:${event.taskKey}:${event.metricKey}`;
     counts.set(key, (counts.get(key) ?? 0) + 1);
-    monthPointMap.set(event.month_key, (monthPointMap.get(event.month_key) ?? 0) + event.points);
-    weekPointMap.set(event.week_start, (weekPointMap.get(event.week_start) ?? 0) + event.points);
+    monthPointMap.set(event.monthKey, (monthPointMap.get(event.monthKey) ?? 0) + event.points);
+    weekPointMap.set(event.weekStart, (weekPointMap.get(event.weekStart) ?? 0) + event.points);
 
-    if (event.month_key === selectedMonthKey) {
-      selectedTaskPointMap.set(event.task_key, (selectedTaskPointMap.get(event.task_key) ?? 0) + event.points);
-      const section = taskSectionMap.get(event.task_key);
+    if (event.monthKey === selectedMonthKey) {
+      selectedTaskPointMap.set(event.taskKey, (selectedTaskPointMap.get(event.taskKey) ?? 0) + event.points);
+      const section = taskSectionMap.get(event.taskKey);
       if (section) {
         selectedSectionPointMap.set(
           section.sectionKey,

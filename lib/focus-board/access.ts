@@ -1,6 +1,13 @@
 import { notFound, redirect } from "next/navigation";
+import { and, asc, eq, inArray } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  clients,
+  clientMemberships,
+  focusBoardSettings,
+  platformUsers,
+} from "@/lib/db/schema";
 import { getSessionUser, requireUser } from "@/lib/auth/session";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import type { FocusThemePreset } from "@/lib/focus-board/config";
 
 export type FocusClientAccess = {
@@ -25,119 +32,97 @@ export type FocusBoardAccess = {
 
 export type FocusManagedClient = Omit<FocusClientAccess, "membershipRole">;
 
-type MembershipRow = {
-  client_id: string;
-  role: FocusClientAccess["membershipRole"];
-  content_lab_access: boolean;
-};
-
-type ClientRow = {
-  id: string;
-  client_key: string;
-  display_name: string;
-  status: FocusClientAccess["status"];
-  content_lab_enabled: boolean;
-  business_stats_enabled: boolean;
-};
-
-type BoardRow = {
-  client_id: string;
-  board_key: string;
-  board_slug: string;
-  admin_slug: string;
-  theme_preset: FocusThemePreset;
-};
-
 type FocusClientLookup = {
   client?: FocusManagedClient;
   access: FocusBoardAccess;
 };
 
 export async function getFocusBoardAccessForUser(userId: string): Promise<FocusBoardAccess> {
-  const admin = createFocusBoardAdminClient();
-  const [platformResult, membershipResult] = await Promise.all([
-    admin
-      .from("platform_users")
-      .select("user_id")
-      .eq("user_id", userId)
-      .eq("role", "platform_owner")
-      .eq("is_active", true)
-      .maybeSingle(),
-    admin
-      .from("client_memberships")
-      .select("client_id, role, content_lab_access")
-      .eq("user_id", userId)
-      .eq("is_active", true),
+  const [platformRows, membershipRows] = await Promise.all([
+    db
+      .select({ userId: platformUsers.userId })
+      .from(platformUsers)
+      .where(
+        and(
+          eq(platformUsers.userId, userId),
+          eq(platformUsers.role, "platform_owner"),
+          eq(platformUsers.isActive, true),
+        ),
+      )
+      .limit(1),
+    db
+      .select({
+        clientId: clientMemberships.clientId,
+        role: clientMemberships.role,
+        contentLabAccess: clientMemberships.contentLabAccess,
+      })
+      .from(clientMemberships)
+      .where(
+        and(eq(clientMemberships.userId, userId), eq(clientMemberships.isActive, true)),
+      ),
   ]);
 
-  if (platformResult.error) {
-    throw new Error(`Failed to load FocusBoard platform access: ${platformResult.error.message}`);
-  }
-
-  if (membershipResult.error) {
-    throw new Error(`Failed to load FocusBoard memberships: ${membershipResult.error.message}`);
-  }
-
-  const memberships = (membershipResult.data ?? []) as MembershipRow[];
+  const isPlatformOwner = platformRows.length > 0;
+  const memberships = membershipRows;
 
   if (memberships.length === 0) {
-    return {
-      isPlatformOwner: Boolean(platformResult.data),
-      clients: [],
-    };
+    return { isPlatformOwner, clients: [] };
   }
 
-  const clientIds = memberships.map((membership) => membership.client_id);
-  const [clientResult, boardResult] = await Promise.all([
-    admin
-      .from("clients")
-      .select("id, client_key, display_name, status, content_lab_enabled, business_stats_enabled")
-      .in("id", clientIds),
-    admin
-      .from("focus_board_settings")
-      .select("client_id, board_key, board_slug, admin_slug, theme_preset")
-      .in("client_id", clientIds),
+  const clientIds = memberships.map((m) => m.clientId);
+  const [clientRows, boardRows] = await Promise.all([
+    db
+      .select({
+        id: clients.id,
+        clientKey: clients.clientKey,
+        displayName: clients.displayName,
+        status: clients.status,
+        contentLabEnabled: clients.contentLabEnabled,
+        businessStatsEnabled: clients.businessStatsEnabled,
+      })
+      .from(clients)
+      .where(inArray(clients.id, clientIds)),
+    db
+      .select({
+        clientId: focusBoardSettings.clientId,
+        boardKey: focusBoardSettings.boardKey,
+        boardSlug: focusBoardSettings.boardSlug,
+        adminSlug: focusBoardSettings.adminSlug,
+        themePreset: focusBoardSettings.themePreset,
+      })
+      .from(focusBoardSettings)
+      .where(inArray(focusBoardSettings.clientId, clientIds)),
   ]);
 
-  if (clientResult.error) {
-    throw new Error(`Failed to load FocusBoard clients: ${clientResult.error.message}`);
-  }
-
-  if (boardResult.error) {
-    throw new Error(`Failed to load client boards: ${boardResult.error.message}`);
-  }
-
-  const clientsById = new Map(
-    ((clientResult.data ?? []) as ClientRow[]).map((client) => [client.id, client]),
-  );
-  const boardsByClientId = new Map(
-    ((boardResult.data ?? []) as BoardRow[]).map((board) => [board.client_id, board]),
-  );
+  const clientsById = new Map(clientRows.map((c) => [c.id, c]));
+  const boardsByClientId = new Map(boardRows.map((b) => [b.clientId, b]));
 
   return {
-    isPlatformOwner: Boolean(platformResult.data),
+    isPlatformOwner,
     clients: memberships.flatMap((membership) => {
-      const client = clientsById.get(membership.client_id);
-      const board = boardsByClientId.get(membership.client_id);
+      const client = clientsById.get(membership.clientId);
+      const board = boardsByClientId.get(membership.clientId);
 
       if (!client || !board || client.status !== "active") {
         return [];
       }
 
-      return [{
-        clientId: client.id,
-        clientKey: client.client_key,
-        displayName: client.display_name,
-        status: client.status,
-        contentLabEnabled: client.content_lab_enabled,
-        businessStatsEnabled: client.business_stats_enabled,
-        canUseContentLab: membership.content_lab_access,
-        membershipRole: membership.role,
-        boardKey: board.board_key,
-        boardSlug: board.board_slug,
-        adminSlug: board.admin_slug,
-        themePreset: board.theme_preset,
-      }];
+      return [
+        {
+          clientId: client.id,
+          clientKey: client.clientKey,
+          displayName: client.displayName,
+          status: client.status as FocusClientAccess["status"],
+          contentLabEnabled: client.contentLabEnabled,
+          businessStatsEnabled: client.businessStatsEnabled,
+          canUseContentLab: membership.contentLabAccess,
+          membershipRole: membership.role as FocusClientAccess["membershipRole"],
+          boardKey: board.boardKey,
+          boardSlug: board.boardSlug,
+          adminSlug: board.adminSlug,
+          themePreset: board.themePreset as FocusThemePreset,
+        },
+      ];
     }),
   };
 }
@@ -183,89 +168,82 @@ export async function requireFocusPlatformOwner(nextPath?: string) {
 }
 
 export async function getManagedFocusClients(): Promise<FocusManagedClient[]> {
-  const admin = createFocusBoardAdminClient();
-  const [clientResult, boardResult] = await Promise.all([
-    admin
-      .from("clients")
-      .select("id, client_key, display_name, status, content_lab_enabled, business_stats_enabled")
-      .order("display_name", { ascending: true }),
-    admin
-      .from("focus_board_settings")
-      .select("client_id, board_key, board_slug, admin_slug, theme_preset"),
-  ]);
+  const rows = await db
+    .select({
+      id: clients.id,
+      clientKey: clients.clientKey,
+      displayName: clients.displayName,
+      status: clients.status,
+      contentLabEnabled: clients.contentLabEnabled,
+      businessStatsEnabled: clients.businessStatsEnabled,
+      boardKey: focusBoardSettings.boardKey,
+      boardSlug: focusBoardSettings.boardSlug,
+      adminSlug: focusBoardSettings.adminSlug,
+      themePreset: focusBoardSettings.themePreset,
+    })
+    .from(clients)
+    .innerJoin(focusBoardSettings, eq(focusBoardSettings.clientId, clients.id))
+    .orderBy(asc(clients.displayName));
 
-  if (clientResult.error) {
-    throw new Error(`Failed to load FocusBoard clients: ${clientResult.error.message}`);
-  }
-
-  if (boardResult.error) {
-    throw new Error(`Failed to load client boards: ${boardResult.error.message}`);
-  }
-
-  const boardsByClientId = new Map(
-    ((boardResult.data ?? []) as BoardRow[]).map((board) => [board.client_id, board]),
-  );
-
-  return ((clientResult.data ?? []) as ClientRow[]).flatMap((client) => {
-    const board = boardsByClientId.get(client.id);
-
-    if (!board) {
-      return [];
-    }
-
-    return [{
-      clientId: client.id,
-      clientKey: client.client_key,
-      displayName: client.display_name,
-      status: client.status,
-      contentLabEnabled: client.content_lab_enabled,
-      businessStatsEnabled: client.business_stats_enabled,
-      canUseContentLab: client.content_lab_enabled,
-      boardKey: board.board_key,
-      boardSlug: board.board_slug,
-      adminSlug: board.admin_slug,
-      themePreset: board.theme_preset,
-    }];
-  });
+  return rows.map((row) => ({
+    clientId: row.id,
+    clientKey: row.clientKey,
+    displayName: row.displayName,
+    status: row.status as FocusClientAccess["status"],
+    contentLabEnabled: row.contentLabEnabled,
+    businessStatsEnabled: row.businessStatsEnabled,
+    canUseContentLab: row.contentLabEnabled,
+    boardKey: row.boardKey,
+    boardSlug: row.boardSlug,
+    adminSlug: row.adminSlug,
+    themePreset: row.themePreset as FocusThemePreset,
+  }));
 }
 
 async function findManagedClientBy(
-  selector: "client_id" | "board_slug" | "admin_slug",
+  selector: "clientId" | "boardSlug" | "adminSlug",
   value: string,
 ): Promise<FocusManagedClient | null> {
-  const admin = createFocusBoardAdminClient();
-  const query = admin
-    .from("focus_board_settings")
-    .select(
-      "client_id, board_key, board_slug, admin_slug, theme_preset, clients!inner(id, client_key, display_name, status, content_lab_enabled, business_stats_enabled)",
-    )
-    .eq(selector, value)
-    .maybeSingle();
+  const condition =
+    selector === "clientId"
+      ? eq(focusBoardSettings.clientId, value)
+      : selector === "boardSlug"
+        ? eq(focusBoardSettings.boardSlug, value)
+        : eq(focusBoardSettings.adminSlug, value);
 
-  const { data, error } = await query;
+  const rows = await db
+    .select({
+      boardKey: focusBoardSettings.boardKey,
+      boardSlug: focusBoardSettings.boardSlug,
+      adminSlug: focusBoardSettings.adminSlug,
+      themePreset: focusBoardSettings.themePreset,
+      clientId: clients.id,
+      clientKey: clients.clientKey,
+      displayName: clients.displayName,
+      status: clients.status,
+      contentLabEnabled: clients.contentLabEnabled,
+      businessStatsEnabled: clients.businessStatsEnabled,
+    })
+    .from(focusBoardSettings)
+    .innerJoin(clients, eq(focusBoardSettings.clientId, clients.id))
+    .where(condition)
+    .limit(1);
 
-  if (error || !data) {
-    return null;
-  }
-
-  const client = Array.isArray(data.clients) ? data.clients[0] : data.clients;
-
-  if (!client) {
-    return null;
-  }
+  const row = rows[0];
+  if (!row) return null;
 
   return {
-    clientId: client.id,
-    clientKey: client.client_key,
-    displayName: client.display_name,
-    status: client.status,
-    contentLabEnabled: client.content_lab_enabled,
-    businessStatsEnabled: client.business_stats_enabled,
-    canUseContentLab: client.content_lab_enabled,
-    boardKey: data.board_key,
-    boardSlug: data.board_slug,
-    adminSlug: data.admin_slug,
-    themePreset: data.theme_preset,
+    clientId: row.clientId,
+    clientKey: row.clientKey,
+    displayName: row.displayName,
+    status: row.status as FocusClientAccess["status"],
+    contentLabEnabled: row.contentLabEnabled,
+    businessStatsEnabled: row.businessStatsEnabled,
+    canUseContentLab: row.contentLabEnabled,
+    boardKey: row.boardKey,
+    boardSlug: row.boardSlug,
+    adminSlug: row.adminSlug,
+    themePreset: row.themePreset as FocusThemePreset,
   };
 }
 
@@ -278,33 +256,21 @@ async function getClientLookupForUser(
 
   const membershipClient =
     selector === "clientId"
-      ? access.clients.find((client) => client.clientId === value)
+      ? access.clients.find((c) => c.clientId === value)
       : selector === "boardSlug"
-        ? access.clients.find((client) => client.boardSlug === value)
-        : access.clients.find((client) => client.adminSlug === value);
+        ? access.clients.find((c) => c.boardSlug === value)
+        : access.clients.find((c) => c.adminSlug === value);
 
   if (membershipClient) {
-    return {
-      access,
-      client: membershipClient,
-    };
+    return { access, client: membershipClient };
   }
 
   if (!access.isPlatformOwner) {
     return { access };
   }
 
-  const managedClient =
-    selector === "clientId"
-      ? await findManagedClientBy("client_id", value)
-      : selector === "boardSlug"
-        ? await findManagedClientBy("board_slug", value)
-        : await findManagedClientBy("admin_slug", value);
-
-  return {
-    access,
-    client: managedClient ?? undefined,
-  };
+  const managedClient = await findManagedClientBy(selector, value);
+  return { access, client: managedClient ?? undefined };
 }
 
 export async function requireFocusBoardAccessBySlug(boardSlug: string, nextPath?: string) {
@@ -315,11 +281,7 @@ export async function requireFocusBoardAccessBySlug(boardSlug: string, nextPath?
     notFound();
   }
 
-  return {
-    user,
-    access: lookup.access,
-    client: lookup.client,
-  };
+  return { user, access: lookup.access, client: lookup.client };
 }
 
 export async function requireFocusContentLabAccessBySlug(boardSlug: string, nextPath?: string) {
@@ -348,11 +310,7 @@ export async function requireFocusContentLabAccessByClientId(clientId: string, n
     notFound();
   }
 
-  return {
-    user,
-    access: lookup.access,
-    client: lookup.client,
-  };
+  return { user, access: lookup.access, client: lookup.client };
 }
 
 export async function requireFocusBusinessStatsAccessByClientId(clientId: string, nextPath?: string) {
@@ -367,11 +325,7 @@ export async function requireFocusBusinessStatsAccessByClientId(clientId: string
     notFound();
   }
 
-  return {
-    user,
-    access: lookup.access,
-    client: lookup.client,
-  };
+  return { user, access: lookup.access, client: lookup.client };
 }
 
 export async function requireManagedFocusClientById(clientId: string, nextPath?: string) {
@@ -386,11 +340,7 @@ export async function requireManagedFocusClientById(clientId: string, nextPath?:
     notFound();
   }
 
-  return {
-    user,
-    access: lookup.access,
-    client: lookup.client,
-  };
+  return { user, access: lookup.access, client: lookup.client };
 }
 
 export async function requireManagedFocusClientByAdminSlug(adminSlug: string, nextPath?: string) {
@@ -405,11 +355,7 @@ export async function requireManagedFocusClientByAdminSlug(adminSlug: string, ne
     notFound();
   }
 
-  return {
-    user,
-    access: lookup.access,
-    client: lookup.client,
-  };
+  return { user, access: lookup.access, client: lookup.client };
 }
 
 export async function isCurrentUserFocusPlatformOwner() {

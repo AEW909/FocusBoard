@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
+import { db } from "@/lib/db";
+import { clientContentProfiles } from "@/lib/db/schema";
 import { getFocusBoardRuntimeConfigByClientId } from "@/lib/focus-board/runtime";
 import { requireManagedFocusClientById } from "@/lib/focus-board/access";
 
@@ -46,23 +47,30 @@ export async function updateFocusClientContentProfileAction(formData: FormData) 
     redirect(getContentProfilePath(clientId, undefined, "Business name is required.", returnPath));
   }
 
-  const admin = createFocusBoardAdminClient();
-  const { error } = await admin
-    .from("client_content_profiles")
-    .upsert({
-      client_id: clientId,
-      business_name: businessName,
-      brand_voice: getValue(formData, "brandVoice"),
-      target_audience: getValue(formData, "targetAudience"),
+  await db
+    .insert(clientContentProfiles)
+    .values({
+      clientId,
+      businessName,
+      brandVoice: getValue(formData, "brandVoice"),
+      targetAudience: getValue(formData, "targetAudience"),
       services: getValue(formData, "services"),
       differentiators: getValue(formData, "differentiators"),
-      content_rules: getValue(formData, "contentRules"),
-      updated_at: new Date().toISOString(),
+      contentRules: getValue(formData, "contentRules"),
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: clientContentProfiles.clientId,
+      set: {
+        businessName,
+        brandVoice: getValue(formData, "brandVoice"),
+        targetAudience: getValue(formData, "targetAudience"),
+        services: getValue(formData, "services"),
+        differentiators: getValue(formData, "differentiators"),
+        contentRules: getValue(formData, "contentRules"),
+        updatedAt: new Date(),
+      },
     });
-
-  if (error) {
-    throw new Error(`Failed to update client content profile: ${error.message}`);
-  }
 
   const runtime = await getFocusBoardRuntimeConfigByClientId(clientId);
   revalidatePath("/clients");

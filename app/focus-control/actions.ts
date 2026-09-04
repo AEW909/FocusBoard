@@ -2,6 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  focusBoardSettings,
+  focusBoardSections,
+  focusBoardTasks,
+  focusBoardTaskMetrics,
+  focusBoardRewardTiers,
+} from "@/lib/db/schema";
 import { requireFocusPlatformOwner } from "@/lib/focus-board/access";
 import {
   DEFAULT_FOCUS_CHECKBOX_OPTIONS,
@@ -13,7 +22,6 @@ import {
   type FocusCheckboxOption,
   type FocusThemePreset,
 } from "@/lib/focus-board/config";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import { getFocusBoardRuntimeConfigByAdminSlug } from "@/lib/focus-board/runtime";
 
 function getValue(formData: FormData, key: string) {
@@ -140,7 +148,6 @@ function revalidateFocusPaths(boardSlug: string, adminSlug: string, clientId: st
 export async function updateFocusBoardSettingsAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const title = getValue(formData, "title") || runtime.settings.title;
   const subtitle = getValue(formData, "subtitle") || runtime.settings.subtitle;
@@ -150,23 +157,18 @@ export async function updateFocusBoardSettingsAction(formData: FormData) {
     ? (requestedTheme as FocusThemePreset)
     : runtime.settings.themePreset;
 
-  const { error } = await admin
-    .from("focus_board_settings")
-    .update({
-      title,
-      subtitle,
-      theme_preset: themePreset,
-      weekly_target: weeklyTarget,
-    })
-    .eq("board_key", runtime.settings.boardKey);
-
-  if (error) {
+  try {
+    await db
+      .update(focusBoardSettings)
+      .set({ title, subtitle, themePreset, weeklyTarget })
+      .where(eq(focusBoardSettings.boardKey, runtime.settings.boardKey));
+  } catch (error) {
     redirect(
       getManagePathWithFeedback(
         runtime.settings.clientId,
         runtime.settings.adminSlug,
         undefined,
-        `Could not save board settings: ${error.message}`,
+        `Could not save board settings: ${error instanceof Error ? error.message : "unknown error"}`,
       ),
     );
   }
@@ -188,28 +190,23 @@ export async function updateFocusBoardSettingsAction(formData: FormData) {
 export async function updateFocusWeeklyRewardAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
-  const { error } = await admin
-    .from("focus_board_settings")
-    .update({
-      weekly_target: Math.max(1, getIntValue(formData, "weeklyTarget", runtime.settings.weeklyTarget)),
-      weekly_reward_label: getValue(formData, "label") || runtime.weeklyReward.label,
-      weekly_reward_locked_description:
+  await db
+    .update(focusBoardSettings)
+    .set({
+      weeklyTarget: Math.max(1, getIntValue(formData, "weeklyTarget", runtime.settings.weeklyTarget)),
+      weeklyRewardLabel: getValue(formData, "label") || runtime.weeklyReward.label,
+      weeklyRewardLockedDescription:
         getValue(formData, "lockedDescription") || runtime.weeklyReward.lockedDescription,
-      weekly_reward_unlocked_description:
+      weeklyRewardUnlockedDescription:
         getValue(formData, "unlockedDescription") || runtime.weeklyReward.unlockedDescription,
-      weekly_reward_locked_sticker_src:
+      weeklyRewardLockedStickerSrc:
         getValue(formData, "lockedStickerSrc") || runtime.weeklyReward.lockedStickerSrc,
-      weekly_reward_unlocked_sticker_src:
+      weeklyRewardUnlockedStickerSrc:
         getValue(formData, "unlockedStickerSrc") || runtime.weeklyReward.unlockedStickerSrc,
-      weekly_reward_sticker_alt: getValue(formData, "stickerAlt") || runtime.weeklyReward.stickerAlt,
+      weeklyRewardStickerAlt: getValue(formData, "stickerAlt") || runtime.weeklyReward.stickerAlt,
     })
-    .eq("board_key", runtime.settings.boardKey);
-
-  if (error) {
-    throw new Error(error.message);
-  }
+    .where(eq(focusBoardSettings.boardKey, runtime.settings.boardKey));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -222,7 +219,6 @@ export async function updateFocusWeeklyRewardAction(formData: FormData) {
 export async function addFocusBoardSectionAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
   const title = getValue(formData, "title");
   const description = getValue(formData, "description");
 
@@ -231,20 +227,20 @@ export async function addFocusBoardSectionAction(formData: FormData) {
   }
 
   const sectionKey = normaliseFocusKey(getValue(formData, "sectionKey") || title);
-  const { error } = await admin.from("focus_board_sections").insert({
-    board_key: runtime.settings.boardKey,
-    section_key: sectionKey,
-    title,
-    description,
-    sort_order: runtime.allSections.filter((section) => section.isActive !== false).length + 1,
-  });
-
-  if (error) {
-    if (error.code === "23505") {
+  try {
+    await db.insert(focusBoardSections).values({
+      boardKey: runtime.settings.boardKey,
+      sectionKey,
+      title,
+      description,
+      sortOrder: runtime.allSections.filter((section) => section.isActive !== false).length + 1,
+    });
+  } catch (error: unknown) {
+    const dbError = error as { code?: string; message?: string };
+    if (dbError.code === "23505") {
       throw new Error(`A section named "${title}" already exists.`);
     }
-
-    throw new Error(error.message);
+    throw new Error(dbError.message ?? "Unknown error");
   }
 
   revalidateFocusPaths(
@@ -257,7 +253,6 @@ export async function addFocusBoardSectionAction(formData: FormData) {
 export async function updateFocusBoardSectionAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
   const sectionId = getValue(formData, "sectionId");
   const section = runtime.allSections.find((item) => item.id === sectionId);
 
@@ -265,18 +260,13 @@ export async function updateFocusBoardSectionAction(formData: FormData) {
     throw new Error("Section not found.");
   }
 
-  const { error } = await admin
-    .from("focus_board_sections")
-    .update({
+  await db
+    .update(focusBoardSections)
+    .set({
       title: getValue(formData, "title") || section.title,
       description: getValue(formData, "description"),
     })
-    .eq("id", sectionId)
-    .eq("board_key", runtime.settings.boardKey);
-
-  if (error) {
-    throw new Error(error.message);
-  }
+    .where(and(eq(focusBoardSections.id, sectionId), eq(focusBoardSections.boardKey, runtime.settings.boardKey)));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -288,7 +278,6 @@ export async function updateFocusBoardSectionAction(formData: FormData) {
 export async function reorderFocusBoardSectionsAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
   const orderedSectionIds = formData
     .getAll("sectionIds")
     .filter((value): value is string => typeof value === "string" && value.length > 0);
@@ -305,20 +294,14 @@ export async function reorderFocusBoardSectionsAction(formData: FormData) {
     throw new Error("One of those sections does not belong to this board.");
   }
 
-  const updates = await Promise.all(
+  await Promise.all(
     orderedSectionIds.map((sectionId, index) =>
-      admin
-        .from("focus_board_sections")
-        .update({ sort_order: index + 1 })
-        .eq("id", sectionId)
-        .eq("board_key", runtime.settings.boardKey),
+      db
+        .update(focusBoardSections)
+        .set({ sortOrder: index + 1 })
+        .where(and(eq(focusBoardSections.id, sectionId), eq(focusBoardSections.boardKey, runtime.settings.boardKey))),
     ),
   );
-  const failedUpdate = updates.find((result) => result.error);
-
-  if (failedUpdate?.error) {
-    throw new Error(failedUpdate.error.message);
-  }
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -330,7 +313,6 @@ export async function reorderFocusBoardSectionsAction(formData: FormData) {
 export async function toggleFocusBoardSectionVisibilityAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
   const sectionId = getValue(formData, "sectionId");
   const nextVisible = getValue(formData, "nextVisible");
   const shouldShow = nextVisible === "true";
@@ -343,25 +325,14 @@ export async function toggleFocusBoardSectionVisibilityAction(formData: FormData
   const visibleSections = runtime.allSections.filter(
     (item) => item.isActive !== false && item.isVisible !== false,
   );
-  const { error } = await admin
-    .from("focus_board_sections")
-    .update(
+  await db
+    .update(focusBoardSections)
+    .set(
       shouldShow
-        ? {
-            is_active: true,
-            is_visible: true,
-            sort_order: visibleSections.length + 1,
-          }
-        : {
-            is_visible: false,
-          },
+        ? { isActive: true, isVisible: true, sortOrder: visibleSections.length + 1 }
+        : { isVisible: false },
     )
-    .eq("id", sectionId)
-    .eq("board_key", runtime.settings.boardKey);
-
-  if (error) {
-    throw new Error(error.message);
-  }
+    .where(and(eq(focusBoardSections.id, sectionId), eq(focusBoardSections.boardKey, runtime.settings.boardKey)));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -373,7 +344,6 @@ export async function toggleFocusBoardSectionVisibilityAction(formData: FormData
 export async function addFocusBoardTaskAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const title = getValue(formData, "title");
   const description = getValue(formData, "description");
@@ -406,28 +376,30 @@ export async function addFocusBoardTaskAction(formData: FormData) {
   const target = kind === "checkbox" ? checkboxOptions.length : Math.max(0, getIntValue(formData, "target", 1));
   const points = getIntValue(formData, "points", 1);
 
-  const { data: taskRow, error: taskError } = await admin
-    .from("focus_board_tasks")
-    .insert({
-      board_key: runtime.settings.boardKey,
-      section_id: section.id,
-      task_key: taskKey,
-      icon,
-      sticker_src: stickerSrc,
-      sticker_alt: stickerAlt,
-      title,
-      description,
-      accent_class: accentClass,
-      sort_order: currentSort,
-    })
-    .select("id")
-    .single();
-
-  if (taskError || !taskRow) {
+  let taskRow: { id: string } | undefined;
+  try {
+    const [inserted] = await db
+      .insert(focusBoardTasks)
+      .values({
+        boardKey: runtime.settings.boardKey,
+        sectionId: section.id,
+        taskKey,
+        icon,
+        stickerSrc,
+        stickerAlt,
+        title,
+        description,
+        accentClass,
+        sortOrder: currentSort,
+      })
+      .returning({ id: focusBoardTasks.id });
+    taskRow = inserted;
+  } catch (error: unknown) {
+    const dbError = error as { code?: string; message?: string };
     const message =
-      taskError?.code === "23505"
+      dbError.code === "23505"
         ? `A challenge with the key "${taskKey}" already exists. Try a more specific title.`
-        : taskError?.message ?? "Could not create the new goal.";
+        : dbError.message ?? "Could not create the new goal.";
 
     redirect(
       getManagePathWithChallengeFeedback(
@@ -439,30 +411,37 @@ export async function addFocusBoardTaskAction(formData: FormData) {
     );
   }
 
-  const { error: metricError } = await admin.from("focus_board_task_metrics").insert({
-    task_id: taskRow.id,
-    metric_key: metricKey,
-    label: metricLabel,
-    target,
-    points,
-    kind,
-    checkbox_options: checkboxOptions,
-    sort_order: 1,
-  });
+  if (!taskRow) {
+    redirect(
+      getManagePathWithChallengeFeedback(
+        runtime.settings.clientId,
+        runtime.settings.adminSlug,
+        undefined,
+        "Could not create the new goal.",
+      ),
+    );
+  }
 
-  if (metricError) {
-    await admin
-      .from("focus_board_tasks")
-      .delete()
-      .eq("id", taskRow.id)
-      .eq("board_key", runtime.settings.boardKey);
+  try {
+    await db.insert(focusBoardTaskMetrics).values({
+      taskId: taskRow.id,
+      metricKey,
+      label: metricLabel,
+      target,
+      points,
+      kind,
+      checkboxOptions,
+      sortOrder: 1,
+    });
+  } catch (metricError: unknown) {
+    await db.delete(focusBoardTasks).where(and(eq(focusBoardTasks.id, taskRow.id), eq(focusBoardTasks.boardKey, runtime.settings.boardKey)));
 
     redirect(
       getManagePathWithChallengeFeedback(
         runtime.settings.clientId,
         runtime.settings.adminSlug,
         undefined,
-        `Could not create the scoring metric: ${metricError.message}`,
+        `Could not create the scoring metric: ${metricError instanceof Error ? metricError.message : "unknown error"}`,
       ),
     );
   }
@@ -484,7 +463,6 @@ export async function addFocusBoardTaskAction(formData: FormData) {
 export async function updateFocusBoardTaskAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const taskId = getValue(formData, "taskId");
   if (!taskId) {
@@ -502,24 +480,23 @@ export async function updateFocusBoardTaskAction(formData: FormData) {
 
   const movedSection = Boolean(nextSection?.id && nextSection.id !== task.sectionId);
 
-  await admin
-    .from("focus_board_tasks")
-    .update({
+  await db
+    .update(focusBoardTasks)
+    .set({
       ...(movedSection && nextSection?.id
         ? {
-            section_id: nextSection.id,
-            sort_order: getActiveTaskCountForSection(runtime, nextSection.id) + 1,
+            sectionId: nextSection.id,
+            sortOrder: getActiveTaskCountForSection(runtime, nextSection.id) + 1,
           }
         : {}),
       title: getValue(formData, "title"),
       description: getValue(formData, "description"),
       icon: (getValue(formData, "icon") || "TASK").toUpperCase().slice(0, 6),
-      sticker_src: getValue(formData, "stickerSrc") || "/focus/mascot-rainbow.svg",
-      sticker_alt: getValue(formData, "stickerAlt") || "Goal sticker",
-      is_boosted: getValue(formData, "isBoosted") === "true",
+      stickerSrc: getValue(formData, "stickerSrc") || "/focus/mascot-rainbow.svg",
+      stickerAlt: getValue(formData, "stickerAlt") || "Goal sticker",
+      isBoosted: getValue(formData, "isBoosted") === "true",
     })
-    .eq("id", taskId)
-    .eq("board_key", runtime.settings.boardKey);
+    .where(and(eq(focusBoardTasks.id, taskId), eq(focusBoardTasks.boardKey, runtime.settings.boardKey)));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -531,7 +508,6 @@ export async function updateFocusBoardTaskAction(formData: FormData) {
 export async function reorderFocusBoardTasksAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
   const sectionId = getValue(formData, "sectionId");
   const orderedTaskIds = formData
     .getAll("taskIds")
@@ -549,20 +525,14 @@ export async function reorderFocusBoardTasksAction(formData: FormData) {
     throw new Error("One of those challenges does not belong to this board.");
   }
 
-  const updates = await Promise.all(
+  await Promise.all(
     orderedTaskIds.map((taskId, index) =>
-      admin
-        .from("focus_board_tasks")
-        .update({ sort_order: index + 1 })
-        .eq("id", taskId)
-        .eq("board_key", runtime.settings.boardKey),
+      db
+        .update(focusBoardTasks)
+        .set({ sortOrder: index + 1 })
+        .where(and(eq(focusBoardTasks.id, taskId), eq(focusBoardTasks.boardKey, runtime.settings.boardKey))),
     ),
   );
-  const failedUpdate = updates.find((result) => result.error);
-
-  if (failedUpdate?.error) {
-    throw new Error(failedUpdate.error.message);
-  }
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -574,7 +544,6 @@ export async function reorderFocusBoardTasksAction(formData: FormData) {
 export async function toggleFocusBoardTaskVisibilityAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const taskId = getValue(formData, "taskId");
   const nextVisible = getValue(formData, "nextVisible");
@@ -591,32 +560,20 @@ export async function toggleFocusBoardTaskVisibilityAction(formData: FormData) {
   }
 
   const visibleTasksCount = getVisibleTaskCountForSection(runtime, task.sectionId);
-  const taskUpdate = shouldShow
-    ? {
-        is_active: true,
-        is_visible: true,
-        sort_order: visibleTasksCount + 1,
-      }
-    : {
-        is_visible: false,
-      };
-
-  const { error: taskError } = await admin
-    .from("focus_board_tasks")
-    .update(taskUpdate)
-    .eq("id", taskId)
-    .eq("board_key", runtime.settings.boardKey);
-
-  if (taskError) {
-    throw new Error(taskError.message);
-  }
+  await db
+    .update(focusBoardTasks)
+    .set(
+      shouldShow
+        ? { isActive: true, isVisible: true, sortOrder: visibleTasksCount + 1 }
+        : { isVisible: false },
+    )
+    .where(and(eq(focusBoardTasks.id, taskId), eq(focusBoardTasks.boardKey, runtime.settings.boardKey)));
 
   if (shouldShow) {
-    const { error: metricsError } = await admin.from("focus_board_task_metrics").update({ is_active: true }).eq("task_id", taskId);
-
-    if (metricsError) {
-      throw new Error(metricsError.message);
-    }
+    await db
+      .update(focusBoardTaskMetrics)
+      .set({ isActive: true })
+      .where(eq(focusBoardTaskMetrics.taskId, taskId));
   }
 
   revalidateFocusPaths(
@@ -629,23 +586,21 @@ export async function toggleFocusBoardTaskVisibilityAction(formData: FormData) {
 export async function deleteFocusBoardTaskAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const taskId = getValue(formData, "taskId");
   if (!taskId) {
     throw new Error("Task id missing.");
   }
 
-  await admin
-    .from("focus_board_tasks")
-    .update({
-      is_active: false,
-      is_visible: false,
-    })
-    .eq("id", taskId)
-    .eq("board_key", runtime.settings.boardKey);
+  await db
+    .update(focusBoardTasks)
+    .set({ isActive: false, isVisible: false })
+    .where(and(eq(focusBoardTasks.id, taskId), eq(focusBoardTasks.boardKey, runtime.settings.boardKey)));
 
-  await admin.from("focus_board_task_metrics").update({ is_active: false }).eq("task_id", taskId);
+  await db
+    .update(focusBoardTaskMetrics)
+    .set({ isActive: false })
+    .where(eq(focusBoardTaskMetrics.taskId, taskId));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -657,7 +612,6 @@ export async function deleteFocusBoardTaskAction(formData: FormData) {
 export async function addFocusBoardMetricAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const taskId = getValue(formData, "taskId");
   const metricLabel = getValue(formData, "metricLabel");
@@ -674,23 +628,23 @@ export async function addFocusBoardMetricAction(formData: FormData) {
   const metricKey = normaliseFocusKey(getValue(formData, "metricKey") || metricLabel);
   const kind = getMetricKind(formData);
   const checkboxOptions = kind === "checkbox" ? getCheckboxOptions(formData) : [];
-  const { error } = await admin.from("focus_board_task_metrics").insert({
-    task_id: taskId,
-    metric_key: metricKey,
-    label: metricLabel,
-    target: kind === "checkbox" ? checkboxOptions.length : Math.max(0, getIntValue(formData, "target", 0)),
-    points: getIntValue(formData, "points", 1),
-    kind,
-    checkbox_options: checkboxOptions,
-    sort_order: task.metrics.length + 1,
-  });
-
-  if (error) {
-    if (error.code === "23505") {
+  try {
+    await db.insert(focusBoardTaskMetrics).values({
+      taskId,
+      metricKey,
+      label: metricLabel,
+      target: kind === "checkbox" ? checkboxOptions.length : Math.max(0, getIntValue(formData, "target", 0)),
+      points: getIntValue(formData, "points", 1),
+      kind,
+      checkboxOptions,
+      sortOrder: task.metrics.length + 1,
+    });
+  } catch (error: unknown) {
+    const dbError = error as { code?: string; message?: string };
+    if (dbError.code === "23505") {
       throw new Error(`A metric named "${metricLabel}" already exists in this goal.`);
     }
-
-    throw new Error(error.message);
+    throw new Error(dbError.message ?? "Unknown error");
   }
 
   revalidateFocusPaths(
@@ -703,7 +657,6 @@ export async function addFocusBoardMetricAction(formData: FormData) {
 export async function updateFocusBoardMetricAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const metricId = getValue(formData, "metricId");
   if (!metricId) {
@@ -721,16 +674,16 @@ export async function updateFocusBoardMetricAction(formData: FormData) {
   const kind = getMetricKind(formData);
   const checkboxOptions = kind === "checkbox" ? getCheckboxOptions(formData) : [];
 
-  await admin
-    .from("focus_board_task_metrics")
-    .update({
+  await db
+    .update(focusBoardTaskMetrics)
+    .set({
       label: getValue(formData, "label"),
       target: kind === "checkbox" ? checkboxOptions.length : Math.max(0, getIntValue(formData, "target", 0)),
       points: getIntValue(formData, "points", 0),
       kind,
-      checkbox_options: checkboxOptions,
+      checkboxOptions,
     })
-    .eq("id", metricId);
+    .where(eq(focusBoardTaskMetrics.id, metricId));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -742,7 +695,6 @@ export async function updateFocusBoardMetricAction(formData: FormData) {
 export async function toggleFocusBoardMetricVisibilityAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const metricId = getValue(formData, "metricId");
   const nextVisible = getValue(formData, "nextVisible");
@@ -764,24 +716,14 @@ export async function toggleFocusBoardMetricVisibilityAction(formData: FormData)
   const visibleMetrics = metricTask?.metrics.filter(
     (metric) => metric.isActive !== false && metric.isVisible !== false,
   ) ?? [];
-  const { error } = await admin
-    .from("focus_board_task_metrics")
-    .update(
+  await db
+    .update(focusBoardTaskMetrics)
+    .set(
       shouldShow
-        ? {
-            is_active: true,
-            is_visible: true,
-            sort_order: visibleMetrics.length + 1,
-          }
-        : {
-            is_visible: false,
-          },
+        ? { isActive: true, isVisible: true, sortOrder: visibleMetrics.length + 1 }
+        : { isVisible: false },
     )
-    .eq("id", metricId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
+    .where(eq(focusBoardTaskMetrics.id, metricId));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -793,7 +735,6 @@ export async function toggleFocusBoardMetricVisibilityAction(formData: FormData)
 export async function deleteFocusBoardMetricAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const metricId = getValue(formData, "metricId");
   const taskId = getValue(formData, "taskId");
@@ -813,7 +754,10 @@ export async function deleteFocusBoardMetricAction(formData: FormData) {
     throw new Error("Delete the whole challenge instead of removing its final metric.");
   }
 
-  await admin.from("focus_board_task_metrics").update({ is_active: false }).eq("id", metricId);
+  await db
+    .update(focusBoardTaskMetrics)
+    .set({ isActive: false })
+    .where(eq(focusBoardTaskMetrics.id, metricId));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,
@@ -825,30 +769,24 @@ export async function deleteFocusBoardMetricAction(formData: FormData) {
 export async function updateFocusRewardTierAction(formData: FormData) {
   const adminSlug = getValue(formData, "adminSlug");
   const runtime = await getAdminContext(adminSlug);
-  const admin = createFocusBoardAdminClient();
 
   const rewardId = getValue(formData, "rewardId");
   if (!rewardId) {
     throw new Error("Reward id missing.");
   }
 
-  const { error } = await admin
-    .from("focus_board_reward_tiers")
-    .update({
+  await db
+    .update(focusBoardRewardTiers)
+    .set({
       label: getValue(formData, "label"),
       description: getValue(formData, "description"),
-      min_points: Math.max(0, getIntValue(formData, "minPoints", 0)),
-      min_weeks_hit: Math.max(0, getIntValue(formData, "minWeeksHit", 0)),
-      locked_sticker_src: getValue(formData, "lockedStickerSrc"),
-      unlocked_sticker_src: getValue(formData, "unlockedStickerSrc"),
-      sticker_alt: getValue(formData, "stickerAlt"),
+      minPoints: Math.max(0, getIntValue(formData, "minPoints", 0)),
+      minWeeksHit: Math.max(0, getIntValue(formData, "minWeeksHit", 0)),
+      lockedStickerSrc: getValue(formData, "lockedStickerSrc"),
+      unlockedStickerSrc: getValue(formData, "unlockedStickerSrc"),
+      stickerAlt: getValue(formData, "stickerAlt"),
     })
-    .eq("id", rewardId)
-    .eq("board_key", runtime.settings.boardKey);
-
-  if (error) {
-    throw new Error(error.message);
-  }
+    .where(and(eq(focusBoardRewardTiers.id, rewardId), eq(focusBoardRewardTiers.boardKey, runtime.settings.boardKey)));
 
   revalidateFocusPaths(
     runtime.settings.boardSlug,

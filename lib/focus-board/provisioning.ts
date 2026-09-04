@@ -1,4 +1,16 @@
 import { randomBytes } from "node:crypto";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  clients,
+  clientContentProfiles,
+  clientMemberships,
+  focusBoardSettings,
+  focusBoardSections,
+  focusBoardTasks,
+  focusBoardTaskMetrics,
+  focusBoardRewardTiers,
+} from "@/lib/db/schema";
 import {
   DEFAULT_FOCUS_BOARD_SETTINGS,
   DEFAULT_FOCUS_BOARD_SECTION,
@@ -6,7 +18,6 @@ import {
   DEFAULT_FOCUS_REWARD_TIERS,
   DEFAULT_FOCUS_WEEKLY_REWARD,
 } from "@/lib/focus-board/config";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import { findAuthUserByEmail } from "@/lib/focus-board/memberships";
 
 function normaliseSlugPart(value: string) {
@@ -23,7 +34,6 @@ function makeToken() {
 }
 
 async function generateProvisioningKeys(displayName: string) {
-  const admin = createFocusBoardAdminClient();
   const base = normaliseSlugPart(displayName);
 
   for (let attempt = 0; attempt < 12; attempt += 1) {
@@ -33,19 +43,14 @@ async function generateProvisioningKeys(displayName: string) {
     const boardKey = `${clientKey}-board`;
     const adminSlug = `${base}-hq-${token}`;
 
-    const [{ data: client }, { data: board }, { data: control }] = await Promise.all([
-      admin.from("clients").select("id").eq("client_key", clientKey).maybeSingle(),
-      admin.from("focus_board_settings").select("board_key").eq("board_slug", boardSlug).maybeSingle(),
-      admin.from("focus_board_settings").select("board_key").eq("admin_slug", adminSlug).maybeSingle(),
+    const [clientRows, boardRows, controlRows] = await Promise.all([
+      db.select({ id: clients.id }).from(clients).where(eq(clients.clientKey, clientKey)).limit(1),
+      db.select({ boardKey: focusBoardSettings.boardKey }).from(focusBoardSettings).where(eq(focusBoardSettings.boardSlug, boardSlug)).limit(1),
+      db.select({ boardKey: focusBoardSettings.boardKey }).from(focusBoardSettings).where(eq(focusBoardSettings.adminSlug, adminSlug)).limit(1),
     ]);
 
-    if (!client && !board && !control) {
-      return {
-        adminSlug,
-        boardKey,
-        boardSlug,
-        clientKey,
-      };
+    if (!clientRows[0] && !boardRows[0] && !controlRows[0]) {
+      return { adminSlug, boardKey, boardSlug, clientKey };
     }
   }
 
@@ -71,7 +76,6 @@ export async function provisionFocusClient({
     throw new Error("Client name is required.");
   }
 
-  const admin = createFocusBoardAdminClient();
   const keys = await generateProvisioningKeys(trimmedName);
   const linkedUser = ownerEmail ? await findAuthUserByEmail(ownerEmail) : null;
 
@@ -79,144 +83,125 @@ export async function provisionFocusClient({
     throw new Error(`No existing signed-in user was found for ${ownerEmail}.`);
   }
 
-  const { data: clientRow, error: clientError } = await admin
-    .from("clients")
-    .insert({
-      client_key: keys.clientKey,
-      content_lab_enabled: contentLabEnabled,
-      created_by: actorUserId,
-      display_name: trimmedName,
+  const [clientRow] = await db
+    .insert(clients)
+    .values({
+      clientKey: keys.clientKey,
+      contentLabEnabled,
+      createdBy: actorUserId,
+      displayName: trimmedName,
       status: "active",
-      updated_by: actorUserId,
+      updatedBy: actorUserId,
     })
-    .select("id")
-    .single();
+    .returning({ id: clients.id });
 
-  if (clientError || !clientRow) {
-    throw new Error(clientError?.message ?? "Could not create the client.");
+  if (!clientRow) {
+    throw new Error("Could not create the client.");
   }
 
   try {
-    const { error: settingsError } = await admin.from("focus_board_settings").insert({
-      admin_slug: keys.adminSlug,
-      board_key: keys.boardKey,
-      board_slug: keys.boardSlug,
-      client_id: clientRow.id,
+    await db.insert(focusBoardSettings).values({
+      adminSlug: keys.adminSlug,
+      boardKey: keys.boardKey,
+      boardSlug: keys.boardSlug,
+      clientId: clientRow.id,
       subtitle: DEFAULT_FOCUS_BOARD_SETTINGS.subtitle,
       title: `${trimmedName}'s focus board`,
-      weekly_reward_label: DEFAULT_FOCUS_WEEKLY_REWARD.label,
-      weekly_reward_locked_description: DEFAULT_FOCUS_WEEKLY_REWARD.lockedDescription,
-      weekly_reward_unlocked_description: DEFAULT_FOCUS_WEEKLY_REWARD.unlockedDescription,
-      weekly_reward_locked_sticker_src: DEFAULT_FOCUS_WEEKLY_REWARD.lockedStickerSrc,
-      weekly_reward_unlocked_sticker_src: DEFAULT_FOCUS_WEEKLY_REWARD.unlockedStickerSrc,
-      weekly_reward_sticker_alt: DEFAULT_FOCUS_WEEKLY_REWARD.stickerAlt,
-      weekly_target: DEFAULT_FOCUS_BOARD_SETTINGS.weeklyTarget,
+      weeklyRewardLabel: DEFAULT_FOCUS_WEEKLY_REWARD.label,
+      weeklyRewardLockedDescription: DEFAULT_FOCUS_WEEKLY_REWARD.lockedDescription,
+      weeklyRewardUnlockedDescription: DEFAULT_FOCUS_WEEKLY_REWARD.unlockedDescription,
+      weeklyRewardLockedStickerSrc: DEFAULT_FOCUS_WEEKLY_REWARD.lockedStickerSrc,
+      weeklyRewardUnlockedStickerSrc: DEFAULT_FOCUS_WEEKLY_REWARD.unlockedStickerSrc,
+      weeklyRewardStickerAlt: DEFAULT_FOCUS_WEEKLY_REWARD.stickerAlt,
+      weeklyTarget: DEFAULT_FOCUS_BOARD_SETTINGS.weeklyTarget,
     });
 
-    if (settingsError) {
-      throw new Error(`Could not create the starter board: ${settingsError.message}`);
-    }
-
-    const { data: sectionRow, error: sectionError } = await admin
-      .from("focus_board_sections")
-      .insert({
-        board_key: keys.boardKey,
+    const [sectionRow] = await db
+      .insert(focusBoardSections)
+      .values({
+        boardKey: keys.boardKey,
         description: DEFAULT_FOCUS_BOARD_SECTION.description,
-        is_active: true,
-        is_visible: true,
-        section_key: DEFAULT_FOCUS_BOARD_SECTION.key,
-        sort_order: DEFAULT_FOCUS_BOARD_SECTION.sortOrder ?? 1,
+        isActive: true,
+        isVisible: true,
+        sectionKey: DEFAULT_FOCUS_BOARD_SECTION.key,
+        sortOrder: DEFAULT_FOCUS_BOARD_SECTION.sortOrder ?? 1,
         title: DEFAULT_FOCUS_BOARD_SECTION.title,
       })
-      .select("id")
-      .single();
+      .returning({ id: focusBoardSections.id });
 
-    if (sectionError || !sectionRow) {
-      throw new Error(sectionError?.message ?? "Could not create starter board section.");
+    if (!sectionRow) {
+      throw new Error("Could not create starter board section.");
     }
 
-    const { data: taskRows, error: taskError } = await admin
-      .from("focus_board_tasks")
-      .insert(
+    const taskRows = await db
+      .insert(focusBoardTasks)
+      .values(
         DEFAULT_FOCUS_BOARD_TASKS.map((task) => ({
-          accent_class: task.accentClass,
-          board_key: keys.boardKey,
+          accentClass: task.accentClass,
+          boardKey: keys.boardKey,
           description: task.description,
           icon: task.icon,
-          section_id: sectionRow.id,
-          sort_order: task.sortOrder ?? 0,
-          sticker_alt: task.stickerAlt,
-          sticker_src: task.stickerSrc,
-          task_key: task.key,
+          sectionId: sectionRow.id,
+          sortOrder: task.sortOrder ?? 0,
+          stickerAlt: task.stickerAlt,
+          stickerSrc: task.stickerSrc,
+          taskKey: task.key,
           title: task.title,
         })),
       )
-      .select("id, task_key");
+      .returning({ id: focusBoardTasks.id, taskKey: focusBoardTasks.taskKey });
 
-    if (taskError || !taskRows) {
-      throw new Error(taskError?.message ?? "Could not create starter goals.");
+    if (!taskRows.length) {
+      throw new Error("Could not create starter goals.");
     }
 
-    const taskIdByKey = new Map(taskRows.map((task) => [task.task_key, task.id]));
-    const metricRows = DEFAULT_FOCUS_BOARD_TASKS.flatMap((task) =>
+    const taskIdByKey = new Map(taskRows.map((task) => [task.taskKey, task.id]));
+    const metricValues = DEFAULT_FOCUS_BOARD_TASKS.flatMap((task) =>
       task.metrics.map((metric) => ({
         kind: metric.kind,
         label: metric.label,
-        metric_key: metric.key,
+        metricKey: metric.key,
         points: metric.points,
-        sort_order: metric.sortOrder ?? 0,
+        sortOrder: metric.sortOrder ?? 0,
         target: metric.target,
-        task_id: taskIdByKey.get(task.key),
+        taskId: taskIdByKey.get(task.key)!,
       })),
-    ).filter((metric) => Boolean(metric.task_id));
+    ).filter((metric) => Boolean(metric.taskId));
 
-    const { error: metricError } = await admin.from("focus_board_task_metrics").insert(metricRows);
+    await db.insert(focusBoardTaskMetrics).values(metricValues);
 
-    if (metricError) {
-      throw new Error(`Could not create starter metrics: ${metricError.message}`);
-    }
-
-    const { error: rewardError } = await admin.from("focus_board_reward_tiers").insert(
+    await db.insert(focusBoardRewardTiers).values(
       DEFAULT_FOCUS_REWARD_TIERS.map((reward) => ({
-        board_key: keys.boardKey,
+        boardKey: keys.boardKey,
         description: reward.description,
         label: reward.label,
-        locked_sticker_src: reward.lockedStickerSrc,
-        min_points: reward.minPoints,
-        min_weeks_hit: reward.minWeeksHit,
-        sort_order: reward.sortOrder ?? 0,
-        sticker_alt: reward.stickerAlt,
-        unlocked_sticker_src: reward.unlockedStickerSrc,
+        lockedStickerSrc: reward.lockedStickerSrc,
+        minPoints: reward.minPoints,
+        minWeeksHit: reward.minWeeksHit,
+        sortOrder: reward.sortOrder ?? 0,
+        stickerAlt: reward.stickerAlt,
+        unlockedStickerSrc: reward.unlockedStickerSrc,
       })),
     );
 
-    if (rewardError) {
-      throw new Error(`Could not create starter rewards: ${rewardError.message}`);
-    }
-
-    const { error: profileError } = await admin.from("client_content_profiles").upsert({
-      business_name: trimmedName,
-      client_id: clientRow.id,
-    });
-
-    if (profileError) {
-      throw new Error(`Could not create the client content profile: ${profileError.message}`);
-    }
-
-    if (linkedUser) {
-      const { error: membershipError } = await admin.from("client_memberships").insert({
-        client_id: clientRow.id,
-        content_lab_access: contentLabEnabled,
-        created_by: actorUserId,
-        is_active: true,
-        role: "client_user",
-        updated_by: actorUserId,
-        user_id: linkedUser.id,
+    await db
+      .insert(clientContentProfiles)
+      .values({ businessName: trimmedName, clientId: clientRow.id })
+      .onConflictDoUpdate({
+        target: clientContentProfiles.clientId,
+        set: { businessName: trimmedName },
       });
 
-      if (membershipError) {
-        throw new Error(`Could not link the initial user: ${membershipError.message}`);
-      }
+    if (linkedUser) {
+      await db.insert(clientMemberships).values({
+        clientId: clientRow.id,
+        contentLabAccess: contentLabEnabled,
+        createdBy: actorUserId,
+        isActive: true,
+        role: "client_user",
+        updatedBy: actorUserId,
+        userId: linkedUser.id,
+      });
     }
 
     return {
@@ -225,17 +210,16 @@ export async function provisionFocusClient({
       linkedEmail: linkedUser?.email ?? null,
     };
   } catch (error) {
-    const { error: settingsCleanupError } = await admin
-      .from("focus_board_settings")
-      .delete()
-      .eq("board_key", keys.boardKey);
-    const { error: clientCleanupError } = await admin.from("clients").delete().eq("id", clientRow.id);
+    try {
+      await db.delete(focusBoardSettings).where(eq(focusBoardSettings.boardKey, keys.boardKey));
+    } catch (settingsCleanupError) {
+      console.error("Failed to clean up partial FocusBoard settings:", settingsCleanupError);
+    }
 
-    if (settingsCleanupError || clientCleanupError) {
-      console.error("Failed to clean up partial FocusBoard provisioning:", {
-        clientCleanupError,
-        settingsCleanupError,
-      });
+    try {
+      await db.delete(clients).where(eq(clients.id, clientRow.id));
+    } catch (clientCleanupError) {
+      console.error("Failed to clean up partial FocusBoard client:", clientCleanupError);
     }
 
     throw error;

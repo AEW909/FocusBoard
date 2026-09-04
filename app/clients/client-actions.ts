@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { clients } from "@/lib/db/schema";
 import { requireFocusPlatformOwner } from "@/lib/focus-board/access";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import { provisionFocusClient } from "@/lib/focus-board/provisioning";
 import { getFocusBoardRuntimeConfigByClientId } from "@/lib/focus-board/runtime";
 
@@ -77,15 +79,10 @@ export async function setFocusClientStatusAction(formData: FormData) {
     redirect(getClientsPath(undefined, "Choose a valid client status."));
   }
 
-  const admin = createFocusBoardAdminClient();
-  const { error } = await admin
-    .from("clients")
-    .update({ status: nextStatus, updated_by: user.id })
-    .eq("id", clientId);
-
-  if (error) {
-    throw new Error(`Failed to update client status: ${error.message}`);
-  }
+  await db
+    .update(clients)
+    .set({ status: nextStatus, updatedBy: user.id })
+    .where(eq(clients.id, clientId));
 
   const runtime = await getFocusBoardRuntimeConfigByClientId(clientId);
   revalidatePath("/clients");

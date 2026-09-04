@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
+import { and, desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { focusBoardEvents } from "@/lib/db/schema";
 import { requireFocusBoardAccessBySlug } from "@/lib/focus-board/access";
 import { getWeekMonthKey, getWeekStart, toIsoDate } from "@/lib/focus-board/dates";
 import { getFocusBoardRuntimeConfigByPublicSlug } from "@/lib/focus-board/runtime";
@@ -71,84 +73,71 @@ export async function updateFocusBoardAction(
     return { error: "Future weeks are locked until they become current." };
   }
 
-  const admin = createFocusBoardAdminClient();
-
   if (direction === "add") {
     if (metric.kind === "checkbox") {
-      const { data: existing, error: existingError } = await admin
-        .from("focus_board_events")
-        .select("id")
-        .eq("board_key", runtime.settings.boardKey)
-        .eq("month_key", eventMonthKey)
-        .eq("week_start", weekKey)
-        .eq("task_key", taskKey)
-        .eq("metric_key", eventMetricKey)
-        .limit(1)
-        .maybeSingle();
+      const existing = await db
+        .select({ id: focusBoardEvents.id })
+        .from(focusBoardEvents)
+        .where(
+          and(
+            eq(focusBoardEvents.boardKey, runtime.settings.boardKey),
+            eq(focusBoardEvents.monthKey, eventMonthKey),
+            eq(focusBoardEvents.weekStart, weekKey),
+            eq(focusBoardEvents.taskKey, taskKey),
+            eq(focusBoardEvents.metricKey, eventMetricKey),
+          ),
+        )
+        .limit(1);
 
-      if (existingError) {
-        return { error: existingError.message };
-      }
-
-      if (existing) {
+      if (existing[0]) {
         return {};
       }
     }
 
-    const { error } = await admin.from("focus_board_events").insert({
-      board_key: runtime.settings.boardKey,
-      month_key: eventMonthKey,
-      week_start: weekKey,
-      task_key: taskKey,
-      metric_key: eventMetricKey,
+    await db.insert(focusBoardEvents).values({
+      boardKey: runtime.settings.boardKey,
+      monthKey: eventMonthKey,
+      weekStart: weekKey,
+      taskKey,
+      metricKey: eventMetricKey,
       points: task.isBoosted ? metric.points * 2 : metric.points,
     });
-
-    if (error) {
-      return { error: error.message };
-    }
   } else if (direction === "remove") {
     if (metric.kind === "checkbox") {
-      const { error: deleteError } = await admin
-        .from("focus_board_events")
-        .delete()
-        .eq("board_key", runtime.settings.boardKey)
-        .eq("month_key", eventMonthKey)
-        .eq("week_start", weekKey)
-        .eq("task_key", taskKey)
-        .eq("metric_key", eventMetricKey);
-
-      if (deleteError) {
-        return { error: deleteError.message };
-      }
+      await db
+        .delete(focusBoardEvents)
+        .where(
+          and(
+            eq(focusBoardEvents.boardKey, runtime.settings.boardKey),
+            eq(focusBoardEvents.monthKey, eventMonthKey),
+            eq(focusBoardEvents.weekStart, weekKey),
+            eq(focusBoardEvents.taskKey, taskKey),
+            eq(focusBoardEvents.metricKey, eventMetricKey),
+          ),
+        );
 
       revalidatePath(`/board/${runtime.settings.boardSlug}`);
       revalidatePath(`/focus/${runtime.settings.boardSlug}`);
       return {};
     }
 
-    const { data: latest, error: fetchError } = await admin
-      .from("focus_board_events")
-      .select("id")
-      .eq("board_key", runtime.settings.boardKey)
-      .eq("month_key", eventMonthKey)
-      .eq("week_start", weekKey)
-      .eq("task_key", taskKey)
-      .eq("metric_key", eventMetricKey)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const latest = await db
+      .select({ id: focusBoardEvents.id })
+      .from(focusBoardEvents)
+      .where(
+        and(
+          eq(focusBoardEvents.boardKey, runtime.settings.boardKey),
+          eq(focusBoardEvents.monthKey, eventMonthKey),
+          eq(focusBoardEvents.weekStart, weekKey),
+          eq(focusBoardEvents.taskKey, taskKey),
+          eq(focusBoardEvents.metricKey, eventMetricKey),
+        ),
+      )
+      .orderBy(desc(focusBoardEvents.createdAt))
+      .limit(1);
 
-    if (fetchError) {
-      return { error: fetchError.message };
-    }
-
-    if (latest) {
-      const { error: deleteError } = await admin.from("focus_board_events").delete().eq("id", latest.id);
-
-      if (deleteError) {
-        return { error: deleteError.message };
-      }
+    if (latest[0]) {
+      await db.delete(focusBoardEvents).where(eq(focusBoardEvents.id, latest[0].id));
     }
   }
 

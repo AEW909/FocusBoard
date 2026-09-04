@@ -1,5 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
+import { and, asc, eq, gte, lt } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { businessStatGroups, businessStatCategories, businessStatEntries } from "@/lib/db/schema";
 import {
   addDays,
   getWeekStart,
@@ -56,40 +58,6 @@ export type BusinessStatEntry = {
   value: number;
 };
 
-type GroupRow = {
-  id: string;
-  client_id: string;
-  name: string;
-  color: string;
-  sort_order: number;
-  is_active: boolean;
-  is_visible: boolean;
-};
-
-type CategoryRow = {
-  id: string;
-  client_id: string;
-  group_id: string | null;
-  name: string;
-  unit: BusinessStatUnit;
-  prefix: string;
-  suffix: string;
-  color: string;
-  weekly_target: number | null;
-  monthly_target: number | null;
-  sort_order: number;
-  is_active: boolean;
-  is_visible: boolean;
-};
-
-type EntryRow = {
-  id: string;
-  client_id: string;
-  category_id: string;
-  week_start: string;
-  value: number;
-};
-
 export type BusinessStatsConfig = {
   groups: BusinessStatGroup[];
   visibleGroups: BusinessStatGroup[];
@@ -105,47 +73,54 @@ export type BusinessStatsData = BusinessStatsConfig & {
   rangeEnd: string;
 };
 
+type GroupRow = typeof businessStatGroups.$inferSelect;
+type CategoryRow = typeof businessStatCategories.$inferSelect;
+type EntryRow = typeof businessStatEntries.$inferSelect;
+
 function mapGroup(row: GroupRow): BusinessStatGroup {
   return {
     id: row.id,
-    clientId: row.client_id,
+    clientId: row.clientId,
     name: row.name,
     color: row.color,
-    sortOrder: row.sort_order,
-    isActive: row.is_active,
-    isVisible: row.is_visible,
+    sortOrder: row.sortOrder,
+    isActive: row.isActive,
+    isVisible: row.isVisible,
   };
 }
 
 function mapCategory(row: CategoryRow): BusinessStatCategory {
+  const weeklyTarget = row.weeklyTarget === null ? null : Number(row.weeklyTarget);
+  const monthlyTarget =
+    row.monthlyTarget === null
+      ? weeklyTarget === null
+        ? null
+        : weeklyTarget * 4
+      : Number(row.monthlyTarget);
+
   return {
     id: row.id,
-    clientId: row.client_id,
-    groupId: row.group_id,
+    clientId: row.clientId,
+    groupId: row.groupId,
     name: row.name,
-    unit: row.unit,
+    unit: row.unit as BusinessStatUnit,
     prefix: row.prefix,
     suffix: row.suffix,
     color: row.color,
-    weeklyTarget: row.weekly_target === null ? null : Number(row.weekly_target),
-    monthlyTarget:
-      row.monthly_target === null
-        ? row.weekly_target === null
-          ? null
-          : Number(row.weekly_target) * 4
-        : Number(row.monthly_target),
-    sortOrder: row.sort_order,
-    isActive: row.is_active,
-    isVisible: row.is_visible,
+    weeklyTarget,
+    monthlyTarget,
+    sortOrder: row.sortOrder,
+    isActive: row.isActive,
+    isVisible: row.isVisible,
   };
 }
 
 function mapEntry(row: EntryRow): BusinessStatEntry {
   return {
     id: row.id,
-    clientId: row.client_id,
-    categoryId: row.category_id,
-    weekStart: row.week_start,
+    clientId: row.clientId,
+    categoryId: row.categoryId,
+    weekStart: row.weekStart,
     value: Number(row.value),
   };
 }
@@ -168,30 +143,21 @@ export function normaliseBusinessStatsWeek(value?: string | null) {
 
 export async function getBusinessStatsConfig(clientId: string): Promise<BusinessStatsConfig> {
   noStore();
-  const admin = createFocusBoardAdminClient();
-  const [groupsResult, categoriesResult] = await Promise.all([
-    admin
-      .from("business_stat_groups")
-      .select("id, client_id, name, color, sort_order, is_active, is_visible")
-      .eq("client_id", clientId)
-      .order("sort_order", { ascending: true }),
-    admin
-      .from("business_stat_categories")
-      .select("id, client_id, group_id, name, unit, prefix, suffix, color, weekly_target, monthly_target, sort_order, is_active, is_visible")
-      .eq("client_id", clientId)
-      .order("sort_order", { ascending: true }),
+  const [groupRows, categoryRows] = await Promise.all([
+    db
+      .select()
+      .from(businessStatGroups)
+      .where(eq(businessStatGroups.clientId, clientId))
+      .orderBy(asc(businessStatGroups.sortOrder)),
+    db
+      .select()
+      .from(businessStatCategories)
+      .where(eq(businessStatCategories.clientId, clientId))
+      .orderBy(asc(businessStatCategories.sortOrder)),
   ]);
 
-  if (groupsResult.error) {
-    throw new Error(`Failed to load business stat groups: ${groupsResult.error.message}`);
-  }
-
-  if (categoriesResult.error) {
-    throw new Error(`Failed to load business stat categories: ${categoriesResult.error.message}`);
-  }
-
-  const groups = ((groupsResult.data ?? []) as GroupRow[]).map(mapGroup);
-  const categories = ((categoriesResult.data ?? []) as CategoryRow[]).map(mapCategory);
+  const groups = groupRows.map(mapGroup);
+  const categories = categoryRows.map(mapCategory);
 
   return {
     groups,
@@ -208,28 +174,27 @@ export async function getBusinessStatsData(
   params: { week?: string; start?: string; end?: string } = {},
 ): Promise<BusinessStatsData> {
   noStore();
-  const admin = createFocusBoardAdminClient();
   const config = await getBusinessStatsConfig(clientId);
   const defaults = getDefaultBusinessStatsRange();
   const rangeStart = parseIsoDate(params.start) ? normaliseBusinessStatsWeek(params.start) : defaults.rangeStart;
   const rangeEnd = parseIsoDate(params.end) ? normaliseBusinessStatsWeek(params.end) : defaults.rangeEnd;
   const collectionWeek = normaliseBusinessStatsWeek(params.week);
 
-  const { data, error } = await admin
-    .from("business_stat_entries")
-    .select("id, client_id, category_id, week_start, value")
-    .eq("client_id", clientId)
-    .gte("week_start", rangeStart)
-    .lt("week_start", rangeEnd)
-    .order("week_start", { ascending: true });
-
-  if (error) {
-    throw new Error(`Failed to load business stat entries: ${error.message}`);
-  }
+  const entryRows = await db
+    .select()
+    .from(businessStatEntries)
+    .where(
+      and(
+        eq(businessStatEntries.clientId, clientId),
+        gte(businessStatEntries.weekStart, rangeStart),
+        lt(businessStatEntries.weekStart, rangeEnd),
+      ),
+    )
+    .orderBy(asc(businessStatEntries.weekStart));
 
   return {
     ...config,
-    entries: ((data ?? []) as EntryRow[]).map(mapEntry),
+    entries: entryRows.map(mapEntry),
     collectionWeek,
     currentWeek: defaults.currentWeek,
     rangeStart,

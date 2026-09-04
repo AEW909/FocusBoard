@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { businessStatEntries } from "@/lib/db/schema";
 import { requireFocusBusinessStatsAccessByClientId } from "@/lib/focus-board/access";
 import { getBusinessStatsConfig, normaliseBusinessStatsWeek } from "@/lib/focus-board/business-stats";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 
 function getValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -53,35 +55,44 @@ export async function saveBusinessStatsEntriesAction(formData: FormData) {
       })
       .map((category) => category.id),
   );
-  const admin = createFocusBoardAdminClient();
 
-  const updates = await Promise.all(
-    Array.from(visibleCategoryIds).map((categoryId) => {
-      const value = getNumberValue(formData.get(`value:${categoryId}`));
+  try {
+    await Promise.all(
+      Array.from(visibleCategoryIds).map((categoryId) => {
+        const value = getNumberValue(formData.get(`value:${categoryId}`));
 
-      if (value === null) {
-        return Promise.resolve({ error: null });
-      }
+        if (value === null) {
+          return Promise.resolve();
+        }
 
-      return admin
-        .from("business_stat_entries")
-        .upsert(
-          {
-            client_id: clientId,
-            category_id: categoryId,
-            week_start: weekStart,
-            value,
-            updated_by: user.id,
-            created_by: user.id,
-          },
-          { onConflict: "category_id,week_start" },
-        );
-    }),
-  );
-  const failed = updates.find((result) => result.error);
-
-  if (failed?.error) {
-    redirect(getBusinessPath(clientId, weekStart, undefined, failed.error.message));
+        return db
+          .insert(businessStatEntries)
+          .values({
+            clientId,
+            categoryId,
+            weekStart,
+            value: value.toString(),
+            updatedBy: user.id,
+            createdBy: user.id,
+          })
+          .onConflictDoUpdate({
+            target: [businessStatEntries.categoryId, businessStatEntries.weekStart],
+            set: {
+              value: value.toString(),
+              updatedBy: user.id,
+            },
+          });
+      }),
+    );
+  } catch (error) {
+    redirect(
+      getBusinessPath(
+        clientId,
+        weekStart,
+        undefined,
+        error instanceof Error ? error.message : "Could not save business stats.",
+      ),
+    );
   }
 
   revalidatePath(`/clients/${clientId}/business`);

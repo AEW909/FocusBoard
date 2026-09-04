@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
+import { auth } from "@/lib/auth/auth";
+import { db } from "@/lib/db";
+import { clients, clientMemberships } from "@/lib/db/schema";
 import { requireFocusPlatformOwner } from "@/lib/focus-board/access";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 function getValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -48,63 +51,50 @@ export async function createFocusUserAction(formData: FormData) {
     redirect(getUsersPath(undefined, "Pick a valid initial FocusBoard role."));
   }
 
-  const supabaseAdmin = createSupabaseAdminClient();
-  const { data: createdUserResult, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: fullName ? { full_name: fullName } : undefined,
-  });
+  let createdUser: { id: string; email: string } | null = null;
 
-  if (createUserError || !createdUserResult.user) {
-    redirect(getUsersPath(undefined, createUserError?.message ?? "Failed to create the new user."));
+  try {
+    const result = await auth.api.createUser({
+      body: {
+        email,
+        password,
+        name: fullName || email,
+        role: "user",
+      },
+      headers: await headers(),
+    });
+    createdUser = result.user;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to create the new user.";
+    redirect(getUsersPath(undefined, message));
   }
 
-  const createdUser = createdUserResult.user;
-  const { error: profileError } = await supabaseAdmin.from("profiles").upsert(
-    {
-      id: createdUser.id,
-      email,
-      full_name: fullName || null,
-    },
-    {
-      onConflict: "id",
-    },
-  );
-
-  if (profileError) {
-    throw new Error(`Failed to upsert the shared profile row: ${profileError.message}`);
+  if (!createdUser) {
+    redirect(getUsersPath(undefined, "Failed to create the new user."));
   }
 
   if (clientId) {
-    const focusAdmin = createFocusBoardAdminClient();
-    const { data: clientRecord, error: clientError } = await focusAdmin
-      .from("clients")
-      .select("id, display_name, content_lab_enabled")
-      .eq("id", clientId)
-      .maybeSingle();
+    const clientRows = await db
+      .select({ id: clients.id, displayName: clients.displayName, contentLabEnabled: clients.contentLabEnabled })
+      .from(clients)
+      .where(eq(clients.id, clientId))
+      .limit(1);
 
-    if (clientError) {
-      throw new Error(`Failed to inspect the selected client: ${clientError.message}`);
-    }
+    const clientRecord = clientRows[0];
 
     if (!clientRecord) {
       redirect(getUsersPath(undefined, "Pick a valid client for the initial board assignment."));
     }
 
-    const { error: membershipError } = await focusAdmin.from("client_memberships").insert({
-      client_id: clientId,
-      user_id: createdUser.id,
+    await db.insert(clientMemberships).values({
+      clientId,
+      userId: createdUser.id,
       role,
-      is_active: true,
-      content_lab_access: clientRecord.content_lab_enabled ? contentLabAccess : false,
-      created_by: user.id,
-      updated_by: user.id,
+      isActive: true,
+      contentLabAccess: clientRecord.contentLabEnabled ? contentLabAccess : false,
+      createdBy: user.id,
+      updatedBy: user.id,
     });
-
-    if (membershipError) {
-      throw new Error(`Failed to create the initial FocusBoard membership: ${membershipError.message}`);
-    }
 
     revalidatePath("/users");
     revalidatePath(`/clients/${clientId}/manage`);
@@ -113,7 +103,7 @@ export async function createFocusUserAction(formData: FormData) {
 
     redirect(
       getUsersPath(
-        `Created ${email} and assigned ${clientRecord.display_name} as the first board.`,
+        `Created ${email} and assigned ${clientRecord.displayName} as the first board.`,
       ),
     );
   }

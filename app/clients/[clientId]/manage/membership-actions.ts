@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { clientMemberships, clients } from "@/lib/db/schema";
 import { requireManagedFocusClientById } from "@/lib/focus-board/access";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 import { findAuthUserByEmail } from "@/lib/focus-board/memberships";
 
 function getValue(formData: FormData, key: string) {
@@ -59,47 +61,34 @@ export async function addFocusClientMembershipAction(formData: FormData) {
     );
   }
 
-  const focusAdmin = createFocusBoardAdminClient();
-  const { data: existing, error: existingError } = await focusAdmin
-    .from("client_memberships")
-    .select("id")
-    .eq("client_id", clientId)
-    .eq("user_id", authUser.id)
-    .maybeSingle();
+  const existingRows = await db
+    .select({ id: clientMemberships.id })
+    .from(clientMemberships)
+    .where(and(eq(clientMemberships.clientId, clientId), eq(clientMemberships.userId, authUser.id)))
+    .limit(1);
 
-  if (existingError) {
-    throw new Error(`Failed to inspect existing client membership: ${existingError.message}`);
-  }
+  const existing = existingRows[0];
 
   if (existing) {
-    const { error } = await focusAdmin
-      .from("client_memberships")
-      .update({
+    await db
+      .update(clientMemberships)
+      .set({
         role,
-        is_active: true,
-        content_lab_access: contentLabAccess,
-        updated_by: user.id,
+        isActive: true,
+        contentLabAccess,
+        updatedBy: user.id,
       })
-      .eq("id", existing.id)
-      .eq("client_id", clientId);
-
-    if (error) {
-      throw new Error(`Failed to update client membership: ${error.message}`);
-    }
+      .where(and(eq(clientMemberships.id, existing.id), eq(clientMemberships.clientId, clientId)));
   } else {
-    const { error } = await focusAdmin.from("client_memberships").insert({
-      client_id: clientId,
-      user_id: authUser.id,
-      created_by: user.id,
+    await db.insert(clientMemberships).values({
+      clientId,
+      userId: authUser.id,
+      createdBy: user.id,
       role,
-      is_active: true,
-      content_lab_access: contentLabAccess,
-      updated_by: user.id,
+      isActive: true,
+      contentLabAccess,
+      updatedBy: user.id,
     });
-
-    if (error) {
-      throw new Error(`Failed to create client membership: ${error.message}`);
-    }
   }
 
   revalidateMembershipPaths(clientId);
@@ -118,16 +107,10 @@ export async function setFocusClientMembershipContentLabAccessAction(formData: F
   }
 
   const contentLabAccess = nextContentLabAccess === "true";
-  const focusAdmin = createFocusBoardAdminClient();
-  const { error } = await focusAdmin
-    .from("client_memberships")
-    .update({ content_lab_access: contentLabAccess, updated_by: user.id })
-    .eq("id", membershipId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    throw new Error(`Failed to update Content Lab access: ${error.message}`);
-  }
+  await db
+    .update(clientMemberships)
+    .set({ contentLabAccess, updatedBy: user.id })
+    .where(and(eq(clientMemberships.id, membershipId), eq(clientMemberships.clientId, clientId)));
 
   revalidateMembershipPaths(clientId);
   redirect(
@@ -153,16 +136,10 @@ export async function updateFocusClientMembershipRoleAction(formData: FormData) 
     redirect(getManagePath(clientId, undefined, "Pick a valid FocusBoard role."));
   }
 
-  const focusAdmin = createFocusBoardAdminClient();
-  const { error } = await focusAdmin
-    .from("client_memberships")
-    .update({ role, updated_by: user.id })
-    .eq("id", membershipId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    throw new Error(`Failed to update membership role: ${error.message}`);
-  }
+  await db
+    .update(clientMemberships)
+    .set({ role, updatedBy: user.id })
+    .where(and(eq(clientMemberships.id, membershipId), eq(clientMemberships.clientId, clientId)));
 
   revalidateMembershipPaths(clientId);
   redirect(getManagePath(clientId, "Client role updated."));
@@ -180,16 +157,10 @@ export async function setFocusClientMembershipActiveAction(formData: FormData) {
   }
 
   const isActive = nextActive === "true";
-  const focusAdmin = createFocusBoardAdminClient();
-  const { error } = await focusAdmin
-    .from("client_memberships")
-    .update({ is_active: isActive, updated_by: user.id })
-    .eq("id", membershipId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    throw new Error(`Failed to update membership status: ${error.message}`);
-  }
+  await db
+    .update(clientMemberships)
+    .set({ isActive, updatedBy: user.id })
+    .where(and(eq(clientMemberships.id, membershipId), eq(clientMemberships.clientId, clientId)));
 
   revalidateMembershipPaths(clientId);
   redirect(
@@ -207,15 +178,10 @@ export async function setFocusClientContentLabEnabledAction(formData: FormData) 
   const { user } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
 
   const contentLabEnabled = nextEnabled === "true";
-  const focusAdmin = createFocusBoardAdminClient();
-  const { error } = await focusAdmin
-    .from("clients")
-    .update({ content_lab_enabled: contentLabEnabled, updated_by: user.id })
-    .eq("id", clientId);
-
-  if (error) {
-    throw new Error(`Failed to update client Content Lab status: ${error.message}`);
-  }
+  await db
+    .update(clients)
+    .set({ contentLabEnabled, updatedBy: user.id })
+    .where(eq(clients.id, clientId));
 
   revalidateMembershipPaths(clientId);
   redirect(

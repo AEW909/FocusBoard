@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { authClient } from "@/lib/auth/client";
 
 type LoginFormProps = {
   nextPath: string;
@@ -26,14 +26,13 @@ export function LoginForm({ nextPath }: LoginFormProps) {
     setError("");
 
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await authClient.signIn.email({
         email: email.trim(),
         password: password.trim(),
       });
 
       if (signInError) {
-        setError(signInError.message);
+        setError(signInError.message ?? "Sign in failed. Please try again.");
         return;
       }
 

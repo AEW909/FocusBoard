@@ -10,8 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.49.8",
+    "better-auth": "^1.7.2",
+    "drizzle-orm": "^0.45.2",
     "next": "^15.3.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -21,6 +24,7 @@
     "@types/node": "^22.15.17",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.26.0",
     "eslint-config-next": "^15.3.1",
     "playwright": "^1.62.1",

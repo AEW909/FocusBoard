@@ -1,4 +1,6 @@
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { clientContentProfiles } from "@/lib/db/schema";
 
 export type FocusContentProfile = {
   businessName: string;
@@ -8,16 +10,6 @@ export type FocusContentProfile = {
   differentiators: string;
   contentRules: string;
   updatedAt: string | null;
-};
-
-type FocusContentProfileRow = {
-  business_name: string;
-  brand_voice: string | null;
-  target_audience: string | null;
-  services: string | null;
-  differentiators: string | null;
-  content_rules: string | null;
-  updated_at: string | null;
 };
 
 function normaliseText(value: string | null | undefined) {
@@ -37,31 +29,26 @@ function buildFallbackProfile(name: string): FocusContentProfile {
 }
 
 export async function getFocusContentProfile(clientId: string, fallbackName: string) {
-  const admin = createFocusBoardAdminClient();
-  const { data, error } = await admin
-    .from("client_content_profiles")
-    .select(
-      "business_name, brand_voice, target_audience, services, differentiators, content_rules, updated_at",
-    )
-    .eq("client_id", clientId)
-    .maybeSingle<FocusContentProfileRow>();
+  const rows = await db
+    .select()
+    .from(clientContentProfiles)
+    .where(eq(clientContentProfiles.clientId, clientId))
+    .limit(1);
 
-  if (error) {
-    throw new Error(`Failed to load client content profile: ${error.message}`);
-  }
+  const row = rows[0];
 
-  if (!data) {
+  if (!row) {
     return buildFallbackProfile(fallbackName);
   }
 
   return {
-    businessName: normaliseText(data.business_name) || fallbackName,
-    brandVoice: normaliseText(data.brand_voice),
-    targetAudience: normaliseText(data.target_audience),
-    services: normaliseText(data.services),
-    differentiators: normaliseText(data.differentiators),
-    contentRules: normaliseText(data.content_rules),
-    updatedAt: data.updated_at,
+    businessName: normaliseText(row.businessName) || fallbackName,
+    brandVoice: normaliseText(row.brandVoice),
+    targetAudience: normaliseText(row.targetAudience),
+    services: normaliseText(row.services),
+    differentiators: normaliseText(row.differentiators),
+    contentRules: normaliseText(row.contentRules),
+    updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : null,
   } satisfies FocusContentProfile;
 }
 

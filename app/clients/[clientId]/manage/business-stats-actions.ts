@@ -2,13 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { businessStatGroups, businessStatCategories, clients } from "@/lib/db/schema";
 import { requireManagedFocusClientById } from "@/lib/focus-board/access";
 import {
   BUSINESS_STAT_LINE_COLORS,
   getBusinessStatsConfig,
   type BusinessStatUnit,
 } from "@/lib/focus-board/business-stats";
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
 
 function getValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -82,16 +84,11 @@ export async function setFocusClientBusinessStatsEnabledAction(formData: FormDat
   const clientId = getValue(formData, "clientId");
   const nextEnabled = getValue(formData, "nextEnabled") === "true";
   const { user } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
-  const admin = createFocusBoardAdminClient();
 
-  const { error } = await admin
-    .from("clients")
-    .update({ business_stats_enabled: nextEnabled, updated_by: user.id })
-    .eq("id", clientId);
-
-  if (error) {
-    throw new Error(`Failed to update Business Stats status: ${error.message}`);
-  }
+  await db
+    .update(clients)
+    .set({ businessStatsEnabled: nextEnabled, updatedBy: user.id })
+    .where(eq(clients.id, clientId));
 
   revalidateBusinessStatsPaths(clientId);
   redirect(
@@ -114,16 +111,15 @@ export async function addBusinessStatGroupAction(formData: FormData) {
     redirect(getBusinessStatsPath(clientId, undefined, "Group name is required.", returnPath));
   }
 
-  const admin = createFocusBoardAdminClient();
-  const { error } = await admin.from("business_stat_groups").insert({
-    client_id: clientId,
-    name,
-    color,
-    sort_order: config.groups.filter((group) => group.isActive !== false).length + 1,
-  });
-
-  if (error) {
-    redirect(getBusinessStatsPath(clientId, undefined, `Could not add group: ${error.message}`, returnPath));
+  try {
+    await db.insert(businessStatGroups).values({
+      clientId,
+      name,
+      color,
+      sortOrder: config.groups.filter((group) => group.isActive !== false).length + 1,
+    });
+  } catch (error) {
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not add group: ${error instanceof Error ? error.message : "unknown error"}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
@@ -142,18 +138,16 @@ export async function updateBusinessStatGroupAction(formData: FormData) {
     redirect(getBusinessStatsPath(clientId, undefined, "Group not found.", returnPath));
   }
 
-  const admin = createFocusBoardAdminClient();
-  const { error } = await admin
-    .from("business_stat_groups")
-    .update({
-      name: getValue(formData, "name") || group.name,
-      color: getValue(formData, "color") || group.color,
-    })
-    .eq("id", groupId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    redirect(getBusinessStatsPath(clientId, undefined, `Could not save group: ${error.message}`, returnPath));
+  try {
+    await db
+      .update(businessStatGroups)
+      .set({
+        name: getValue(formData, "name") || group.name,
+        color: getValue(formData, "color") || group.color,
+      })
+      .where(and(eq(businessStatGroups.id, groupId), eq(businessStatGroups.clientId, clientId)));
+  } catch (error) {
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not save group: ${error instanceof Error ? error.message : "unknown error"}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
@@ -170,20 +164,18 @@ export async function toggleBusinessStatGroupVisibilityAction(formData: FormData
   const visibleGroups = config.groups.filter(
     (group) => group.isActive !== false && group.isVisible !== false,
   );
-  const admin = createFocusBoardAdminClient();
 
-  const { error } = await admin
-    .from("business_stat_groups")
-    .update(
-      shouldShow
-        ? { is_active: true, is_visible: true, sort_order: visibleGroups.length + 1 }
-        : { is_visible: false },
-    )
-    .eq("id", groupId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    redirect(getBusinessStatsPath(clientId, undefined, `Could not update group visibility: ${error.message}`, returnPath));
+  try {
+    await db
+      .update(businessStatGroups)
+      .set(
+        shouldShow
+          ? { isActive: true, isVisible: true, sortOrder: visibleGroups.length + 1 }
+          : { isVisible: false },
+      )
+      .where(and(eq(businessStatGroups.id, groupId), eq(businessStatGroups.clientId, clientId)));
+  } catch (error) {
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not update group visibility: ${error instanceof Error ? error.message : "unknown error"}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
@@ -195,16 +187,14 @@ export async function deleteBusinessStatGroupAction(formData: FormData) {
   const returnPath = getValue(formData, "returnPath");
   const groupId = getValue(formData, "groupId");
   await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
-  const admin = createFocusBoardAdminClient();
 
-  const { error } = await admin
-    .from("business_stat_groups")
-    .update({ is_active: false, is_visible: false })
-    .eq("id", groupId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    redirect(getBusinessStatsPath(clientId, undefined, `Could not retire group: ${error.message}`, returnPath));
+  try {
+    await db
+      .update(businessStatGroups)
+      .set({ isActive: false, isVisible: false })
+      .where(and(eq(businessStatGroups.id, groupId), eq(businessStatGroups.clientId, clientId)));
+  } catch (error) {
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not retire group: ${error instanceof Error ? error.message : "unknown error"}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
@@ -227,25 +217,25 @@ export async function addBusinessStatCategoryAction(formData: FormData) {
     redirect(getBusinessStatsPath(clientId, undefined, "Pick a valid stat group.", returnPath));
   }
 
-  const admin = createFocusBoardAdminClient();
   const activeCategoryCount = config.categories.filter(
     (category) => category.isActive !== false,
   ).length;
   const color = BUSINESS_STAT_LINE_COLORS[activeCategoryCount % BUSINESS_STAT_LINE_COLORS.length];
-  const { error } = await admin.from("business_stat_categories").insert({
-    client_id: clientId,
-    group_id: groupId,
-    name,
-    unit: getUnit(getValue(formData, "unit")),
-    prefix: getValue(formData, "prefix"),
-    suffix: getValue(formData, "suffix"),
-    color,
-    monthly_target: getNumberValue(formData, "monthlyTarget"),
-    sort_order: activeCategoryCount + 1,
-  });
 
-  if (error) {
-    redirect(getBusinessStatsPath(clientId, undefined, `Could not add stat: ${error.message}`, returnPath));
+  try {
+    await db.insert(businessStatCategories).values({
+      clientId,
+      groupId,
+      name,
+      unit: getUnit(getValue(formData, "unit")),
+      prefix: getValue(formData, "prefix"),
+      suffix: getValue(formData, "suffix"),
+      color,
+      monthlyTarget: getNumberValue(formData, "monthlyTarget")?.toString() ?? null,
+      sortOrder: activeCategoryCount + 1,
+    });
+  } catch (error) {
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not add stat: ${error instanceof Error ? error.message : "unknown error"}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
@@ -269,22 +259,20 @@ export async function updateBusinessStatCategoryAction(formData: FormData) {
     redirect(getBusinessStatsPath(clientId, undefined, "Pick a valid stat group.", returnPath));
   }
 
-  const admin = createFocusBoardAdminClient();
-  const { error } = await admin
-    .from("business_stat_categories")
-    .update({
-      group_id: groupId,
-      name: getValue(formData, "name") || category.name,
-      unit: getUnit(getValue(formData, "unit")),
-      prefix: getValue(formData, "prefix"),
-      suffix: getValue(formData, "suffix"),
-      monthly_target: getNumberValue(formData, "monthlyTarget"),
-    })
-    .eq("id", categoryId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    redirect(getBusinessStatsPath(clientId, undefined, `Could not save stat: ${error.message}`, returnPath));
+  try {
+    await db
+      .update(businessStatCategories)
+      .set({
+        groupId,
+        name: getValue(formData, "name") || category.name,
+        unit: getUnit(getValue(formData, "unit")),
+        prefix: getValue(formData, "prefix"),
+        suffix: getValue(formData, "suffix"),
+        monthlyTarget: getNumberValue(formData, "monthlyTarget")?.toString() ?? null,
+      })
+      .where(and(eq(businessStatCategories.id, categoryId), eq(businessStatCategories.clientId, clientId)));
+  } catch (error) {
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not save stat: ${error instanceof Error ? error.message : "unknown error"}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
@@ -301,20 +289,18 @@ export async function toggleBusinessStatCategoryVisibilityAction(formData: FormD
   const visibleCategories = config.categories.filter(
     (category) => category.isActive !== false && category.isVisible !== false,
   );
-  const admin = createFocusBoardAdminClient();
 
-  const { error } = await admin
-    .from("business_stat_categories")
-    .update(
-      shouldShow
-        ? { is_active: true, is_visible: true, sort_order: visibleCategories.length + 1 }
-        : { is_visible: false },
-    )
-    .eq("id", categoryId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    redirect(getBusinessStatsPath(clientId, undefined, `Could not update stat visibility: ${error.message}`, returnPath));
+  try {
+    await db
+      .update(businessStatCategories)
+      .set(
+        shouldShow
+          ? { isActive: true, isVisible: true, sortOrder: visibleCategories.length + 1 }
+          : { isVisible: false },
+      )
+      .where(and(eq(businessStatCategories.id, categoryId), eq(businessStatCategories.clientId, clientId)));
+  } catch (error) {
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not update stat visibility: ${error instanceof Error ? error.message : "unknown error"}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);
@@ -326,16 +312,14 @@ export async function deleteBusinessStatCategoryAction(formData: FormData) {
   const returnPath = getValue(formData, "returnPath");
   const categoryId = getValue(formData, "categoryId");
   await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
-  const admin = createFocusBoardAdminClient();
 
-  const { error } = await admin
-    .from("business_stat_categories")
-    .update({ is_active: false, is_visible: false })
-    .eq("id", categoryId)
-    .eq("client_id", clientId);
-
-  if (error) {
-    redirect(getBusinessStatsPath(clientId, undefined, `Could not retire stat: ${error.message}`, returnPath));
+  try {
+    await db
+      .update(businessStatCategories)
+      .set({ isActive: false, isVisible: false })
+      .where(and(eq(businessStatCategories.id, categoryId), eq(businessStatCategories.clientId, clientId)));
+  } catch (error) {
+    redirect(getBusinessStatsPath(clientId, undefined, `Could not retire stat: ${error instanceof Error ? error.message : "unknown error"}`, returnPath));
   }
 
   revalidateBusinessStatsPaths(clientId);

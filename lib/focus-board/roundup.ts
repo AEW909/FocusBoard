@@ -1,13 +1,8 @@
-import { createFocusBoardAdminClient } from "@/lib/focus-board/db";
+import { and, asc, eq, gte, lt } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { focusBoardEvents, focusBoardWeeklyRoundups } from "@/lib/db/schema";
 import { addMonths, getMonthStart, getPreviousWeekKey, getWeekStart, parseIsoDate, toIsoDate } from "@/lib/focus-board/dates";
 import { getFocusBoardRuntimeConfigByBoardKey } from "@/lib/focus-board/runtime";
-
-type FocusBoardEventRow = {
-  week_start: string;
-  task_key: string;
-  metric_key: string;
-  points: number;
-};
 
 function listMonthWeekKeys(monthStart: Date) {
   const nextMonthStart = addMonths(monthStart, 1);
@@ -28,40 +23,35 @@ function listMonthWeekKeys(monthStart: Date) {
 }
 
 export async function getPendingFocusWeeklyRoundup(userId: string, boardKey: string) {
-  const admin = createFocusBoardAdminClient();
   const weekKey = getPreviousWeekKey();
-  const { data, error } = await admin
-    .from("focus_board_weekly_roundups")
-    .select("id")
-    .eq("board_key", boardKey)
-    .eq("user_id", userId)
-    .eq("week_start", weekKey)
-    .maybeSingle();
+  const rows = await db
+    .select({ id: focusBoardWeeklyRoundups.id })
+    .from(focusBoardWeeklyRoundups)
+    .where(
+      and(
+        eq(focusBoardWeeklyRoundups.boardKey, boardKey),
+        eq(focusBoardWeeklyRoundups.userId, userId),
+        eq(focusBoardWeeklyRoundups.weekStart, weekKey),
+      ),
+    )
+    .limit(1);
 
-  if (error) {
-    throw new Error(`Failed to check weekly roundup state: ${error.message}`);
-  }
-
-  return data ? null : { weekKey };
+  return rows[0] ? null : { weekKey };
 }
 
 export async function markFocusWeeklyRoundupSeen(userId: string, boardKey: string, weekKey: string) {
-  const admin = createFocusBoardAdminClient();
-  const { error } = await admin
-    .from("focus_board_weekly_roundups")
-    .upsert(
-      {
-        board_key: boardKey,
-        user_id: userId,
-        week_start: weekKey,
-        seen_at: new Date().toISOString(),
-      },
-      { onConflict: "board_key,user_id,week_start" },
-    );
-
-  if (error) {
-    throw new Error(`Failed to save weekly roundup state: ${error.message}`);
-  }
+  await db
+    .insert(focusBoardWeeklyRoundups)
+    .values({
+      boardKey,
+      userId,
+      weekStart: weekKey,
+      seenAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: [focusBoardWeeklyRoundups.boardKey, focusBoardWeeklyRoundups.userId, focusBoardWeeklyRoundups.weekStart],
+      set: { seenAt: new Date() },
+    });
 }
 
 export async function getFocusWeeklyRoundupData(boardKey: string, userId: string, weekKey: string) {
@@ -77,53 +67,34 @@ export async function getFocusWeeklyRoundupData(boardKey: string, userId: string
     return null;
   }
 
-  const admin = createFocusBoardAdminClient();
   const monthStart = getMonthStart(weekStart);
   const monthKey = toIsoDate(monthStart);
   const nextMonthKey = toIsoDate(addMonths(monthStart, 1));
-  const [{ data: weekRows, error: weekError }, { data: monthRows, error: monthError }, { data: seenRow, error: seenError }] =
-    await Promise.all([
-      admin
-        .from("focus_board_events")
-        .select("week_start, task_key, metric_key, points")
-        .eq("board_key", boardKey)
-        .eq("week_start", weekKey),
-      admin
-        .from("focus_board_events")
-        .select("week_start, task_key, metric_key, points")
-        .eq("board_key", boardKey)
-        .gte("month_key", monthKey)
-        .lt("month_key", nextMonthKey),
-      admin
-        .from("focus_board_weekly_roundups")
-        .select("id, seen_at")
-        .eq("board_key", boardKey)
-        .eq("user_id", userId)
-        .eq("week_start", weekKey)
-        .maybeSingle(),
-    ]);
 
-  if (weekError) {
-    throw new Error(`Failed to load weekly roundup: ${weekError.message}`);
-  }
+  const [weekEvents, monthEvents, seenRows] = await Promise.all([
+    db
+      .select({ weekStart: focusBoardEvents.weekStart, taskKey: focusBoardEvents.taskKey, metricKey: focusBoardEvents.metricKey, points: focusBoardEvents.points })
+      .from(focusBoardEvents)
+      .where(and(eq(focusBoardEvents.boardKey, boardKey), eq(focusBoardEvents.weekStart, weekKey))),
+    db
+      .select({ weekStart: focusBoardEvents.weekStart, taskKey: focusBoardEvents.taskKey, metricKey: focusBoardEvents.metricKey, points: focusBoardEvents.points })
+      .from(focusBoardEvents)
+      .where(and(eq(focusBoardEvents.boardKey, boardKey), gte(focusBoardEvents.monthKey, monthKey), lt(focusBoardEvents.monthKey, nextMonthKey))),
+    db
+      .select({ id: focusBoardWeeklyRoundups.id, seenAt: focusBoardWeeklyRoundups.seenAt })
+      .from(focusBoardWeeklyRoundups)
+      .where(and(eq(focusBoardWeeklyRoundups.boardKey, boardKey), eq(focusBoardWeeklyRoundups.userId, userId), eq(focusBoardWeeklyRoundups.weekStart, weekKey)))
+      .limit(1),
+  ]);
 
-  if (monthError) {
-    throw new Error(`Failed to load monthly roundup progress: ${monthError.message}`);
-  }
-
-  if (seenError) {
-    throw new Error(`Failed to load weekly roundup state: ${seenError.message}`);
-  }
-
-  const weekEvents = (weekRows ?? []) as FocusBoardEventRow[];
-  const monthEvents = (monthRows ?? []) as FocusBoardEventRow[];
+  const seenRow = seenRows[0] ?? null;
   const weekPoints = weekEvents.reduce((sum, event) => sum + event.points, 0);
   const monthPoints = monthEvents.reduce((sum, event) => sum + event.points, 0);
   const monthWeekKeys = listMonthWeekKeys(monthStart);
   const monthWeekPointMap = new Map<string, number>();
 
   monthEvents.forEach((event) => {
-    monthWeekPointMap.set(event.week_start, (monthWeekPointMap.get(event.week_start) ?? 0) + event.points);
+    monthWeekPointMap.set(event.weekStart, (monthWeekPointMap.get(event.weekStart) ?? 0) + event.points);
   });
 
   const weeksHit = monthWeekKeys.filter((key) => (monthWeekPointMap.get(key) ?? 0) >= runtime.settings.weeklyTarget).length;
@@ -136,11 +107,11 @@ export async function getFocusWeeklyRoundupData(boardKey: string, userId: string
 
   const taskBreakdown = runtime.allTasks
     .map((task) => {
-      const taskEvents = weekEvents.filter((event) => event.task_key === task.key);
+      const taskEvents = weekEvents.filter((event) => event.taskKey === task.key);
       const metrics = task.metrics
         .map((metric) => {
           const metricEvents = taskEvents.filter(
-            (event) => event.metric_key === metric.key || event.metric_key.startsWith(`${metric.key}:`),
+            (event) => event.metricKey === metric.key || event.metricKey.startsWith(`${metric.key}:`),
           );
 
           return {
@@ -168,7 +139,7 @@ export async function getFocusWeeklyRoundupData(boardKey: string, userId: string
     .filter((section) => section.isActive !== false)
     .map((section) => {
       const points = section.tasks.reduce((sum, task) => {
-        const taskEvents = weekEvents.filter((event) => event.task_key === task.key);
+        const taskEvents = weekEvents.filter((event) => event.taskKey === task.key);
         return sum + taskEvents.reduce((taskSum, event) => taskSum + event.points, 0);
       }, 0);
 
