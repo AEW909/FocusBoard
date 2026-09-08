@@ -39,9 +39,14 @@ export function PushNotificationToggle() {
         const permission = await Notification.requestPermission();
         if (permission !== "granted") return;
 
+        const rawKey = process.env.NEXT_PUBLIC_VAPID_KEY!;
+        const padding = "=".repeat((4 - (rawKey.length % 4)) % 4);
+        const base64 = (rawKey + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const keyBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: process.env.NEXT_PUBLIC_VAPID_KEY,
+          applicationServerKey: keyBytes,
         });
 
         await fetch("/api/push/subscribe", {
