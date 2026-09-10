@@ -6690,3 +6690,150 @@ details > summary::-webkit-details-marker {
     flex-shrink: 0;
   }
 }
+
+/* ── Admin panel split-pane layout ────────────────────────────────────────── */
+
+.focus-manage-shell {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 0;
+  min-height: 60vh;
+}
+
+.focus-manage-sidebar {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  padding: 4px 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding-right: 20px;
+}
+
+.focus-manage-client-label {
+  margin: 0 0 18px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(244, 240, 255, 0.45);
+  padding-left: 14px;
+}
+
+.focus-manage-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.focus-manage-nav-item a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  color: rgba(244, 240, 255, 0.65);
+  font-size: 0.88rem;
+  text-decoration: none;
+  transition: background 0.14s, color 0.14s;
+}
+
+.focus-manage-nav-item a:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff9ff;
+}
+
+.focus-manage-nav-item-active a {
+  background: rgba(89, 244, 214, 0.12);
+  color: #59f4d6;
+}
+
+.focus-manage-nav-icon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.focus-manage-panel {
+  padding-left: 28px;
+  min-width: 0;
+}
+
+/* Drawer toggle button — hidden on desktop */
+.focus-manage-drawer-toggle {
+  display: none;
+}
+
+/* Drawer and backdrop — hidden on desktop */
+.focus-manage-drawer {
+  display: none;
+}
+
+.focus-manage-backdrop {
+  display: none;
+}
+
+/* ── Mobile: slide-over drawer ── */
+@media (max-width: 768px) {
+  .focus-manage-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .focus-manage-sidebar {
+    display: none;
+  }
+
+  .focus-manage-panel {
+    padding-left: 0;
+  }
+
+  .focus-manage-drawer-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 11px 16px;
+    color: rgba(244, 240, 255, 0.8);
+    font-size: 0.88rem;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+  }
+
+  .focus-manage-drawer-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff9ff;
+  }
+
+  .focus-manage-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .focus-manage-drawer {
+    display: block;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 260px;
+    z-index: 200;
+    background: #1a163e;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    padding: 28px 20px;
+    overflow-y: auto;
+  }
+
+  .focus-manage-drawer.open {
+    transform: translateX(0);
+  }
+}

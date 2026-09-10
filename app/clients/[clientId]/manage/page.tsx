@@ -18,6 +18,7 @@ import {
 import { ProtectedSessionBar } from "@/components/auth/protected-session-bar";
 import { FocusControlExistingGoals } from "@/components/focus/focus-control-existing-goals";
 import { FocusImageSelect } from "@/components/focus/focus-image-select";
+import { FocusManageLayout } from "@/components/focus/focus-manage-layout";
 import { FocusPullToRefresh } from "@/components/focus/focus-pull-to-refresh";
 import { getFocusAssetOptions } from "@/lib/focus-board/assets";
 import { requireManagedFocusClientById } from "@/lib/focus-board/access";
@@ -30,6 +31,7 @@ export const dynamic = "force-dynamic";
 type FocusClientManagePageProps = {
   params: Promise<{ clientId: string }>;
   searchParams: Promise<{
+    panel?: string;
     membershipMessage?: string;
     membershipError?: string;
     contentProfileMessage?: string;
@@ -75,36 +77,6 @@ function FocusControlSection({
   );
 }
 
-type FocusControlGroupProps = {
-  eyebrow: string;
-  title: string;
-  summary?: string;
-  children: React.ReactNode;
-};
-
-function FocusControlGroup({
-  eyebrow,
-  title,
-  summary,
-  children,
-}: FocusControlGroupProps) {
-  return (
-    <details className="focus-control-section focus-control-section-group">
-      <summary className="focus-control-section-summary">
-        <div className="focus-control-section-copy">
-          <p className="eyebrow">{eyebrow}</p>
-          <h2>{title}</h2>
-          {summary ? <p>{summary}</p> : null}
-        </div>
-        <span className="focus-control-collapse-icon" aria-hidden="true">
-          <svg fill="none" height="14" viewBox="0 0 14 9" width="14"><path d="M1 1.5L7 7.5L13 1.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"/></svg>
-        </span>
-      </summary>
-      <div className="focus-control-section-body focus-control-section-group-body">{children}</div>
-    </details>
-  );
-}
-
 function formatMembershipRole(role: "client_admin" | "client_user") {
   return role === "client_admin" ? "Client admin" : "Client user";
 }
@@ -123,6 +95,8 @@ export default async function FocusClientManagePage({
 }: FocusClientManagePageProps) {
   const { clientId } = await params;
   const query = await searchParams;
+  const activePanel = query.panel ?? "challenges";
+
   const { client } = await requireManagedFocusClientById(clientId, `/clients/${clientId}/manage`);
   const [runtime, assets, memberships] = await Promise.all([
     getFocusBoardRuntimeConfigByClientId(client.clientId),
@@ -150,169 +124,295 @@ export default async function FocusClientManagePage({
         className={`shell focus-public-page focus-public-page-neon focus-board-shell-neon focus-control-page focus-theme-${runtime.settings.themePreset}`}
       >
         <FocusPullToRefresh label="Release to refresh controls" />
-        <section className="focus-arcade-hero focus-control-hero">
-          <p className="focus-kicker">Secret focus control room</p>
-          <h1>Tune the game board</h1>
-          <p className="focus-hero-copy">
-            Change the weekly target, add new goals, adjust point weights, and reshape the reward ladder without touching code again.
-          </p>
-          <div className="focus-control-links">
-            <div className="focus-control-link-card">
-              <strong>Client</strong>
-              <p>{client.displayName}</p>
-            </div>
-            <div className="focus-control-link-card">
-              <strong>Board route</strong>
-              <p>/board/{runtime.settings.boardSlug}</p>
-            </div>
-          </div>
-        </section>
+        <FocusManageLayout activePanel={activePanel} displayName={client.displayName}>
 
-        <section className="focus-control-stack">
-          <FocusControlSection
-            defaultOpen={Boolean(query.boardSettingsError || query.boardSettingsMessage)}
-            eyebrow="Board copy"
-            summary="Set the board kicker and main headline without digging through admin settings."
-            title="Board headline"
-          >
-            <form action={updateFocusBoardSettingsAction} className="focus-control-form">
-              <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
-              {query.boardSettingsMessage ? (
-                <p className="form-success">{query.boardSettingsMessage}</p>
-              ) : null}
-              {query.boardSettingsError ? (
-                <p className="form-error">{query.boardSettingsError}</p>
-              ) : null}
-              <label className="field">
-                <span>Title / kicker</span>
-                <input defaultValue={runtime.settings.title} name="title" />
-              </label>
-              <label className="field">
-                <span>Main headline</span>
-                <textarea defaultValue={runtime.settings.subtitle} name="subtitle" />
-              </label>
-              <button className="button button-primary" type="submit">
-                Save board headline
-              </button>
-            </form>
-          </FocusControlSection>
-
-          <FocusControlSection
-            defaultOpen={Boolean(query.challengeError)}
-            eyebrow="Add a goal"
-            summary="Create a fresh weekly challenge and give it its first scoring metric."
-            title="New weekly challenge"
-          >
-            <form action={addFocusBoardTaskAction} className="focus-control-form">
-              <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
-              {query.challengeMessage ? (
-                <p className="form-success">{query.challengeMessage}</p>
-              ) : null}
-              {query.challengeError ? (
-                <p className="form-error">{query.challengeError}</p>
-              ) : null}
-              <div className="focus-control-two-up">
-                <label className="field">
-                  <span>Section</span>
-                  <select className="select-field" name="sectionId" required>
-                    {runtime.allSections
-                      .filter((section) => section.isActive !== false)
-                      .map((section) => (
-                        <option key={section.id ?? section.key} value={section.id ?? ""}>
-                          {section.title}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-                <label className="field">
-                  <span>Goal title</span>
-                  <input name="title" placeholder="Example: Ask for referrals" required />
-                </label>
-              </div>
-              <div className="focus-control-two-up">
-                <label className="field">
-                  <span>Badge text</span>
-                  <input name="icon" placeholder="REF" />
-                </label>
-              </div>
-              <label className="field">
-                <span>Description / help text</span>
-                <textarea
-                  name="description"
-                  placeholder="What counts as completing this one?"
-                  required
-                />
-              </label>
-              <div className="focus-control-three-up">
-                <label className="field">
-                  <span>Metric label</span>
-                  <input name="metricLabel" placeholder="Asked" required />
-                </label>
-                <label className="field">
-                  <span>Target</span>
-                  <input defaultValue={1} min={0} name="target" type="number" />
-                </label>
-                <label className="field">
-                  <span>Points each</span>
-                  <input defaultValue={5} name="points" type="number" />
-                </label>
-              </div>
-              <div className="focus-control-three-up">
-                <label className="field">
-                  <span>Kind</span>
-                  <select className="select-field" defaultValue="count" name="kind">
-                    <option value="count">Count</option>
-                    <option value="checkbox">Checkboxes</option>
-                  </select>
-                </label>
-                <FocusImageSelect
-                  assets={assets}
-                  label="Sticker image"
-                  name="stickerSrc"
-                  value={defaultChallengeSticker}
-                />
-                <label className="field">
-                  <span>Sticker alt (optional)</span>
-                  <input name="stickerAlt" placeholder="Custom goal sticker" />
-                </label>
-              </div>
-              <label className="field">
-                <span>Checkbox labels</span>
-                <textarea
-                  defaultValue={"MON\nTUE\nWED\nTHUR\nFRI"}
-                  name="checkboxLabels"
-                />
-                <small className="focus-field-help">
-                  Used when Kind is Checkboxes. Put one checkbox label per line.
-                </small>
-              </label>
-              <button className="button button-primary" type="submit">
-                Add weekly goal
-              </button>
-            </form>
-          </FocusControlSection>
-
-          <FocusControlSection
-            defaultOpen
-            eyebrow="Goals"
-            summary={`${runtime.tasks.length} challenge${runtime.tasks.length === 1 ? "" : "s"} currently on the board.`}
-            title="Existing weekly challenges"
-          >
+          {activePanel === "challenges" && (
             <div className="focus-control-stack">
-              <FocusControlExistingGoals
-                adminSlug={runtime.settings.adminSlug}
-                assets={assets}
-                sections={runtime.allSections}
-                tasks={runtime.allTasks}
-              />
-            </div>
-          </FocusControlSection>
+              <FocusControlSection
+                defaultOpen={Boolean(query.challengeError || query.challengeMessage)}
+                eyebrow="Add a goal"
+                summary="Create a fresh weekly challenge and give it its first scoring metric."
+                title="New weekly challenge"
+              >
+                <form action={addFocusBoardTaskAction} className="focus-control-form">
+                  <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+                  {query.challengeMessage ? (
+                    <p className="form-success">{query.challengeMessage}</p>
+                  ) : null}
+                  {query.challengeError ? (
+                    <p className="form-error">{query.challengeError}</p>
+                  ) : null}
+                  <div className="focus-control-two-up">
+                    <label className="field">
+                      <span>Section</span>
+                      <select className="select-field" name="sectionId" required>
+                        {runtime.allSections
+                          .filter((section) => section.isActive !== false)
+                          .map((section) => (
+                            <option key={section.id ?? section.key} value={section.id ?? ""}>
+                              {section.title}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <label className="field">
+                      <span>Goal title</span>
+                      <input name="title" placeholder="Example: Ask for referrals" required />
+                    </label>
+                  </div>
+                  <div className="focus-control-two-up">
+                    <label className="field">
+                      <span>Badge text</span>
+                      <input name="icon" placeholder="REF" />
+                    </label>
+                  </div>
+                  <label className="field">
+                    <span>Description / help text</span>
+                    <textarea
+                      name="description"
+                      placeholder="What counts as completing this one?"
+                      required
+                    />
+                  </label>
+                  <div className="focus-control-three-up">
+                    <label className="field">
+                      <span>Metric label</span>
+                      <input name="metricLabel" placeholder="Asked" required />
+                    </label>
+                    <label className="field">
+                      <span>Target</span>
+                      <input defaultValue={1} min={0} name="target" type="number" />
+                    </label>
+                    <label className="field">
+                      <span>Points each</span>
+                      <input defaultValue={5} name="points" type="number" />
+                    </label>
+                  </div>
+                  <div className="focus-control-three-up">
+                    <label className="field">
+                      <span>Kind</span>
+                      <select className="select-field" defaultValue="count" name="kind">
+                        <option value="count">Count</option>
+                        <option value="checkbox">Checkboxes</option>
+                      </select>
+                    </label>
+                    <FocusImageSelect
+                      assets={assets}
+                      label="Sticker image"
+                      name="stickerSrc"
+                      value={defaultChallengeSticker}
+                    />
+                    <label className="field">
+                      <span>Sticker alt (optional)</span>
+                      <input name="stickerAlt" placeholder="Custom goal sticker" />
+                    </label>
+                  </div>
+                  <label className="field">
+                    <span>Checkbox labels</span>
+                    <textarea
+                      defaultValue={"MON\nTUE\nWED\nTHUR\nFRI"}
+                      name="checkboxLabels"
+                    />
+                    <small className="focus-field-help">
+                      Used when Kind is Checkboxes. Put one checkbox label per line.
+                    </small>
+                  </label>
+                  <button className="button button-primary" type="submit">
+                    Add weekly goal
+                  </button>
+                </form>
+              </FocusControlSection>
 
-          <FocusControlGroup
-            eyebrow="Admin"
-            summary="Module visibility, board theme, user access, and reusable images."
-            title="Settings"
-          >
+              <FocusControlSection
+                defaultOpen
+                eyebrow="Goals"
+                summary={`${runtime.tasks.length} challenge${runtime.tasks.length === 1 ? "" : "s"} currently on the board.`}
+                title="Existing weekly challenges"
+              >
+                <div className="focus-control-stack">
+                  <FocusControlExistingGoals
+                    adminSlug={runtime.settings.adminSlug}
+                    assets={assets}
+                    sections={runtime.allSections}
+                    tasks={runtime.allTasks}
+                  />
+                </div>
+              </FocusControlSection>
+            </div>
+          )}
+
+          {activePanel === "board" && (
+            <FocusControlSection
+              defaultOpen
+              eyebrow="Board copy"
+              summary="Set the board kicker and main headline without digging through admin settings."
+              title="Board headline"
+            >
+              <form action={updateFocusBoardSettingsAction} className="focus-control-form">
+                <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+                {query.boardSettingsMessage ? (
+                  <p className="form-success">{query.boardSettingsMessage}</p>
+                ) : null}
+                {query.boardSettingsError ? (
+                  <p className="form-error">{query.boardSettingsError}</p>
+                ) : null}
+                <label className="field">
+                  <span>Title / kicker</span>
+                  <input defaultValue={runtime.settings.title} name="title" />
+                </label>
+                <label className="field">
+                  <span>Main headline</span>
+                  <textarea defaultValue={runtime.settings.subtitle} name="subtitle" />
+                </label>
+                <button className="button button-primary" type="submit">
+                  Save board headline
+                </button>
+              </form>
+            </FocusControlSection>
+          )}
+
+          {activePanel === "rewards" && (
+            <div className="focus-control-stack">
+              <FocusControlSection
+                defaultOpen
+                eyebrow="Weekly prize"
+                summary="The immediate reward unlocked whenever the weekly points target is reached."
+                title="Weekly reward"
+              >
+                <form action={updateFocusWeeklyRewardAction} className="focus-control-reward-row">
+                  <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+                  <div className="focus-control-two-up">
+                    <label className="field">
+                      <span>Weekly points target</span>
+                      <input defaultValue={runtime.settings.weeklyTarget} min={1} name="weeklyTarget" type="number" />
+                    </label>
+                    <label className="field">
+                      <span>Reward label</span>
+                      <input defaultValue={runtime.weeklyReward.label} name="label" />
+                    </label>
+                  </div>
+                  <div className="focus-control-two-up">
+                    <label className="field">
+                      <span>Text while locked</span>
+                      <textarea
+                        defaultValue={runtime.weeklyReward.lockedDescription}
+                        name="lockedDescription"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>Text once unlocked</span>
+                      <textarea
+                        defaultValue={runtime.weeklyReward.unlockedDescription}
+                        name="unlockedDescription"
+                      />
+                    </label>
+                  </div>
+                  <label className="field">
+                    <span>Sticker alt</span>
+                    <input defaultValue={runtime.weeklyReward.stickerAlt} name="stickerAlt" />
+                  </label>
+                  <div className="focus-control-two-up">
+                    <FocusImageSelect
+                      assets={assets}
+                      label="Locked image"
+                      name="lockedStickerSrc"
+                      value={runtime.weeklyReward.lockedStickerSrc}
+                    />
+                    <FocusImageSelect
+                      assets={assets}
+                      label="Unlocked image"
+                      name="unlockedStickerSrc"
+                      value={runtime.weeklyReward.unlockedStickerSrc}
+                    />
+                  </div>
+                  <button className="button button-primary" type="submit">
+                    Save weekly reward
+                  </button>
+                </form>
+              </FocusControlSection>
+
+              <FocusControlSection
+                defaultOpen
+                eyebrow="Prizes"
+                summary="Locked and unlocked reward art, thresholds, and tier copy."
+                title="Reward ladder"
+              >
+                <div className="focus-control-stack">
+                  {runtime.rewards.map((reward) => (
+                    <details
+                      className="focus-control-task-collapsible focus-control-task-collapsible-static"
+                      key={reward.id ?? reward.label}
+                    >
+                      <summary className="focus-control-task-summary">
+                        <div className="focus-control-task-summary-copy">
+                          <p className="eyebrow">Prize tier</p>
+                          <h3>{reward.label || "Untitled tier"}</h3>
+                          <p>
+                            {reward.minPoints} pts &middot; {reward.minWeeksHit} week{reward.minWeeksHit === 1 ? "" : "s"} hit
+                          </p>
+                        </div>
+                        <div className="focus-control-task-summary-meta">
+                          <span className="focus-control-collapse-icon" aria-hidden="true">
+                            +
+                          </span>
+                        </div>
+                      </summary>
+                      <form
+                        action={updateFocusRewardTierAction}
+                        className="focus-control-form focus-control-task-panel focus-control-task-panel-rich"
+                      >
+                        <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
+                        <input name="rewardId" type="hidden" value={reward.id} />
+                        <div className="focus-control-two-up">
+                          <label className="field">
+                            <span>Reward label</span>
+                            <input defaultValue={reward.label} name="label" />
+                          </label>
+                          <label className="field">
+                            <span>Sticker alt</span>
+                            <input defaultValue={reward.stickerAlt} name="stickerAlt" />
+                          </label>
+                        </div>
+                        <label className="field">
+                          <span>Description</span>
+                          <textarea defaultValue={reward.description} name="description" />
+                        </label>
+                        <div className="focus-control-three-up">
+                          <label className="field">
+                            <span>Min points</span>
+                            <input defaultValue={reward.minPoints} min={0} name="minPoints" type="number" />
+                          </label>
+                          <label className="field">
+                            <span>Min weeks hit</span>
+                            <input defaultValue={reward.minWeeksHit} min={0} name="minWeeksHit" type="number" />
+                          </label>
+                        </div>
+                        <div className="focus-control-two-up">
+                          <FocusImageSelect
+                            assets={assets}
+                            label="Locked image"
+                            name="lockedStickerSrc"
+                            value={reward.lockedStickerSrc}
+                          />
+                          <FocusImageSelect
+                            assets={assets}
+                            label="Unlocked image"
+                            name="unlockedStickerSrc"
+                            value={reward.unlockedStickerSrc}
+                          />
+                        </div>
+                        <button className="button button-secondary" type="submit">
+                          Save prize
+                        </button>
+                      </form>
+                    </details>
+                  ))}
+                </div>
+              </FocusControlSection>
+            </div>
+          )}
+
+          {activePanel === "settings" && (
             <div className="focus-control-stack">
               {query.membershipMessage ? (
                 <p className="form-success">{query.membershipMessage}</p>
@@ -392,325 +492,189 @@ export default async function FocusClientManagePage({
                   </button>
                 </form>
               </div>
+            </div>
+          )}
 
-              <FocusControlSection
-                eyebrow="Client access"
-                summary="Grant or remove board access for existing signed-in users, including Content Lab access."
-                title="User management"
-              >
-                <div className="focus-membership-stack">
-                  {query.membershipMessage ? (
-                    <p className="form-success">{query.membershipMessage}</p>
-                  ) : null}
-                  {query.membershipError ? <p className="form-error">{query.membershipError}</p> : null}
+          {activePanel === "members" && (
+            <FocusControlSection
+              defaultOpen
+              eyebrow="Client access"
+              summary="Grant or remove board access for existing signed-in users, including Content Lab access."
+              title="User management"
+            >
+              <div className="focus-membership-stack">
+                {query.membershipMessage ? (
+                  <p className="form-success">{query.membershipMessage}</p>
+                ) : null}
+                {query.membershipError ? <p className="form-error">{query.membershipError}</p> : null}
 
-                  <form action={addFocusClientMembershipAction} className="focus-membership-add-form">
-                    <input name="clientId" type="hidden" value={client.clientId} />
-                    <label className="field">
-                      <span>Existing user email</span>
-                      <input
-                        name="email"
-                        placeholder="name@example.com"
-                        required
-                        type="email"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>Role</span>
-                      <select className="select-field" defaultValue="client_user" name="role">
-                        <option value="client_user">Client user</option>
-                        <option value="client_admin">Client admin</option>
-                      </select>
-                    </label>
-                    <label className="field">
-                      <span>Content Lab</span>
-                      <select
-                        className="select-field"
-                        defaultValue={client.contentLabEnabled ? "true" : "false"}
-                        disabled={!client.contentLabEnabled}
-                        name="contentLabAccess"
+                <form action={addFocusClientMembershipAction} className="focus-membership-add-form">
+                  <input name="clientId" type="hidden" value={client.clientId} />
+                  <label className="field">
+                    <span>Existing user email</span>
+                    <input
+                      name="email"
+                      placeholder="name@example.com"
+                      required
+                      type="email"
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Role</span>
+                    <select className="select-field" defaultValue="client_user" name="role">
+                      <option value="client_user">Client user</option>
+                      <option value="client_admin">Client admin</option>
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Content Lab</span>
+                    <select
+                      className="select-field"
+                      defaultValue={client.contentLabEnabled ? "true" : "false"}
+                      disabled={!client.contentLabEnabled}
+                      name="contentLabAccess"
+                    >
+                      <option value="false">Disabled</option>
+                      <option value="true">Enabled</option>
+                    </select>
+                  </label>
+                  <button className="button button-primary" type="submit">
+                    Add user to client
+                  </button>
+                </form>
+
+                {memberships.length > 0 ? (
+                  <div className="focus-membership-list">
+                    {memberships.map((membership) => (
+                      <details
+                        className={`focus-membership-card ${
+                          membership.isActive ? "" : "focus-membership-card-inactive"
+                        }`}
+                        key={membership.membershipId}
                       >
-                        <option value="false">Disabled</option>
-                        <option value="true">Enabled</option>
-                      </select>
-                    </label>
-                    <button className="button button-primary" type="submit">
-                      Add user to client
-                    </button>
-                  </form>
-
-                  {memberships.length > 0 ? (
-                    <div className="focus-membership-list">
-                      {memberships.map((membership) => (
-                        <details
-                          className={`focus-membership-card ${
-                            membership.isActive ? "" : "focus-membership-card-inactive"
-                          }`}
-                          key={membership.membershipId}
-                        >
-                          <summary className="focus-membership-card-head">
-                            <div>
-                              <h3>{membership.fullName ?? membership.email}</h3>
-                              <p>{membership.email}</p>
-                            </div>
-                            <span
-                              className={`focus-client-status ${
-                                membership.isActive
-                                  ? "focus-client-status-active"
-                                  : "focus-client-status-inactive"
-                              }`}
-                            >
-                              {membership.isActive ? "active" : "inactive"}
-                            </span>
-                            <span className="focus-control-collapse-icon" aria-hidden="true">
-                              +
-                            </span>
-                          </summary>
-
-                          <div className="focus-membership-actions">
-                            <form
-                              action={updateFocusClientMembershipRoleAction}
-                              className="focus-membership-role-form"
-                            >
-                              <input name="clientId" type="hidden" value={client.clientId} />
-                              <input
-                                name="membershipId"
-                                type="hidden"
-                                value={membership.membershipId}
-                              />
-                              <label className="field">
-                                <span>Role</span>
-                                <select
-                                  className="select-field"
-                                  defaultValue={membership.role}
-                                  name="role"
-                                >
-                                  <option value="client_user">Client user</option>
-                                  <option value="client_admin">Client admin</option>
-                                </select>
-                              </label>
-                              <button className="button button-secondary" type="submit">
-                                Save role
-                              </button>
-                            </form>
-
-                            <form action={setFocusClientMembershipContentLabAccessAction}>
-                              <input name="clientId" type="hidden" value={client.clientId} />
-                              <input
-                                name="membershipId"
-                                type="hidden"
-                                value={membership.membershipId}
-                              />
-                              <input
-                                name="nextContentLabAccess"
-                                type="hidden"
-                                value={membership.contentLabAccess ? "false" : "true"}
-                              />
-                              <button
-                                className="button focus-membership-content-button"
-                                disabled={!client.contentLabEnabled || !membership.isActive}
-                                type="submit"
-                              >
-                                {membership.contentLabAccess ? "Disable Content Lab" : "Enable Content Lab"}
-                              </button>
-                            </form>
-
-                            <form action={setFocusClientMembershipActiveAction}>
-                              <input name="clientId" type="hidden" value={client.clientId} />
-                              <input
-                                name="membershipId"
-                                type="hidden"
-                                value={membership.membershipId}
-                              />
-                              <input
-                                name="nextActive"
-                                type="hidden"
-                                value={membership.isActive ? "false" : "true"}
-                              />
-                              <button className="button button-management" type="submit">
-                                {membership.isActive ? "Remove access" : "Restore access"}
-                              </button>
-                            </form>
+                        <summary className="focus-membership-card-head">
+                          <div>
+                            <h3>{membership.fullName ?? membership.email}</h3>
+                            <p>{membership.email}</p>
                           </div>
+                          <span
+                            className={`focus-client-status ${
+                              membership.isActive
+                                ? "focus-client-status-active"
+                                : "focus-client-status-inactive"
+                            }`}
+                          >
+                            {membership.isActive ? "active" : "inactive"}
+                          </span>
+                          <span className="focus-control-collapse-icon" aria-hidden="true">
+                            +
+                          </span>
+                        </summary>
 
-                          <p className="focus-membership-role-note">
-                            Current role: {formatMembershipRole(membership.role)}
-                          </p>
-                          <p className="focus-membership-role-note">
-                            Content Lab: {formatContentLabState(membership.contentLabAccess)}
-                            {!client.contentLabEnabled ? " (client feature disabled)" : ""}
-                          </p>
-                        </details>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="focus-membership-empty">
-                      No client users are linked yet. Add an existing signed-in account above.
-                    </p>
-                  )}
-                </div>
-              </FocusControlSection>
+                        <div className="focus-membership-actions">
+                          <form
+                            action={updateFocusClientMembershipRoleAction}
+                            className="focus-membership-role-form"
+                          >
+                            <input name="clientId" type="hidden" value={client.clientId} />
+                            <input
+                              name="membershipId"
+                              type="hidden"
+                              value={membership.membershipId}
+                            />
+                            <label className="field">
+                              <span>Role</span>
+                              <select
+                                className="select-field"
+                                defaultValue={membership.role}
+                                name="role"
+                              >
+                                <option value="client_user">Client user</option>
+                                <option value="client_admin">Client admin</option>
+                              </select>
+                            </label>
+                            <button className="button button-secondary" type="submit">
+                              Save role
+                            </button>
+                          </form>
 
-              <FocusControlSection
-                eyebrow="Images"
-                summary="Artwork available for challenge stickers and reward ladder images. Add new images to the public/focus folder and redeploy."
-                title="Focus image library"
-              >
-                <div className="focus-asset-grid">
-                  {assets.map((asset) => (
-                    <div className="focus-asset-chip" key={asset.value}>
-                      <img alt="" src={asset.value} />
-                      <span>{asset.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </FocusControlSection>
-            </div>
-          </FocusControlGroup>
+                          <form action={setFocusClientMembershipContentLabAccessAction}>
+                            <input name="clientId" type="hidden" value={client.clientId} />
+                            <input
+                              name="membershipId"
+                              type="hidden"
+                              value={membership.membershipId}
+                            />
+                            <input
+                              name="nextContentLabAccess"
+                              type="hidden"
+                              value={membership.contentLabAccess ? "false" : "true"}
+                            />
+                            <button
+                              className="button focus-membership-content-button"
+                              disabled={!client.contentLabEnabled || !membership.isActive}
+                              type="submit"
+                            >
+                              {membership.contentLabAccess ? "Disable Content Lab" : "Enable Content Lab"}
+                            </button>
+                          </form>
 
-          <FocusControlGroup
-            eyebrow="Rewards"
-            summary="Weekly targets, weekly prize copy, and the monthly ladder."
-            title="Rewards"
-          >
-            <div className="focus-control-stack">
-          <FocusControlSection
-            eyebrow="Weekly prize"
-            summary="The immediate reward unlocked whenever the weekly points target is reached."
-            title="Weekly reward"
-          >
-            <form action={updateFocusWeeklyRewardAction} className="focus-control-reward-row">
-              <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
-              <div className="focus-control-two-up">
-                <label className="field">
-                  <span>Weekly points target</span>
-                  <input defaultValue={runtime.settings.weeklyTarget} min={1} name="weeklyTarget" type="number" />
-                </label>
-                <label className="field">
-                  <span>Reward label</span>
-                  <input defaultValue={runtime.weeklyReward.label} name="label" />
-                </label>
+                          <form action={setFocusClientMembershipActiveAction}>
+                            <input name="clientId" type="hidden" value={client.clientId} />
+                            <input
+                              name="membershipId"
+                              type="hidden"
+                              value={membership.membershipId}
+                            />
+                            <input
+                              name="nextActive"
+                              type="hidden"
+                              value={membership.isActive ? "false" : "true"}
+                            />
+                            <button className="button button-management" type="submit">
+                              {membership.isActive ? "Remove access" : "Restore access"}
+                            </button>
+                          </form>
+                        </div>
+
+                        <p className="focus-membership-role-note">
+                          Current role: {formatMembershipRole(membership.role)}
+                        </p>
+                        <p className="focus-membership-role-note">
+                          Content Lab: {formatContentLabState(membership.contentLabAccess)}
+                          {!client.contentLabEnabled ? " (client feature disabled)" : ""}
+                        </p>
+                      </details>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="focus-membership-empty">
+                    No client users are linked yet. Add an existing signed-in account above.
+                  </p>
+                )}
               </div>
-              <div className="focus-control-two-up">
-                <label className="field">
-                  <span>Text while locked</span>
-                  <textarea
-                    defaultValue={runtime.weeklyReward.lockedDescription}
-                    name="lockedDescription"
-                  />
-                </label>
-                <label className="field">
-                  <span>Text once unlocked</span>
-                  <textarea
-                    defaultValue={runtime.weeklyReward.unlockedDescription}
-                    name="unlockedDescription"
-                  />
-                </label>
-              </div>
-              <label className="field">
-                <span>Sticker alt</span>
-                <input defaultValue={runtime.weeklyReward.stickerAlt} name="stickerAlt" />
-              </label>
-              <div className="focus-control-two-up">
-                <FocusImageSelect
-                  assets={assets}
-                  label="Locked image"
-                  name="lockedStickerSrc"
-                  value={runtime.weeklyReward.lockedStickerSrc}
-                />
-                <FocusImageSelect
-                  assets={assets}
-                  label="Unlocked image"
-                  name="unlockedStickerSrc"
-                  value={runtime.weeklyReward.unlockedStickerSrc}
-                />
-              </div>
-              <button className="button button-primary" type="submit">
-                Save weekly reward
-              </button>
-            </form>
-          </FocusControlSection>
+            </FocusControlSection>
+          )}
 
-          <FocusControlSection
-            eyebrow="Prizes"
-            summary="Locked and unlocked reward art, thresholds, and tier copy."
-            title="Reward ladder"
-          >
-            <div className="focus-control-stack">
-              {runtime.rewards.map((reward) => (
-                <details
-                  className="focus-control-task-collapsible focus-control-task-collapsible-static"
-                  key={reward.id ?? reward.label}
-                >
-                  <summary className="focus-control-task-summary">
-                    <div className="focus-control-task-summary-copy">
-                      <p className="eyebrow">Prize tier</p>
-                      <h3>{reward.label || "Untitled tier"}</h3>
-                      <p>
-                        {reward.minPoints} pts &middot; {reward.minWeeksHit} week{reward.minWeeksHit === 1 ? "" : "s"} hit
-                      </p>
-                    </div>
-                    <div className="focus-control-task-summary-meta">
-                      <span className="focus-control-collapse-icon" aria-hidden="true">
-                        +
-                      </span>
-                    </div>
-                  </summary>
-                  <form
-                    action={updateFocusRewardTierAction}
-                    className="focus-control-form focus-control-task-panel focus-control-task-panel-rich"
-                  >
-                    <input name="adminSlug" type="hidden" value={runtime.settings.adminSlug} />
-                    <input name="rewardId" type="hidden" value={reward.id} />
-                    <div className="focus-control-two-up">
-                      <label className="field">
-                        <span>Reward label</span>
-                        <input defaultValue={reward.label} name="label" />
-                      </label>
-                      <label className="field">
-                        <span>Sticker alt</span>
-                        <input defaultValue={reward.stickerAlt} name="stickerAlt" />
-                      </label>
-                    </div>
-                    <label className="field">
-                      <span>Description</span>
-                      <textarea defaultValue={reward.description} name="description" />
-                    </label>
-                    <div className="focus-control-three-up">
-                      <label className="field">
-                        <span>Min points</span>
-                        <input defaultValue={reward.minPoints} min={0} name="minPoints" type="number" />
-                      </label>
-                      <label className="field">
-                        <span>Min weeks hit</span>
-                        <input defaultValue={reward.minWeeksHit} min={0} name="minWeeksHit" type="number" />
-                      </label>
-                    </div>
-                    <div className="focus-control-two-up">
-                      <FocusImageSelect
-                        assets={assets}
-                        label="Locked image"
-                        name="lockedStickerSrc"
-                        value={reward.lockedStickerSrc}
-                      />
-                      <FocusImageSelect
-                        assets={assets}
-                        label="Unlocked image"
-                        name="unlockedStickerSrc"
-                        value={reward.unlockedStickerSrc}
-                      />
-                    </div>
-                    <button className="button button-secondary" type="submit">
-                      Save prize
-                    </button>
-                  </form>
-                </details>
-              ))}
-            </div>
-          </FocusControlSection>
-            </div>
-          </FocusControlGroup>
-        </section>
+          {activePanel === "images" && (
+            <FocusControlSection
+              defaultOpen
+              eyebrow="Images"
+              summary="Artwork available for challenge stickers and reward ladder images. Add new images to the public/focus folder and redeploy."
+              title="Focus image library"
+            >
+              <div className="focus-asset-grid">
+                {assets.map((asset) => (
+                  <div className="focus-asset-chip" key={asset.value}>
+                    <img alt="" src={asset.value} />
+                    <span>{asset.label}</span>
+                  </div>
+                ))}
+              </div>
+            </FocusControlSection>
+          )}
+
+        </FocusManageLayout>
       </main>
     </>
   );
