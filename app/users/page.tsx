@@ -48,9 +48,8 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           <p className="focus-kicker">Platform workspace</p>
           <h1>Create and assign users.</h1>
           <p>
-            FocusBoard now owns board access from inside the app. Auth still lives in the shared
-            Supabase project, so this screen creates the login and then maps board access through
-            FocusBoard memberships.
+            FocusBoard owns both sign-in and board access. This screen creates the login and then
+            maps board access through FocusBoard memberships.
           </p>
         </section>
 

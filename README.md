@@ -1,69 +1,71 @@
 # FocusBoard
 
-Standalone extraction of the FocusBoard feature from `PhysioNote`.
+Multi-client weekly goals, points and rewards boards, with an ambient group display for shared
+screens.
 
 ## Stack
 
-- Next.js 15
-- React 19
-- Supabase Auth + shared database
+- Next.js 15 (App Router), React 19
+- Neon Postgres with Drizzle ORM (`lib/db/schema.ts`)
+- Better Auth for sign-in (`neon_auth` schema)
+- Deployed on Vercel
 
 ## Local setup
 
-Create `.env.local` with:
+Copy `.env.example` to `.env.local` and fill it in:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
+DATABASE_URL=postgresql://...
+DATABASE_URL_UNPOOLED=postgresql://...
+BETTER_AUTH_SECRET=...
+BETTER_AUTH_URL=http://localhost:3000
 ANTHROPIC_API_KEY=...
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_VAPID_KEY=...
+VAPID_PRIVATE_KEY=...
 ```
 
-`ANTHROPIC_API_KEY` is only needed for the content generator route.
+`ANTHROPIC_API_KEY` is only needed for the Content Lab generator route.
+
+Note that local development uses the same Neon database as production unless you point
+`DATABASE_URL` at a Neon branch.
 
 ## Database shape
 
-This app is designed to share the existing Supabase project with `PhysioNote`, but keep FocusBoard-owned tables in the `focusboard` schema.
+FocusBoard-owned tables live in the `focusboard` schema; Better Auth tables live in `neon_auth`.
 
-Shared objects that stay outside this repo's schema:
-
-- `auth.*`
-- `public.profiles`
-
-Legacy shared-database cleanup note:
-
-- Old `public.focus_board_*` tables from the PhysioNote-era implementation were removed from the
-  shared Supabase project on 2026-06-14 after PhysioNote was redeployed with redirect-only FocusBoard
-  shims and Liona's migrated data was re-verified in `focusboard.*`.
-
-FocusBoard-owned objects that live in `focusboard.*`:
-
-- `focus_board_settings`
-- `focus_board_tasks`
-- `focus_board_task_metrics`
-- `focus_board_reward_tiers`
-- `focus_board_events`
+- `clients`, `client_memberships`, `platform_users`: tenancy and access
+- `focus_board_settings`, `focus_board_sections`, `focus_board_tasks`,
+  `focus_board_task_metrics`, `focus_board_reward_tiers`, `focus_board_events`: board content
+  and history
+- `focus_board_weekly_roundups`, `push_subscriptions`: per-user state
+- `display_tokens`: hashed, revocable links for the group display
+- `business_stat_*`, `client_content_profiles`: optional modules
 
 ## Migrations
 
-The copied migrations were rewritten to create and use the `focusboard` schema.
+Drizzle's schema is in `lib/db/schema.ts`. Schema and data changes are written as plain SQL in
+`db/migrations/` and applied to Neon by hand (Neon console, MCP, or `psql`). Keep them additive,
+and put rollback notes in the file header.
 
-Apply them with your normal Supabase workflow before running the app against the shared database.
+## Artwork
 
-One migration also sets `pgrst.db_schemas` for `authenticator` and `service_role` so the Data API can serve `focusboard.*`.
-That is intentional for this project because the app queries the custom schema through `supabase-js`.
+Sticker and reward images are static files in `public/focus/`. To add artwork, drop the file in
+that folder and redeploy; the admin image picker lists whatever is there.
+
+## Group display
+
+Platform owners manage display groups and links at `/clients/display`. A link opens
+`/display/<group>?dt=<token>` with no login, which is what an Echo Show or wall screen needs.
 
 ## Provisioning and recovery
 
 ### Provision a new client board
 
-1. Sign in as a `platform_owner`.
-2. Open `/clients`.
-3. Use `Create client workspace`.
-4. Enter the client / board name.
-5. Optionally enter an existing Supabase Auth email to link the first user immediately.
-6. Choose whether Content Lab starts enabled or disabled.
+1. Sign in as a platform owner.
+2. Open `/clients` and use `Create client workspace`.
+3. Enter the client / board name.
+4. Optionally enter the email of an existing FocusBoard user to link as the first member.
+5. Choose whether Content Lab starts enabled or disabled.
 
 What this creates:
 
@@ -71,27 +73,27 @@ What this creates:
 - a linked `focusboard.focus_board_settings` board with unique board and admin slugs
 - starter tasks, metrics, weekly reward, and reward ladder entries from the current template
 - an initial `focusboard.client_content_profiles` row
-- an optional initial `focusboard.client_memberships` row when the email already exists in Auth
+- an optional initial `focusboard.client_memberships` row when the email already has a login
 
-Important:
-
-- The create form links an existing Auth user. It does not create a Supabase Auth account.
-- Additional users can be attached later from the client management screen.
+Create logins first from `/users`, then link them to a board. Additional users can be attached
+later from the client management screen.
 
 ### Activate or deactivate a client
 
 - Use the `Deactivate` or `Reactivate` button on `/clients`.
-- Inactive clients remain visible to platform owners for management, but board access and Content Lab access are blocked for client users.
+- Inactive clients remain visible to platform owners for management, but board access and
+  Content Lab access are blocked for client users.
 
 ### Recovery checks
 
-Use these checks when a newly provisioned board does not behave as expected:
+When a newly provisioned board does not behave as expected:
 
-1. Run `supabase/verification/verify_focusboard_client_provisioning.sql`.
-2. Confirm the client has one `focus_board_settings` row and the expected starter task/reward counts.
-3. Confirm any initial user email already existed in Supabase Auth before provisioning.
-4. Confirm the client status is `active`.
-5. If login routing looks wrong for a user with multiple memberships, run `supabase/verification/verify_focusboard_login_destinations.sql`.
+1. Confirm the client has one `focus_board_settings` row and the expected starter task and
+   reward counts.
+2. Confirm any linked user's email exists in `neon_auth.user` before linking.
+3. Confirm the client status is `active`.
+4. If login routing looks wrong for a user with several memberships, check their rows in
+   `focusboard.client_memberships` (`is_active`) and the client statuses.
 
 ## Scripts
 

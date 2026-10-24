@@ -40,7 +40,6 @@ export type FocusBoardTask = {
   key: string;
   icon: string;
   stickerSrc: string;
-  stickerFallbackSrc?: string | null;
   stickerAlt: string;
   title: string;
   description: string;
@@ -69,9 +68,7 @@ export type FocusRewardTier = {
   minPoints: number;
   minWeeksHit: number;
   lockedStickerSrc: string;
-  lockedStickerFallbackSrc?: string | null;
   unlockedStickerSrc: string;
-  unlockedStickerFallbackSrc?: string | null;
   stickerAlt: string;
   description: string;
   sortOrder?: number;
@@ -82,9 +79,7 @@ export type FocusWeeklyReward = {
   lockedDescription: string;
   unlockedDescription: string;
   lockedStickerSrc: string;
-  lockedStickerFallbackSrc?: string | null;
   unlockedStickerSrc: string;
-  unlockedStickerFallbackSrc?: string | null;
   stickerAlt: string;
 };
 

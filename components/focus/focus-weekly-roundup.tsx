@@ -291,7 +291,6 @@ export function FocusWeeklyRoundup({ isPreview = false, roundup }: FocusWeeklyRo
                   <div className="focus-roundup-reward-image">
                     <FocusImageWithFallback
                       alt={tier.stickerAlt}
-                      fallbackSrc={unlocked ? tier.unlockedStickerFallbackSrc : tier.lockedStickerFallbackSrc}
                       src={unlocked ? tier.unlockedStickerSrc : tier.lockedStickerSrc}
                     />
                   </div>

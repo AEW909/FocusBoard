@@ -832,7 +832,7 @@ Each implementation slice should run the checks relevant to its scope:
 
 - `npm run typecheck`
 - `npm run build`
-- Migration verification queries against the target Supabase project
+- Migration verification queries against the target Neon project
 - Liona board smoke test
 - Platform owner login and routing test
 - Client user login and routing test
@@ -1014,3 +1014,11 @@ Each implementation slice should run the checks relevant to its scope:
   redeploying. Caveat: the rows were rewritten before the files were deployed, and local
   development shares the production database, so deployed builds show missing stickers until the
   commit containing `public/focus` is pushed and deployed. Rollback JSON restores the old URLs.
+- 2026-10-24: Supabase removed from the FocusBoard repo: `@supabase/ssr`, `@supabase/supabase-js` and the
+  `supabase` CLI dependency, the `supabase/` folder (config, 25 migrations, 8 verification scripts;
+  recoverable from git at commit `86eb765`, for example `git show 86eb765:supabase/migrations/<file>`),
+  the URL-fallback plumbing for Supabase Storage links, and Supabase wording in the README and Users
+  screen. `.env.example` now lists `ANTHROPIC_API_KEY` (the code never read `OPENAI_API_KEY`). Left
+  deliberately: historical roadmap entries, and the sticker rollback files that name the old bucket.
+  Outside the repo and not touched: the old `focusboard` schema copy and `focus-assets` bucket in the
+  PhysioNote Supabase project, and any `SUPABASE_*` variables in the Vercel project settings.

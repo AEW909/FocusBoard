@@ -667,7 +667,6 @@ export function FocusBoard({
                       alt={task.stickerAlt}
                       className="focus-task-sticker-image"
                       expandable
-                      fallbackSrc={task.stickerFallbackSrc}
                       src={task.stickerSrc}
                     />
                   </div>
@@ -835,11 +834,6 @@ export function FocusBoard({
                     alt={board.weeklyReward.stickerAlt}
                     className="focus-reward-bubble-photo"
                     expandable
-                    fallbackSrc={
-                      currentWeek.hitTarget
-                        ? board.weeklyReward.unlockedStickerFallbackSrc
-                        : board.weeklyReward.lockedStickerFallbackSrc
-                    }
                     src={weeklyPrizeImageSrc}
                   />
                 </div>
@@ -1079,7 +1073,6 @@ export function FocusBoard({
                         alt={tier.stickerAlt}
                         className="focus-liona-reward-photo"
                         expandable
-                        fallbackSrc={unlocked ? tier.unlockedStickerFallbackSrc : tier.lockedStickerFallbackSrc}
                         src={unlocked ? tier.unlockedStickerSrc : tier.lockedStickerSrc}
                       />
                     </div>

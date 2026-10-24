@@ -7,7 +7,6 @@ type FocusImageWithFallbackProps = {
   alt: string;
   className?: string;
   expandable?: boolean;
-  fallbackSrc?: string | null;
   src: string;
 };
 
@@ -15,17 +14,11 @@ export function FocusImageWithFallback({
   alt,
   className,
   expandable = false,
-  fallbackSrc,
   src,
 }: FocusImageWithFallbackProps) {
-  const [currentSrc, setCurrentSrc] = useState(src);
   const [isExpanded, setIsExpanded] = useState(false);
   const dialogTitleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    setCurrentSrc(src);
-  }, [src]);
 
   useEffect(() => {
     if (!isExpanded) {
@@ -48,12 +41,7 @@ export function FocusImageWithFallback({
     <img
       alt={alt}
       className={className}
-      onError={() => {
-        if (fallbackSrc && currentSrc !== fallbackSrc) {
-          setCurrentSrc(fallbackSrc);
-        }
-      }}
-      src={currentSrc}
+      src={src}
     />
   );
 
@@ -94,7 +82,7 @@ export function FocusImageWithFallback({
                 >
                   &times;
                 </button>
-                <img alt={alt} className="focus-image-viewer-photo" src={currentSrc} />
+                <img alt={alt} className="focus-image-viewer-photo" src={src} />
               </div>
             </div>,
             document.body,

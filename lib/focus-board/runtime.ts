@@ -8,7 +8,6 @@ import {
   focusBoardTaskMetrics,
   focusBoardRewardTiers,
 } from "@/lib/db/schema";
-import { getBundledFocusFallback } from "@/lib/focus-board/assets";
 import {
   DEFAULT_FOCUS_BOARD_SETTINGS,
   DEFAULT_FOCUS_BOARD_SECTION,
@@ -80,9 +79,7 @@ function mapWeeklyReward(row?: SettingsRow | null): FocusWeeklyReward {
       row.weeklyRewardDescription ||
       DEFAULT_FOCUS_WEEKLY_REWARD.unlockedDescription,
     lockedStickerSrc: row.weeklyRewardLockedStickerSrc || DEFAULT_FOCUS_WEEKLY_REWARD.lockedStickerSrc,
-    lockedStickerFallbackSrc: getBundledFocusFallback(row.weeklyRewardLockedStickerSrc),
     unlockedStickerSrc: row.weeklyRewardUnlockedStickerSrc || DEFAULT_FOCUS_WEEKLY_REWARD.unlockedStickerSrc,
-    unlockedStickerFallbackSrc: getBundledFocusFallback(row.weeklyRewardUnlockedStickerSrc),
     stickerAlt: row.weeklyRewardStickerAlt || DEFAULT_FOCUS_WEEKLY_REWARD.stickerAlt,
   };
 }
@@ -162,7 +159,6 @@ function mapTasks(
         key: row.taskKey,
         icon: row.icon,
         stickerSrc: row.stickerSrc,
-        stickerFallbackSrc: getBundledFocusFallback(row.stickerSrc),
         stickerAlt: row.stickerAlt,
         title: row.title,
         description: row.description,
@@ -227,9 +223,7 @@ function mapRewards(rows: RewardRow[]): FocusRewardTier[] {
       minPoints: row.minPoints,
       minWeeksHit: row.minWeeksHit,
       lockedStickerSrc: row.lockedStickerSrc,
-      lockedStickerFallbackSrc: getBundledFocusFallback(row.lockedStickerSrc),
       unlockedStickerSrc: row.unlockedStickerSrc,
-      unlockedStickerFallbackSrc: getBundledFocusFallback(row.unlockedStickerSrc),
       stickerAlt: row.stickerAlt,
       description: row.description,
       sortOrder: row.sortOrder,
