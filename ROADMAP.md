@@ -600,7 +600,7 @@ Completion:
 
 ### Slice 11 - Optional Board Business Stats Module
 
-Status: `IN PROGRESS`
+Status: `COMPLETE`
 
 Goal:
 
@@ -661,7 +661,126 @@ Progress:
   migration history records `20260708092854` as applied, and the Business Stats rollback smoke
   verification passed without note writes.
 - Local checks passed: `npm run typecheck`, `npm run build`, and `git diff --check`.
-- Outstanding deployment work: redeploy and production app smoke verification.
+- Slice push recorded in commit `84bde93`.
+- Post-slice out-of-band work (not part of Slice 11 scope): Supabase → Neon + Drizzle +
+  Better Auth migration (`cebf062`), Supabase Storage removal (`e5ad4a0`), UI overhauls,
+  optimistic metric updates, PWA manifest and push notifications, and admin panel split-pane
+  redesign (`bcb0f81`). All landed on main between 2026-07-08 and 2026-10-24.
+- Outstanding deployment work: none — subsequent commits confirm production deploys occurred
+  after Slice 11 landed.
+- Production smoke verification of Business Stats outstanding: platform owner should confirm
+  the module is accessible and functional in the live app before Slice 12 begins.
+
+Completion:
+
+- Implementation commit: `0ef0a23`
+- Pushed: 2026-07-08
+- Slice push commit: `84bde93`
+
+### Slice 12 - Group Display Dashboard
+
+Status: `NEXT`
+
+Goal:
+
+Build a purpose-built unified display view that aggregates multiple boards into a single
+designed screen, targeted at 1920×1080, with Echo Show constraints respected from the start so
+the page doubles as the Echo Show surface with no auth refactoring later.
+
+Deliverables:
+
+- Add optional `display_group` text field to `focusboard.focus_board_settings`.
+- Add a `focusboard.display_tokens` table: a read-only token keyed to a display group, with
+  revoke support and a `last_used_at` timestamp.
+- Add platform-owner UI to assign a board to a display group and to generate or revoke a
+  display token for that group.
+- Add `/display/[group]` — a session-less, display-only route authenticated by a `?dt=` URL
+  param; token is read into memory on load and used in `Authorization` headers for all API
+  calls; no `localStorage` or `sessionStorage` dependency.
+- Display shows for the current week across all boards in the group:
+  - Day-by-day weekly points chart, one line per board/person.
+  - Task completion grid showing each person's progress against their metrics.
+  - Leaderboard ranked by weekly points with monthly points as tiebreaker.
+  - Reward tier status per person (locked/unlocked sticker and label).
+- Client-side polling every 30–60 seconds; display re-renders on new data without a full
+  page reload.
+- Layout designed for 1920×1080 full-screen; verified readable at that resolution in Chrome
+  DevTools device emulation.
+- An invalid or missing token returns a non-disclosing denial, not a redirect to login.
+
+Acceptance:
+
+- Platform owner can assign any active board to a display group from board settings.
+- Platform owner can generate and revoke a display token for a group from the admin panel.
+- A valid `?dt=` token renders the group display; an invalid token returns a denial.
+- Display reflects a logged event within 60 seconds of it being saved.
+- No session cookie, no `localStorage`, no `sessionStorage` required anywhere in the display
+  route; the page is usable on Echo Show from day one.
+- `npm run typecheck` and `npm run build` pass.
+
+### Slice 13 - Echo Show Implementation
+
+Status: `FUTURE`
+
+Goal:
+
+Wrap the group display as an Alexa custom skill so Echo Show devices can open it
+full-screen by voice, with the session kept alive for up to 30 minutes.
+
+Deliverables:
+
+- Build an Alexa custom skill (Node.js AWS Lambda) that responds to the LaunchRequest with
+  an `Alexa.Presentation.HTML.Start` directive pointing at the `/display/[group]?dt=` URL.
+- Add the three-line `alexa.js` SDK initialization to the display page; it must be a silent
+  no-op in a regular browser so the PC version is unaffected.
+- Configure the skill for developer/personal-use mode (no Alexa Skills Store certification
+  required for personal Echo Shows linked to the developer account).
+- Document the one-time device setup: linking Echo Shows to the developer account and the
+  voice invocation phrase.
+- Verify session timeout behavior: after the 30-minute limit, the display returns to the Echo
+  Show home screen; re-invoking the skill restores the display in full.
+
+Acceptance:
+
+- Saying the skill invocation phrase on a linked Echo Show opens the group display
+  full-screen.
+- The display polls and updates while the skill session is active.
+- The page renders identically in a regular browser; no Echo Show-specific behavior leaks
+  into the PC experience.
+- Setup documentation covers developer account linking, skill deployment, and the invocation
+  phrase.
+
+### Slice 14 - Organisations Layer
+
+Status: `FUTURE`
+
+Goal:
+
+Replace the simple `display_group` text field with a proper Organisations entity that
+supports organisation-level goals, cross-board visibility, and future multi-client groupings.
+This slice is optional; the display and Echo Show slices are fully functional without it.
+
+Deliverables:
+
+- Add `focusboard.organisations` table: `id`, `org_key`, `display_name`, `status`,
+  `created_by`, `created_at`, `updated_at`.
+- Add optional `organisation_id` foreign key to `focusboard.focus_board_settings` alongside
+  the existing `display_group` field; backfill existing `display_group` values to named
+  organisation records before making `display_group` redundant.
+- Organisation CRUD in the platform admin panel: create, rename, activate, deactivate.
+- Add optional organisation-level monthly and weekly point goals.
+- Extend the group display to show a combined progress bar against the organisation goal
+  alongside per-person leaderboard rows.
+- Migrate `display_tokens` to reference `organisation_id` instead of a raw group string.
+
+Acceptance:
+
+- Platform owner can create and manage organisations without SQL.
+- Boards can be assigned to an organisation from board settings.
+- Organisation goals appear as a combined progress indicator on the group display when set.
+- Existing `display_group` data and tokens are migrated without display downtime.
+- Boards with no organisation assignment continue to work as before.
+- `npm run typecheck` and `npm run build` pass.
 
 ## Verification Matrix
 
@@ -733,6 +852,15 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-07-08: Model Business Stats as a board-level optional module with admin-configured groups,
   numeric stat categories, visibility toggles, and weekly entries rather than per-user private
   metrics.
+- 2026-10-24: Group display uses a simple `display_group` text field rather than a full
+  Organisations table; the Organisations entity is deferred to Slice 14 until it has more than
+  one reason to exist.
+- 2026-10-24: Build the group display as a browser-first 1920×1080 page (Slice 12) before
+  wrapping it as an Alexa skill (Slice 13); the page is the fallback product if the Echo Show
+  route proves impractical.
+- 2026-10-24: Display route uses URL-param device token auth with no localStorage or session
+  dependency from day one, so the Echo Show adaptation in Slice 13 requires no auth
+  refactoring.
 
 ## Change Log
 
@@ -808,3 +936,14 @@ Each implementation slice should run the checks relevant to its scope:
 - 2026-07-08: Business Stats notes were removed from the app flow and Supabase entry schema; the
   review screen was simplified around grouped stat filters, a larger chart, and a below-chart
   legend.
+- 2026-10-24: Slice 11 marked complete. All Business Stats routes, migrations, and UI are
+  confirmed in the codebase and on main. Production smoke verification of the Business Stats
+  module is the one remaining check before Slice 12 begins.
+- 2026-10-24: Slice 12 (Group Display Dashboard), Slice 13 (Echo Show Implementation), and
+  Slice 14 (Organisations Layer) added to the roadmap. Slice 12 is next after Slice 11
+  production smoke verification. Slice 13 follows Slice 12. Slice 14 is optional and deferred
+  until organisations serve more than one purpose.
+- 2026-10-24: Noted significant out-of-band work landed between Slice 11 and today: Supabase →
+  Neon + Drizzle + Better Auth migration, Supabase Storage removal, optimistic metric updates,
+  PWA and push notifications, and admin panel split-pane redesign. None of these were roadmap
+  slices; Decision Log should be updated if any represent permanent architectural decisions.

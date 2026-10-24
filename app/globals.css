@@ -6837,3 +6837,348 @@ details > summary::-webkit-details-marker {
     transform: translateX(0);
   }
 }
+
+/* ── Family Display (Echo Show / ambient TV display) ───────────────────────── */
+
+.fdisplay-root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vh, 22px);
+  padding: clamp(14px, 2.4vh, 28px) clamp(18px, 2vw, 40px);
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #f4f0ff;
+  font-family: var(--font-body), sans-serif;
+  background:
+    radial-gradient(circle at 8% 6%, rgba(0, 255, 214, 0.2), transparent 24%),
+    radial-gradient(circle at 92% 8%, rgba(255, 77, 202, 0.22), transparent 24%),
+    radial-gradient(circle at 50% 100%, rgba(149, 255, 74, 0.14), transparent 34%),
+    linear-gradient(180deg, #14203c 0%, #3f1761 55%, #102d39 100%);
+}
+
+.fdisplay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.fdisplay-header-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.2vw, 20px);
+}
+
+.fdisplay-logo {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(22px, 3.6vh, 40px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #fff9ff;
+  text-shadow: 0 0 22px rgba(255, 77, 202, 0.55);
+}
+
+.fdisplay-header-month,
+.fdisplay-header-week {
+  padding: 0.45em 1em;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: clamp(13px, 1.9vh, 20px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(244, 240, 255, 0.9);
+}
+
+.fdisplay-header-week {
+  color: #95ff4a;
+  border-color: rgba(149, 255, 74, 0.35);
+}
+
+.fdisplay-legend {
+  display: flex;
+  gap: clamp(8px, 1vw, 16px);
+}
+
+.fdisplay-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.45em 1.1em 0.45em 0.9em;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: clamp(14px, 2vh, 22px);
+  font-weight: 800;
+  color: #fff9ff;
+}
+
+.fdisplay-legend-dot {
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 50%;
+  box-shadow: 0 0 12px currentColor;
+}
+
+.fdisplay-chart-section {
+  flex-shrink: 0;
+  padding: clamp(10px, 1.6vh, 18px) clamp(16px, 1.6vw, 30px) clamp(6px, 1vh, 12px);
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    radial-gradient(circle at top left, rgba(0, 255, 214, 0.1), transparent 30%),
+    rgba(26, 22, 62, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 20px 50px rgba(0, 0, 0, 0.35),
+    0 0 40px rgba(0, 245, 212, 0.12);
+}
+
+.fdisplay-chart-label {
+  margin: 0;
+  color: #59f4d6;
+  font-size: clamp(11px, 1.6vh, 17px);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fdisplay-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fdisplay-chart-grid {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1.5;
+}
+
+.fdisplay-chart-tick,
+.fdisplay-chart-week {
+  fill: rgba(244, 240, 255, 0.6);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fdisplay-chart-week-current {
+  fill: #fff9ff;
+  font-weight: 800;
+}
+
+.fdisplay-chart-pace {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 2.5;
+  stroke-dasharray: 9 9;
+  stroke-linecap: round;
+}
+
+.fdisplay-chart-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 7px currentColor);
+}
+
+.fdisplay-chart-dot {
+  fill: currentColor;
+  stroke: #1a1440;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.fdisplay-chart-end {
+  fill: currentColor;
+  font-family: var(--font-display), sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.fdisplay-boards {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  gap: clamp(12px, 1.4vw, 26px);
+}
+
+.fdisplay-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 16px);
+  min-height: 0;
+  padding: clamp(14px, 2.2vh, 26px) clamp(14px, 1.3vw, 26px);
+  border-radius: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: var(--focus-text);
+  background:
+    radial-gradient(circle at top left, var(--focus-page-glow-a), transparent 34%),
+    radial-gradient(circle at top right, var(--focus-page-glow-b), transparent 34%),
+    radial-gradient(circle at bottom center, var(--focus-page-glow-c), transparent 46%),
+    linear-gradient(165deg, var(--focus-page-start) 0%, var(--focus-page-mid) 55%, var(--focus-page-end) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 24px 54px rgba(0, 0, 0, 0.4),
+    0 0 40px color-mix(in srgb, var(--focus-accent-bright) 30%, transparent);
+}
+
+.fdisplay-card-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fdisplay-card-kicker {
+  margin: 0 0 4px;
+  color: var(--focus-accent);
+  font-size: clamp(11px, 1.6vh, 17px);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fdisplay-card-name {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(28px, 5.4vh, 60px);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  color: var(--focus-text-strong);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--focus-accent-secondary) 40%, transparent);
+}
+
+.fdisplay-card-pts {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.fdisplay-pts-value {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(32px, 6vh, 68px);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--focus-text-strong);
+}
+
+.fdisplay-pts-target {
+  font-size: clamp(13px, 2vh, 22px);
+  font-weight: 800;
+  color: var(--focus-text-muted);
+}
+
+.fdisplay-progress-bar {
+  height: clamp(12px, 1.8vh, 20px);
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--focus-text-strong) 18%, transparent);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  flex-shrink: 0;
+}
+
+.fdisplay-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--focus-action-from), var(--focus-action-to));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--focus-action-from) 70%, transparent);
+  transition: width 0.6s ease;
+}
+
+.fdisplay-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 0.9vh, 10px);
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+
+.fdisplay-task {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: clamp(6px, 1vh, 12px) clamp(10px, 1vw, 18px);
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--focus-accent) 22%, transparent);
+  color: var(--focus-text-strong);
+  font-size: clamp(14px, 2.1vh, 24px);
+  font-weight: 800;
+  opacity: 0.85;
+}
+
+.fdisplay-task-s1,
+.fdisplay-task-s2,
+.fdisplay-task-s3 {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07));
+  background-blend-mode: normal;
+}
+
+.fdisplay-task-s1 {
+  background-color: var(--focus-task-surface-1);
+  box-shadow: 0 8px 22px var(--focus-task-glow-1);
+}
+
+.fdisplay-task-s2 {
+  background-color: var(--focus-task-surface-2);
+  box-shadow: 0 8px 22px var(--focus-task-glow-2);
+}
+
+.fdisplay-task-s3 {
+  background-color: var(--focus-task-surface-3);
+  box-shadow: 0 8px 22px var(--focus-task-glow-3);
+}
+
+.fdisplay-task-done {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--focus-accent-bright) 70%, transparent);
+}
+
+.fdisplay-task-badge {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--focus-text) 35%, transparent);
+  font-size: 0.9em;
+  font-weight: 900;
+  color: #0b2637;
+}
+
+.fdisplay-task-done .fdisplay-task-badge {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--focus-action-from), var(--focus-action-to));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--focus-action-from) 75%, transparent);
+}
+
+.fdisplay-task-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fdisplay-task-count {
+  flex-shrink: 0;
+  padding: 0.15em 0.7em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--focus-accent-bright) 30%, transparent);
+  font-size: 0.8em;
+  font-weight: 800;
+}
