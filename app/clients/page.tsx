@@ -38,6 +38,9 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
             <Link className="button focus-client-open-button" href="/users">
               User management
             </Link>
+            <Link className="button focus-client-open-button" href="/clients/display">
+              Display groups
+            </Link>
           </div>
         </section>
 

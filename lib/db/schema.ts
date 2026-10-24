@@ -113,6 +113,7 @@ export const focusBoardSettings = focusboardSchema.table("focus_board_settings",
   title: text("title").notNull(),
   subtitle: text("subtitle").notNull().default(""),
   weeklyTarget: integer("weekly_target").notNull().default(5),
+  displayGroup: text("display_group"),
   weeklyRewardLabel: text("weekly_reward_label").notNull().default(""),
   weeklyRewardDescription: text("weekly_reward_description").notNull().default(""),
   weeklyRewardLockedDescription: text("weekly_reward_locked_description").notNull().default(""),
@@ -208,7 +209,18 @@ export const focusBoardEvents = focusboardSchema.table("focus_board_events", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const clientContentProfiles = focusboardSchema.table("client_content_profiles", {
+export const displayTokens = focusboardSchema.table("display_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  displayGroup: text("display_group").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  label: text("label").notNull().default(""),
+  createdBy: uuid("created_by").references(() => neonAuthUser.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+});
+
+export const clientContentProfiles =focusboardSchema.table("client_content_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
   clientId: uuid("client_id").notNull().unique().references(() => clients.id, { onDelete: "cascade" }),
   businessName: text("business_name").notNull(),

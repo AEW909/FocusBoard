@@ -729,11 +729,38 @@ Progress:
   and a re-check on `visibilitychange`. Tested: no refetch when unchanged, one refetch when
   changed, 401 without a session. Neon Realtime was rejected (beta, unstable protocol, project
   region `eu-west-2` unsupported, sealed-query model conflicts with server-side authorization).
-- Still to do before this slice is complete: `display_group` column, `display_tokens` table
-  and migration, platform-owner UI to assign groups and generate/revoke tokens,
-  `/display/[group]?dt=` route, token auth on the version endpoint, leaderboard and reward-tier
-  sections, and `npm run build` verification. Slice 13 is blocked on the token route because
-  the Alexa web view clears cookies and disables local storage.
+- Implemented (uncommitted at the time of writing; see Completion once pushed):
+  - Migration `db/migrations/20261024_display_groups_and_tokens.sql` (additive: nullable
+    `focus_board_settings.display_group`, new `focusboard.display_tokens`). Applied to the
+    Neon `FocusBoard` project's only branch (`production`, `br-gentle-moon-zapwqp6o`) on
+    2026-10-24 before the code deploy. Counts before and after: 3 boards, 3 clients, 174 events,
+    unchanged. Rollback is in the file header.
+  - Tokens are random 32-byte values stored only as SHA-256 hashes; the raw link is shown once
+    at creation. Revoked or unknown tokens are rejected.
+  - `/display/[group]?dt=` renders for a valid token for that exact group, or for a platform
+    owner session (admin preview). Any other request, including a wrong group, gets a plain 404.
+    The page sets `referrer: no-referrer` and `noindex`.
+  - `/api/display/version?group=` accepts `Authorization: Bearer <token>` for that group;
+    without `group` it stays owner-only (all-boards `/display` preview).
+  - Admin page `/clients/display` (linked from the Client Hub): assign boards to a group,
+    create a link, list links, revoke.
+  - Cards show leaderboard rank (weekly points, monthly points as tiebreaker, shown only once
+    someone has points), monthly points, and next-reward/unlocked status.
+  - Verified locally against the live Neon database: valid token 200; missing, bad, wrong-group
+    and revoked tokens 404 (page) / 401 (API), all with no session cookie; no storage or cookie
+    use in the display route; task lists fit at emulated 1920×1080. `npm run typecheck` and
+    `npm run build` pass.
+- Deviations from the deliverables above, to confirm or change:
+  - Group assignment lives on `/clients/display`, not inside the board settings form.
+  - The chart is cumulative points per person by week across the month, not day-by-day within
+    the week; events store only the week, so day-level needs a different query.
+  - Reward status is text only on the display cards for now. Sticker artwork is now bundled
+    locally (see Decision Log, sticker migration), so reward and task stickers can be added.
+  - Leaderboard is a rank badge on each card rather than a separate ranked table.
+- Still to do before this slice is complete: push and let Vercel deploy, smoke test the token
+  link on the production URL, and decide on the deviations above. The three existing boards
+  are already assigned to a `family` group in the production database (test assignment; no
+  token remains active). Slice 13 can start once production is verified.
 
 ### Slice 13 - Echo Show Implementation
 
@@ -970,3 +997,20 @@ Each implementation slice should run the checks relevant to its scope:
   browser. The Echo Show web view (Web API for Games) is Chromium-based but clears cookies and
   disables localStorage, so the display must authenticate by URL token (Slice 12) before the
   Alexa skill (Slice 13) can work.
+- 2026-10-24: Display tokens are stored as SHA-256 hashes with one-time reveal, scoped to a single
+  group, and revocable; an invalid, missing, wrong-group or revoked token returns a plain 404 (page)
+  or 401 (API) so group existence is not disclosed. Platform owners can preview any group by
+  session. Group assignment and token management live on /clients/display rather than in the board
+  settings form, to keep the existing admin forms untouched.
+- 2026-10-24: Sticker artwork migrated off the old Supabase Storage bucket (PhysioNote project,
+  `focus-assets/focus/`). The earlier storage-removal commit (e5ad4a0) dropped uploads and made
+  `public/focus` the library, but 45 of 51 referenced images, and 63 files in the bucket, were
+  never copied. All 63 files were downloaded, resized to at most 1024px (PNG palette, 85 MB to
+  18.8 MB), and added to `public/focus` (existing files were not overwritten). 37 database rows
+  (22 tasks, 12 reward tiers, 3 board settings) were rewritten from Supabase URLs to
+  `/focus/<file>` on the Neon production branch; previous values are in
+  `db/migrations/20261024_sticker_urls_to_public.rollback.json`. Nothing in FocusBoard now
+  references Supabase Storage. New artwork is added by dropping a file into `public/focus` and
+  redeploying. Caveat: the rows were rewritten before the files were deployed, and local
+  development shares the production database, so deployed builds show missing stickers until the
+  commit containing `public/focus` is pushed and deployed. Rollback JSON restores the old URLs.

@@ -2,17 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { FocusManagedClient } from "@/lib/focus-board/access";
 import type { FocusBoardData } from "@/lib/focus-board/queries";
 
 type DisplayBoard = {
-  client: FocusManagedClient;
+  client: { clientKey: string; displayName: string };
   board: FocusBoardData;
 };
 
 type Props = {
   boards: DisplayBoard[];
   version: string;
+  group?: string;
+  token?: string;
 };
 
 const POLL_INTERVAL_MS = 15_000;
@@ -204,16 +205,57 @@ function TaskRow({ task, index }: { task: WeekTask; index: number }) {
   );
 }
 
-function BoardCard({ client, board }: DisplayBoard) {
+function ordinal(n: number) {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  return `${n}${["th", "st", "nd", "rd"][n % 10 <= 3 ? n % 10 : 0]}`;
+}
+
+// Weekly points first, monthly points as the tiebreaker; equal scores share a rank.
+function getRanks(boards: DisplayBoard[]) {
+  const score = (b: DisplayBoard) => [b.board.currentWeek?.weekPoints ?? 0, b.board.monthPoints] as const;
+  const anyPoints = boards.some((b) => score(b)[0] > 0 || score(b)[1] > 0);
+
+  return boards.map((b) => {
+    if (!anyPoints) return null;
+    const [week, month] = score(b);
+    return 1 + boards.filter((o) => {
+      const [ow, om] = score(o);
+      return ow > week || (ow === week && om > month);
+    }).length;
+  });
+}
+
+function rewardLine(board: FocusBoardData) {
+  const next = board.nextReward;
+
+  if (next) {
+    const pointsToGo = Math.max(0, next.minPoints - board.monthPoints);
+    const weeksToGo = Math.max(0, next.minWeeksHit - board.weeksHit);
+    const need =
+      pointsToGo > 0
+        ? `${pointsToGo} pts to go`
+        : `${weeksToGo} more week${weeksToGo === 1 ? "" : "s"} on target`;
+    return `Next: ${next.label} - ${need}`;
+  }
+
+  return board.currentReward ? `Unlocked: ${board.currentReward.label}` : "";
+}
+
+function BoardCard({ client, board, rank }: DisplayBoard & { rank: number | null }) {
   const week = board.currentWeek;
   if (!week) return null;
   const pct = Math.min(100, Math.round((week.weekPoints / board.weeklyTarget) * 100));
+  const reward = rewardLine(board);
 
   return (
     <article className={`fdisplay-card focus-theme-${board.settings.themePreset}`}>
       <header className="fdisplay-card-header">
         <div>
-          <p className="fdisplay-card-kicker">{getWeeklyHype(week.weekPoints, board.weeklyTarget)}</p>
+          <p className="fdisplay-card-kicker">
+            {rank ? <span className="fdisplay-rank">{ordinal(rank)}</span> : null}
+            {getWeeklyHype(week.weekPoints, board.weeklyTarget)}
+          </p>
           <h2 className="fdisplay-card-name">{shortName(client.displayName)}</h2>
         </div>
         <p className="fdisplay-card-pts">
@@ -231,11 +273,16 @@ function BoardCard({ client, board }: DisplayBoard) {
           <TaskRow index={i} key={task.key} task={task} />
         ))}
       </ul>
+
+      <footer className="fdisplay-card-footer">
+        <span className="fdisplay-card-month">{board.monthPoints} pts this month</span>
+        {reward ? <span className="fdisplay-reward">{reward}</span> : null}
+      </footer>
     </article>
   );
 }
 
-export function FamilyDisplay({ boards, version }: Props) {
+export function FamilyDisplay({ boards, version, group, token }: Props) {
   const router = useRouter();
   const knownVersion = useRef(version);
 
@@ -246,7 +293,11 @@ export function FamilyDisplay({ boards, version }: Props) {
   useEffect(() => {
     async function check() {
       try {
-        const res = await fetch("/api/display/version", { cache: "no-store" });
+        const url = group ? `/api/display/version?group=${encodeURIComponent(group)}` : "/api/display/version";
+        const res = await fetch(url, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         if (!res.ok) return;
         const data = (await res.json()) as { version?: string };
         if (data.version && data.version !== knownVersion.current) {
@@ -271,13 +322,14 @@ export function FamilyDisplay({ boards, version }: Props) {
       clearInterval(fullId);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [router]);
+  }, [router, group, token]);
 
   const firstBoard = boards[0]?.board;
   const monthLabel = firstBoard?.monthLabel ?? "";
   const weekKey = firstBoard?.currentWeek?.weekKey ?? "";
   const weekLabel = weekKey ? `Week of ${formatWeekLabel(weekKey)}` : "";
   const colors = personColors(boards);
+  const ranks = getRanks(boards);
 
   return (
     <div className="fdisplay-root">
@@ -303,8 +355,8 @@ export function FamilyDisplay({ boards, version }: Props) {
       </section>
 
       <div className="fdisplay-boards" style={{ gridTemplateColumns: `repeat(${boards.length}, 1fr)` }}>
-        {boards.map((b) => (
-          <BoardCard board={b.board} client={b.client} key={b.client.clientKey} />
+        {boards.map((b, i) => (
+          <BoardCard board={b.board} client={b.client} key={b.client.clientKey} rank={ranks[i] ?? null} />
         ))}
       </div>
     </div>

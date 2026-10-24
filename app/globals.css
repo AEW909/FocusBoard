@@ -7069,6 +7069,43 @@ details > summary::-webkit-details-marker {
   text-transform: uppercase;
 }
 
+.fdisplay-rank {
+  display: inline-block;
+  margin-right: 10px;
+  padding: 0.15em 0.7em;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--focus-action-from), var(--focus-action-to));
+  color: #0b2637;
+  letter-spacing: 0.06em;
+}
+
+.fdisplay-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-shrink: 0;
+  font-size: clamp(12px, 1.8vh, 20px);
+  font-weight: 800;
+  color: var(--focus-text-soft);
+}
+
+.fdisplay-card-month {
+  flex-shrink: 0;
+}
+
+.fdisplay-reward {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.25em 0.9em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--focus-text-strong) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--focus-accent-bright) 45%, transparent);
+  color: var(--focus-text-strong);
+}
+
 .fdisplay-card-name {
   margin: 0;
   font-family: var(--font-display), sans-serif;
@@ -7122,7 +7159,7 @@ details > summary::-webkit-details-marker {
 .fdisplay-task-list {
   display: flex;
   flex-direction: column;
-  gap: clamp(5px, 0.9vh, 10px);
+  gap: clamp(4px, 0.7vh, 9px);
   flex: 1;
   min-height: 0;
   margin: 0;
@@ -7135,7 +7172,7 @@ details > summary::-webkit-details-marker {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: clamp(6px, 1vh, 12px) clamp(10px, 1vw, 18px);
+  padding: clamp(5px, 0.7vh, 10px) clamp(10px, 1vw, 18px);
   border-radius: 22px;
   border: 1px solid color-mix(in srgb, var(--focus-accent) 22%, transparent);
   color: var(--focus-text-strong);
