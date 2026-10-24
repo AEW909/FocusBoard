@@ -17,7 +17,7 @@ type Props = {
 const POLL_INTERVAL_MS = 60_000;
 
 const PRESET_COLORS: Record<string, string> = {
-  neon: "#00f5d4",
+  neon: "#95ff4a",
   sunset_pop: "#ff8a5b",
   lagoon_bounce: "#63f2ff",
   citrus_blast: "#c6ff3f",
@@ -128,35 +128,38 @@ function MonthlyChart({ boards, colors }: { boards: DisplayBoard[]; colors: stri
       ))}
 
       {series.map((s, bi) => {
-        const color = colors[bi]!;
         const points = s
           .map((v, i) => (v === null ? null : `${x(i)},${y(v)}`))
           .filter(Boolean)
           .join(" ");
         return (
-          <g key={boards[bi]!.client.clientKey} style={{ color }}>
-            <polyline className="fdisplay-chart-line" points={points} />
-            {s.map((v, i) =>
-              v === null ? null : (
-                <circle
-                  className="fdisplay-chart-dot"
-                  cx={x(i)}
-                  cy={y(v)}
-                  key={i}
-                  r={i === currentIdx ? 9 : 6}
-                />
-              ),
-            )}
-            <text
-              className="fdisplay-chart-end"
-              x={x(currentIdx) + 20}
-              y={labelY.get(bi)}
-            >
-              {s[currentIdx] ?? 0}
-            </text>
-          </g>
+          <polyline
+            className="fdisplay-chart-line"
+            key={boards[bi]!.client.clientKey}
+            points={points}
+            style={{ color: colors[bi] }}
+          />
         );
       })}
+
+      {series.map((s, bi) => (
+        <g key={boards[bi]!.client.clientKey} style={{ color: colors[bi] }}>
+          {s.map((v, i) =>
+            v === null ? null : (
+              <circle
+                className="fdisplay-chart-dot"
+                cx={x(i)}
+                cy={y(v)}
+                key={i}
+                r={i === currentIdx ? 7 : 5}
+              />
+            ),
+          )}
+          <text className="fdisplay-chart-end" x={x(currentIdx) + 20} y={labelY.get(bi)}>
+            {s[currentIdx] ?? 0}
+          </text>
+        </g>
+      ))}
     </svg>
   );
 }

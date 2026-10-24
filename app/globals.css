@@ -6990,7 +6990,7 @@ details > summary::-webkit-details-marker {
 .fdisplay-chart-dot {
   fill: currentColor;
   stroke: #1a1440;
-  stroke-width: 3;
+  stroke-width: 2;
   filter: drop-shadow(0 0 6px currentColor);
 }
 
@@ -7029,6 +7029,30 @@ details > summary::-webkit-details-marker {
     0 0 40px color-mix(in srgb, var(--focus-accent-bright) 30%, transparent);
 }
 
+.fdisplay-card.focus-theme-neon {
+  --focus-page-glow-a: rgba(0, 255, 214, 0.18);
+  --focus-page-glow-b: rgba(255, 77, 202, 0.2);
+  --focus-page-glow-c: rgba(149, 255, 74, 0.16);
+  --focus-page-start: #14203c;
+  --focus-page-mid: #3f1761;
+  --focus-page-end: #102d39;
+  --focus-text: #f4f0ff;
+  --focus-text-strong: #fff9ff;
+  --focus-text-soft: rgba(244, 240, 255, 0.78);
+  --focus-text-muted: rgba(244, 240, 255, 0.72);
+  --focus-accent: #59f4d6;
+  --focus-accent-bright: #00f5d4;
+  --focus-accent-secondary: #ff4dca;
+  --focus-action-from: #00ffd5;
+  --focus-action-to: #64ff6a;
+  --focus-task-surface-1: rgba(18, 45, 64, 0.9);
+  --focus-task-surface-2: rgba(27, 64, 42, 0.9);
+  --focus-task-surface-3: rgba(61, 27, 76, 0.9);
+  --focus-task-glow-1: rgba(0, 255, 214, 0.2);
+  --focus-task-glow-2: rgba(149, 255, 74, 0.18);
+  --focus-task-glow-3: rgba(255, 108, 221, 0.2);
+}
+
 .fdisplay-card-header {
   display: flex;
   align-items: flex-end;
@@ -7038,7 +7062,7 @@ details > summary::-webkit-details-marker {
 
 .fdisplay-card-kicker {
   margin: 0 0 4px;
-  color: var(--focus-accent);
+  color: var(--focus-text-soft);
   font-size: clamp(11px, 1.6vh, 17px);
   font-weight: 800;
   letter-spacing: 0.16em;
