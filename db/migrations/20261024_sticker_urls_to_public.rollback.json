@@ -1,0 +1,172 @@
+{
+  "note": "Previous values of sticker URL columns before they were rewritten to /focus/<file>. Restore by writing each value back to the same row.",
+  "focus_board_tasks": [
+    {
+      "id": "52fc5b7c-7a93-47da-8c34-c2504078fe67",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona-photographer.png"
+    },
+    {
+      "id": "1958b150-1409-40f7-855a-bc3830fbab57",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona-critic.png"
+    },
+    {
+      "id": "266da050-6aaf-4b8b-ab6a-12af99197644",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona-influencer.png"
+    },
+    {
+      "id": "0405ad05-65da-4958-b467-5c8fdb919960",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/mascot-rainbow.svg"
+    },
+    {
+      "id": "bc13f269-df4e-4c33-943a-68cf57a221df",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/camera-zap.svg"
+    },
+    {
+      "id": "777673ee-6531-431e-a03a-a0faa13a9b9c",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona-maid.png"
+    },
+    {
+      "id": "4f576219-0f24-49f1-ada3-efb9fa8b49ca",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona-sales.png"
+    },
+    {
+      "id": "ec6b3bc8-3b22-448a-99ca-a37471010e78",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Study.png"
+    },
+    {
+      "id": "6cb51ff9-20c6-4cd5-b0d2-996c50c3bc42",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tidying.png"
+    },
+    {
+      "id": "e79efa16-ef8f-453e-9433-5efea5bc7860",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Hoovering.png"
+    },
+    {
+      "id": "a933c43e-b941-4749-80d5-fac3e8795b4f",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tidy.png"
+    },
+    {
+      "id": "45d5738b-0d7f-4eea-a31d-2f085d1781bb",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-bedtime.png"
+    },
+    {
+      "id": "8dc76e3b-4ba6-47f6-bf36-8ee115b46de6",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-hoovering.png"
+    },
+    {
+      "id": "b74cd842-9e3b-481e-87d8-3b8fcba75efa",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-reading.png"
+    },
+    {
+      "id": "5bc4b27e-d590-45eb-a4e1-c0e767ea333b",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona_stats.png"
+    },
+    {
+      "id": "7a7bd994-52ea-4c52-a8a1-28461965d3cc",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona_business.png"
+    },
+    {
+      "id": "bf3e5f5d-202f-47aa-ab99-817c18077a75",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona-sales.png"
+    },
+    {
+      "id": "2d24be32-831d-43f9-8a7c-6ecc5ebc0dcc",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona_stats.png"
+    },
+    {
+      "id": "9bcda309-fb6f-44da-b1c6-ed8a93a32fa8",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona_japanese.png"
+    },
+    {
+      "id": "dd60cd9e-74ef-4923-abae-fcf15f8a1b8d",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/big_girl_pants.png"
+    },
+    {
+      "id": "b69202ae-d7f8-429b-be09-2f355d076d81",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Study.png"
+    },
+    {
+      "id": "be72a180-cbd8-404f-9990-7ebccaed70f4",
+      "sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/liona-sales.png"
+    }
+  ],
+  "focus_board_reward_tiers": [
+    {
+      "id": "1438279b-26e7-40f1-8edf-dae94929dfa4",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/physio-locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/physio-unlocked.png"
+    },
+    {
+      "id": "52a59886-c6ec-4c87-b8cf-cac8a1bd3074",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/angel-locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/angel-unlocked-2.jpg"
+    },
+    {
+      "id": "ff620b6c-6b8c-495d-a963-d71c13ee2868",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/queen-locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/queen-unlocked.png"
+    },
+    {
+      "id": "9c6a3018-4dd1-438f-b6f5-230dc430b544",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/boss-locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/boss-unlocked.png"
+    },
+    {
+      "id": "325a3b83-5b6c-4946-80dd-4ecdb290858a",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tier1_Locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tier1_Unlocked.png"
+    },
+    {
+      "id": "60b31a9d-ded9-4f35-8962-c7e4ee1084ad",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tier2_Locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tier2_UnlLocked.png"
+    },
+    {
+      "id": "825a2082-21c1-435d-a1ac-57fac73192e9",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tier3_Locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tier3_Unlocked.png"
+    },
+    {
+      "id": "87f284db-ea1c-4177-9960-0399cc854466",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tier4_Locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper_Tier4_Unlocked.png"
+    },
+    {
+      "id": "2cb98fb8-e9b4-4dc2-90bf-c9fce6d9bd2b",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tier4-locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tier4-unlocked.png"
+    },
+    {
+      "id": "14d0c6f4-fbc4-4d44-9d04-5e6000abc4b8",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tier3-locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tier3-unlocked.png"
+    },
+    {
+      "id": "f4f9d967-9d35-4bed-b4c0-40a4ae80e4d6",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tier2-locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tier2-unlocked.png"
+    },
+    {
+      "id": "56c6aa5b-7d16-457b-b63f-61299ce47ecd",
+      "locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tier1-locked.png",
+      "unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-tier1-unlocked.png"
+    }
+  ],
+  "focus_board_settings": [
+    {
+      "board_key": "camille-s-board-2a41-board",
+      "weekly_reward_locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-weekly-locked.png",
+      "weekly_reward_unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Camille-weekly-unlocked.png"
+    },
+    {
+      "board_key": "harper-s-board-8f0d-board",
+      "weekly_reward_locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper%20Unlocked.png",
+      "weekly_reward_unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/Harper%20Unlocked.png"
+    },
+    {
+      "board_key": "liona-growth-board",
+      "weekly_reward_locked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/sleep_locked.png",
+      "weekly_reward_unlocked_sticker_src": "https://xoafnjhsxxczmfavmwoq.supabase.co/storage/v1/object/public/focus-assets/focus/sleep_unlocked_1.png"
+    }
+  ]
+}
