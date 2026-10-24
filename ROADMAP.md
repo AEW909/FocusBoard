@@ -679,7 +679,7 @@ Completion:
 
 ### Slice 12 - Group Display Dashboard
 
-Status: `NEXT`
+Status: `IN PROGRESS`
 
 Goal:
 
@@ -717,6 +717,23 @@ Acceptance:
 - No session cookie, no `localStorage`, no `sessionStorage` required anywhere in the display
   route; the page is usable on Echo Show from day one.
 - `npm run typecheck` and `npm run build` pass.
+
+Progress:
+
+- Prototype `/display` (platform-owner session auth) committed in `94ce6ee` and `b765439`:
+  themed per-person cards, multi-line cumulative monthly chart, 1920×1080 layout verified at
+  emulated size.
+- Live update implemented as a version check: `GET /api/display/version` returns a fingerprint
+  of events, settings, sections, tasks and metrics; the display polls it every 15s and calls
+  `router.refresh()` only when it changes, plus a 10-minute safety refresh for week rollover
+  and a re-check on `visibilitychange`. Tested: no refetch when unchanged, one refetch when
+  changed, 401 without a session. Neon Realtime was rejected (beta, unstable protocol, project
+  region `eu-west-2` unsupported, sealed-query model conflicts with server-side authorization).
+- Still to do before this slice is complete: `display_group` column, `display_tokens` table
+  and migration, platform-owner UI to assign groups and generate/revoke tokens,
+  `/display/[group]?dt=` route, token auth on the version endpoint, leaderboard and reward-tier
+  sections, and `npm run build` verification. Slice 13 is blocked on the token route because
+  the Alexa web view clears cookies and disables local storage.
 
 ### Slice 13 - Echo Show Implementation
 
@@ -947,3 +964,9 @@ Each implementation slice should run the checks relevant to its scope:
   Neon + Drizzle + Better Auth migration, Supabase Storage removal, optimistic metric updates,
   PWA and push notifications, and admin panel split-pane redesign. None of these were roadmap
   slices; Decision Log should be updated if any represent permanent architectural decisions.
+- 2026-10-24: Display live updates use a polled version fingerprint (`/api/display/version`,
+  15s) with `router.refresh()` only on change, not Neon Realtime or webhooks. Realtime is beta,
+  unavailable in `eu-west-2`, and exposes client-held sealed queries; webhooks cannot reach a
+  browser. The Echo Show web view (Web API for Games) is Chromium-based but clears cookies and
+  disables localStorage, so the display must authenticate by URL token (Slice 12) before the
+  Alexa skill (Slice 13) can work.

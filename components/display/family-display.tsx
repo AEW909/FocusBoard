@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { FocusManagedClient } from "@/lib/focus-board/access";
 import type { FocusBoardData } from "@/lib/focus-board/queries";
@@ -12,9 +12,11 @@ type DisplayBoard = {
 
 type Props = {
   boards: DisplayBoard[];
+  version: string;
 };
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 15_000;
+const FULL_REFRESH_MS = 10 * 60_000;
 
 const PRESET_COLORS: Record<string, string> = {
   neon: "#95ff4a",
@@ -233,12 +235,42 @@ function BoardCard({ client, board }: DisplayBoard) {
   );
 }
 
-export function FamilyDisplay({ boards }: Props) {
+export function FamilyDisplay({ boards, version }: Props) {
   const router = useRouter();
+  const knownVersion = useRef(version);
 
   useEffect(() => {
-    const id = setInterval(() => router.refresh(), POLL_INTERVAL_MS);
-    return () => clearInterval(id);
+    knownVersion.current = version;
+  }, [version]);
+
+  useEffect(() => {
+    async function check() {
+      try {
+        const res = await fetch("/api/display/version", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { version?: string };
+        if (data.version && data.version !== knownVersion.current) {
+          router.refresh();
+        }
+      } catch {
+        // Network blip or device asleep: the next tick or wake-up check retries.
+      }
+    }
+
+    function onVisible() {
+      if (document.visibilityState === "visible") void check();
+    }
+
+    const pollId = setInterval(() => void check(), POLL_INTERVAL_MS);
+    // Safety net for changes the version can't see, such as the week rolling over.
+    const fullId = setInterval(() => router.refresh(), FULL_REFRESH_MS);
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      clearInterval(pollId);
+      clearInterval(fullId);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [router]);
 
   const firstBoard = boards[0]?.board;
